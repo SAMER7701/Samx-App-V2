@@ -682,10 +682,11 @@
     'settings.closeFooter': 'إغلاق',
 
     // ─── Settings Tabs (labels only — emoji in const) ───
-    'settings.tabs.appearance': 'المظهر',
+    'settings.tabs.appearance': 'المظهر والسمة',
+    'settings.tabs.identity': 'الهوية والمنشأة',
+    'settings.tabs.labels': 'المصطلحات والقطاع',
+    'settings.tabs.system': 'النظام والبيانات',
     'settings.tabs.colors': 'الألوان',
-    'settings.tabs.identity': 'الهوية',
-    'settings.tabs.labels': 'المسميات',
     'settings.tabs.layout': 'التخطيط',
     'settings.tabs.language': 'اللغة',
     'settings.tabs.about': 'عن التطبيق',

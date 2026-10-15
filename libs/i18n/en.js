@@ -682,10 +682,11 @@
     'settings.closeFooter': 'Close',
 
     // ─── Settings Tabs (labels only) ───
-    'settings.tabs.appearance': 'Appearance',
+    'settings.tabs.appearance': 'Theme & Display',
+    'settings.tabs.identity': 'Branding & Info',
+    'settings.tabs.labels': 'Sector & Labels',
+    'settings.tabs.system': 'System & Data',
     'settings.tabs.colors': 'Colors',
-    'settings.tabs.identity': 'Identity',
-    'settings.tabs.labels': 'Labels',
     'settings.tabs.layout': 'Layout',
     'settings.tabs.language': 'Language',
     'settings.tabs.about': 'About',

@@ -628,52 +628,51 @@
               </div>
               <div class="form-group-pro" style="margin-bottom:0;">
                 <label class="form-label-pro" style="color:#94a3b8;">➕ {{ t('dashboard.target.manualExtraLabel') }}</label>
-                <input type="number" min="0" inputmode="numeric" :value="branchManualExtra === 0 ? '' : branchManualExtra" @focus="$event.target.select()" @input="branchManualExtra = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="target-input" style="min-height:48px;font-size:16px;border-radius:12px;" placeholder="0">
+                <input type="number" min="0" inputmode="numeric" :value="branchManualExtra === 0 ? '' : branchManualExtra" @focus="$event.target.select()" @input="branchManualExtra = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="target-input" placeholder="0">
               </div>
             </div>
           </div>
 
-          <div class="card" style="border-radius:16px;padding:16px;border-color:rgba(59,130,246,.4);">
-            <h3 style="font-size:14px;font-weight:bold;color:#93c5fd;margin:0 0 6px;">{{ t('dashboard.invPcs.title') }}</h3>
-            <p style="font-size:11px;color:#94a3b8;margin:0 0 14px;">{{ t('dashboard.invPcs.subtitle') }}</p>
+          <div class="card" style="border-radius:14px;padding:14px;border-color:rgba(59,130,246,.4);">
+            <h3 style="font-size:13px;font-weight:bold;color:#93c5fd;margin:0 0 4px;">{{ t('dashboard.invPcs.title') }}</h3>
+            <p style="font-size:11px;color:#94a3b8;margin:0 0 12px;">{{ t('dashboard.invPcs.subtitle') }}</p>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
               <div>
-                <label style="display:block;font-size:12px;color:#93c5fd;margin-bottom:6px;font-weight:bold;">{{ t('dashboard.invPcs.invoicesLabel') }}</label>
+                <label style="display:block;font-size:11px;color:#93c5fd;margin-bottom:4px;font-weight:bold;">{{ t('dashboard.invPcs.invoicesLabel') }}</label>
                 <input type="number" min="0" inputmode="numeric" :value="branchInvoicesInput === 0 ? '' : branchInvoicesInput" @focus="$event.target.select()" @input="branchInvoicesInput = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="invoice-input" placeholder="0">
-                <p style="font-size:10px;color:#94a3b8;margin:6px 0 0;">{{ t('dashboard.invPcs.invoicesHint') }}</p>
+                <p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ t('dashboard.invPcs.invoicesHint') }}</p>
               </div>
               <div>
-                <label style="display:block;font-size:12px;color:#c4b5fd;margin-bottom:6px;font-weight:bold;">{{ t('dashboard.invPcs.piecesLabel') }}</label>
+                <label style="display:block;font-size:11px;color:#c4b5fd;margin-bottom:4px;font-weight:bold;">{{ t('dashboard.invPcs.piecesLabel') }}</label>
                 <input type="number" min="0" inputmode="numeric" :value="branchPiecesInput === 0 ? '' : branchPiecesInput" @focus="$event.target.select()" @input="branchPiecesInput = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="pieces-input" placeholder="0">
-                <p style="font-size:10px;color:#94a3b8;margin:6px 0 0;">{{ t('dashboard.invPcs.piecesHint') }}</p>
+                <p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ t('dashboard.invPcs.piecesHint') }}</p>
               </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <div style="background:linear-gradient(135deg,rgba(59,130,246,.15),transparent);border:1px solid rgba(59,130,246,.4);border-radius:12px;padding:14px;">
-                <p style="font-size:11px;color:#93c5fd;margin:0 0 4px;font-weight:700;">{{ t('dashboard.invPcs.uptLabel') }}</p>
-                <p style="font-size:28px;font-weight:900;color:#fff;margin:6px 0;line-height:1;">{{ branchUPT.toFixed(2) }}</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div style="background:linear-gradient(135deg,rgba(59,130,246,.15),transparent);border:1px solid rgba(59,130,246,.4);border-radius:10px;padding:10px 12px;">
+                <p style="font-size:10px;color:#93c5fd;margin:0 0 2px;font-weight:700;">{{ t('dashboard.invPcs.uptLabel') }}</p>
+                <p style="font-size:22px;font-weight:900;color:#fff;margin:4px 0;line-height:1;">{{ branchUPT.toFixed(2) }}</p>
                 <p style="font-size:10px;color:#94a3b8;margin:0;">{{ t('dashboard.invPcs.uptHint', '', { pieces: formatNum(branchPieces), invoices: formatNum(branchInvoices) }) }}</p>
               </div>
-              <div style="background:linear-gradient(135deg,rgba(212,168,75,.15),transparent);border:1px solid rgba(212,168,75,.4);border-radius:12px;padding:14px;">
-                <p style="font-size:11px;color:#e6c074;margin:0 0 4px;font-weight:700;">{{ t('dashboard.invPcs.atvLabel') }}</p>
-                <p style="font-size:28px;font-weight:900;color:#fff;margin:6px 0;line-height:1;">{{ formatSAR(branchATV) }}</p>
+              <div style="background:linear-gradient(135deg,rgba(212,168,75,.15),transparent);border:1px solid rgba(212,168,75,.4);border-radius:10px;padding:10px 12px;">
+                <p style="font-size:10px;color:#e6c074;margin:0 0 2px;font-weight:700;">{{ t('dashboard.invPcs.atvLabel') }}</p>
+                <p style="font-size:22px;font-weight:900;color:#fff;margin:4px 0;line-height:1;">{{ formatSAR(branchATV) }}</p>
                 <p style="font-size:10px;color:#94a3b8;margin:0;">{{ t('dashboard.invPcs.atvHint') }}</p>
               </div>
             </div>
           </div>
           <!-- Staff Table (Desktop) -->
-          <!-- Staff Table (Desktop) -->
-          <div class="card hide-mobile" style="border-radius:16px;padding:16px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
-              <h3 style="font-size:14px;font-weight:bold;color:#34d399;margin:0;">{{ t('dashboard.staff.title') }}</h3>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button @click="exportDailyExcel" :disabled="!selectedBranch || !canExport" class="btn-ghost" style="border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;background:linear-gradient(135deg,rgba(16,185,129,.15),transparent);border-color:rgba(16,185,129,.5);color:#6ee7b7;">{{ t('dashboard.staff.actions.excel') }}</button>
-                <button @click="showCompareModal=true" class="btn-ghost" style="border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;">{{ t('dashboard.staff.actions.compare') }}</button>
-                <button @click="markAllPresent" :disabled="!canEditTarget" class="btn-ghost" style="border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;">{{ t('dashboard.staff.actions.markAllPresent') }}</button>
-                <span style="font-size:10px;color:#94a3b8;padding:6px 10px;">{{ t('dashboard.staff.actions.autoDistHint') }}</span>
-                <button @click="clearAllSales" :disabled="!canEnterDailySales" class="btn-ghost" style="border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;color:#fda4af;">{{ t('dashboard.staff.actions.clearAll') }}</button>
+          <div class="card hide-mobile" style="border-radius:14px;padding:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+              <h3 style="font-size:13px;font-weight:bold;color:#34d399;margin:0;">{{ t('dashboard.staff.title') }}</h3>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                <button @click="exportDailyExcel" :disabled="!selectedBranch || !canExport" class="btn-success-subtle btn-sm">{{ t('dashboard.staff.actions.excel') }}</button>
+                <button @click="showCompareModal=true" class="btn-ghost btn-sm">{{ t('dashboard.staff.actions.compare') }}</button>
+                <button @click="markAllPresent" :disabled="!canEditTarget" class="btn-ghost btn-sm">{{ t('dashboard.staff.actions.markAllPresent') }}</button>
+                <span style="font-size:10px;color:#94a3b8;padding:4px 6px;">{{ t('dashboard.staff.actions.autoDistHint') }}</span>
+                <button @click="clearAllSales" :disabled="!canEnterDailySales" class="btn-danger-subtle btn-sm">{{ t('dashboard.staff.actions.clearAll') }}</button>
               </div>
             </div>
             <div v-if="branchStaff.length===0" style="text-align:center;color:#94a3b8;padding:32px;">{{ t('dashboard.staff.empty') }}</div>
@@ -1954,110 +1953,116 @@
          ============================================================ -->
     <transition name="fade">
       <div v-if="showImportModal" class="bottom-sheet-overlay" @click.self="showImportModal=false">
-        <div class="bottom-sheet" style="max-width:640px;">
+        <div class="bottom-sheet" style="max-width:660px;">
           <div class="bottom-sheet-handle"></div>
-          <div style="padding:20px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <h3 style="font-size:16px;font-weight:bold;color:#e6c074;margin:0;display:flex;align-items:center;gap:8px;">
-                <span>📊</span>
-                <span>{{ t('modal.import.title') }}</span>
-              </h3>
-              <button @click="showImportModal=false" class="modal-close-btn" aria-label="Close">✕</button>
-            </div>
-            <div style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:12px;font-size:12px;color:#93c5fd;margin-bottom:16px;">
-              <p style="margin:0 0 6px;font-weight:bold;">{{ t('modal.import.format.title') }}</p>
-              <p style="margin:0 0 4px;">{{ t('modal.import.format.basic') }}</p>
-              <p style="margin:0 0 4px;">{{ t('modal.import.format.challenge') }}</p>
+
+          <!-- Header -->
+          <div class="modal-header-pro">
+            <h3 class="modal-title-pro">
+              <span>📊</span>
+              <span>{{ t('modal.import.title') }}</span>
+            </h3>
+            <button @click="showImportModal=false" class="modal-close-btn" aria-label="Close">✕</button>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body-pro">
+            <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:12px;font-size:12px;color:#93c5fd;margin-bottom:14px;line-height:1.6;">
+              <p style="margin:0 0 4px;font-weight:700;">{{ t('modal.import.format.title') }}</p>
+              <p style="margin:0 0 2px;">{{ t('modal.import.format.basic') }}</p>
+              <p style="margin:0 0 2px;">{{ t('modal.import.format.challenge') }}</p>
               <p style="margin:0;">{{ t('modal.import.format.branch') }}</p>
             </div>
-            <label class="btn-ghost" style="display:block;width:100%;border-radius:12px;padding:16px;font-size:14px;cursor:pointer;text-align:center;margin-bottom:16px;">
+
+            <label class="btn-ghost btn-md" style="display:block;width:100%;cursor:pointer;text-align:center;margin-bottom:14px;">
               {{ t('modal.import.chooseFile') }}
               <input type="file" accept=".xlsx,.xls,.csv" @change="handleExcelImport" style="display:none;">
             </label>
-            <div v-if="importPreview.length > 0 || (importMeta && importMeta.unmatched.length > 0)" style="border:1px solid #243356;border-radius:12px;padding:16px;margin-bottom:16px;background:rgba(15,23,42,.3);">
-              <div v-if="importMeta" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-                <div style="background:linear-gradient(135deg,rgba(212,168,75,.15),transparent);border:1px solid rgba(212,168,75,.4);border-radius:10px;padding:8px 14px;">
+
+            <div v-if="importPreview.length > 0 || (importMeta && importMeta.unmatched.length > 0)" style="border:1px solid #243356;border-radius:12px;padding:14px;background:rgba(15,23,42,.35);">
+              <div v-if="importMeta" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                <div style="background:linear-gradient(135deg,rgba(212,168,75,.15),transparent);border:1px solid rgba(212,168,75,.4);border-radius:8px;padding:6px 12px;">
                   <p style="font-size:10px;color:#94a3b8;margin:0 0 2px;">{{ t('modal.import.meta.month') }}</p>
-                  <p style="font-size:15px;font-weight:900;color:#e6c074;margin:0;">{{ importMeta.detectedMonth }}</p>
+                  <p style="font-size:14px;font-weight:900;color:#e6c074;margin:0;">{{ importMeta.detectedMonth }}</p>
                 </div>
-                <div style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:8px 14px;">
+                <div style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:6px 12px;">
                   <p style="font-size:10px;color:#94a3b8;margin:0 0 2px;">{{ t('modal.import.meta.days') }}</p>
-                  <p style="font-size:15px;font-weight:900;color:#93c5fd;margin:0;">{{ importMeta.dateColumnsCount }}</p>
+                  <p style="font-size:14px;font-weight:900;color:#93c5fd;margin:0;">{{ importMeta.dateColumnsCount }}</p>
                 </div>
-                <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:8px 14px;">
+                <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:6px 12px;">
                   <p style="font-size:10px;color:#94a3b8;margin:0 0 2px;">{{ t('modal.import.meta.basic') }}</p>
-                  <p style="font-size:15px;font-weight:900;color:#6ee7b7;margin:0;">{{ importMeta.basicFound ? t('modal.import.meta.exists') : t('modal.import.meta.missing') }}</p>
+                  <p style="font-size:14px;font-weight:900;color:#6ee7b7;margin:0;">{{ importMeta.basicFound ? t('modal.import.meta.exists') : t('modal.import.meta.missing') }}</p>
                 </div>
-                <div style="background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:10px;padding:8px 14px;">
+                <div style="background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:8px;padding:6px 12px;">
                   <p style="font-size:10px;color:#94a3b8;margin:0 0 2px;">{{ t('modal.import.meta.challenge') }}</p>
-                  <p style="font-size:15px;font-weight:900;color:#c4b5fd;margin:0;">{{ importMeta.challengeFound ? t('modal.import.meta.exists') : t('modal.import.meta.missing') }}</p>
+                  <p style="font-size:14px;font-weight:900;color:#c4b5fd;margin:0;">{{ importMeta.challengeFound ? t('modal.import.meta.exists') : t('modal.import.meta.missing') }}</p>
                 </div>
               </div>
 
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px;">
-                <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:12px;text-align:center;">
-                  <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('modal.import.stats.matched') }}</p>
-                  <p style="font-size:22px;font-weight:900;color:#6ee7b7;margin:0;">{{ importPreview.length }}</p>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px;">
+                <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:10px;text-align:center;">
+                  <p style="font-size:11px;color:#94a3b8;margin:0 0 4px;">{{ t('modal.import.stats.matched') }}</p>
+                  <p style="font-size:20px;font-weight:900;color:#6ee7b7;margin:0;">{{ importPreview.length }}</p>
                 </div>
-                <div style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:10px;padding:12px;text-align:center;">
-                  <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('modal.import.stats.unmatched') }}</p>
-                  <p style="font-size:22px;font-weight:900;color:#fda4af;margin:0;">{{ importMeta ? importMeta.unmatched.length : 0 }}</p>
+                <div style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:8px;padding:10px;text-align:center;">
+                  <p style="font-size:11px;color:#94a3b8;margin:0 0 4px;">{{ t('modal.import.stats.unmatched') }}</p>
+                  <p style="font-size:20px;font-weight:900;color:#fda4af;margin:0;">{{ importMeta ? importMeta.unmatched.length : 0 }}</p>
                 </div>
-                <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:12px;text-align:center;">
-                  <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('modal.import.stats.conflicts') }}</p>
-                  <p style="font-size:22px;font-weight:900;color:#fcd34d;margin:0;">{{ importMeta ? importMeta.conflicts.length : 0 }}</p>
+                <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:10px;text-align:center;">
+                  <p style="font-size:11px;color:#94a3b8;margin:0 0 4px;">{{ t('modal.import.stats.conflicts') }}</p>
+                  <p style="font-size:20px;font-weight:900;color:#fcd34d;margin:0;">{{ importMeta ? importMeta.conflicts.length : 0 }}</p>
                 </div>
               </div>
 
               <div v-if="importMeta && importMeta.unmatched.length > 0" style="background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.3);border-radius:8px;padding:10px;margin-bottom:12px;">
-                <p style="font-size:12px;color:#fda4af;margin:0 0 6px;font-weight:bold;">{{ t('modal.import.unmatched.header') }}</p>
-                <div style="display:flex;flex-wrap:wrap;gap:6px;">
-                  <span v-for="u in importMeta.unmatched.slice(0, 10)" :key="u.code" style="background:rgba(244,63,94,.15);color:#fda4af;padding:3px 8px;border-radius:6px;font-size:11px;">
+                <p style="font-size:11px;color:#fda4af;margin:0 0 6px;font-weight:bold;">{{ t('modal.import.unmatched.header') }}</p>
+                <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                  <span v-for="u in importMeta.unmatched.slice(0, 10)" :key="u.code" style="background:rgba(244,63,94,.15);color:#fda4af;padding:2px 6px;border-radius:4px;font-size:10px;">
                     {{ u.code }} — {{ u.name }}
                   </span>
-                  <span v-if="importMeta.unmatched.length > 10" style="color:#94a3b8;font-size:11px;padding:3px 8px;">
+                  <span v-if="importMeta.unmatched.length > 10" style="color:#94a3b8;font-size:10px;padding:2px 6px;">
                     {{ t('modal.import.unmatched.more', '', { count: importMeta.unmatched.length - 10 }) }}
                   </span>
                 </div>
               </div>
 
               <div v-if="importMeta && importMeta.conflicts.length > 0" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:10px;margin-bottom:12px;">
-                <p style="font-size:12px;color:#fcd34d;margin:0 0 6px;font-weight:bold;">{{ t('modal.import.conflicts.header', '', { month: importMeta.detectedMonth }) }}</p>
-                <div style="display:flex;flex-wrap:wrap;gap:6px;">
-                  <span v-for="c in importMeta.conflicts.slice(0, 10)" :key="c.branchId" style="background:rgba(245,158,11,.15);color:#fcd34d;padding:3px 8px;border-radius:6px;font-size:11px;">
+                <p style="font-size:11px;color:#fcd34d;margin:0 0 6px;font-weight:bold;">{{ t('modal.import.conflicts.header', '', { month: importMeta.detectedMonth }) }}</p>
+                <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                  <span v-for="c in importMeta.conflicts.slice(0, 10)" :key="c.branchId" style="background:rgba(245,158,11,.15);color:#fcd34d;padding:2px 6px;border-radius:4px;font-size:10px;">
                     {{ c.branchName }}
                   </span>
                 </div>
               </div>
 
-              <div v-if="importPreview.length > 0" style="border:1px solid #243356;border-radius:10px;overflow:hidden;">
-                <div style="background:#1a2540;padding:8px 14px;font-size:11px;color:#e6c074;font-weight:bold;">
+              <div v-if="importPreview.length > 0" style="border:1px solid #243356;border-radius:8px;overflow:hidden;">
+                <div style="background:#1a2540;padding:6px 12px;font-size:11px;color:#e6c074;font-weight:bold;">
                   {{ t('modal.import.preview.header', '', { count: importPreview.length }) }}
                 </div>
-                <div style="max-height:320px;overflow-y:auto;">
-                  <table style="width:100%;font-size:12px;border-collapse:collapse;">
+                <div style="max-height:280px;overflow-y:auto;">
+                  <table style="width:100%;font-size:11px;border-collapse:collapse;">
                     <thead style="position:sticky;top:0;background:#0e1628;z-index:1;">
                       <tr style="color:#94a3b8;font-size:10px;">
-                        <th style="text-align:right;padding:6px 10px;">{{ t('modal.import.col.code') }}</th>
-                        <th style="text-align:right;padding:6px 10px;">{{ t('modal.import.col.name') }}</th>
-                        <th style="text-align:right;padding:6px 10px;">{{ t('modal.import.col.basic') }}</th>
-                        <th style="text-align:right;padding:6px 10px;">{{ t('modal.import.col.challenge') }}</th>
-                        <th style="text-align:right;padding:6px 10px;">{{ t('modal.import.col.status') }}</th>
+                        <th style="text-align:start;padding:6px 8px;">{{ t('modal.import.col.code') }}</th>
+                        <th style="text-align:start;padding:6px 8px;">{{ t('modal.import.col.name') }}</th>
+                        <th style="text-align:start;padding:6px 8px;">{{ t('modal.import.col.basic') }}</th>
+                        <th style="text-align:start;padding:6px 8px;">{{ t('modal.import.col.challenge') }}</th>
+                        <th style="text-align:start;padding:6px 8px;">{{ t('modal.import.col.status') }}</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr v-for="row in importPreview" :key="row.code" style="border-top:1px solid #243356;">
-                        <td style="padding:6px 10px;color:#94a3b8;font-size:11px;">{{ row.code }}</td>
-                        <td style="padding:6px 10px;color:#fff;font-size:12px;">{{ row.name }}</td>
-                        <td style="padding:6px 10px;color:#60a5fa;font-weight:700;">
+                        <td style="padding:6px 8px;color:#94a3b8;">{{ row.code }}</td>
+                        <td style="padding:6px 8px;color:#fff;font-weight:600;">{{ row.name }}</td>
+                        <td style="padding:6px 8px;color:#60a5fa;font-weight:700;">
                           {{ formatSAR(row.basicSumFromDays) }}
-                          <span v-if="row.basicMismatch" style="color:#fcd34d;font-size:10px;margin-right:4px;">⚠️</span>
+                          <span v-if="row.basicMismatch" style="color:#fcd34d;font-size:10px;margin-inline-start:4px;">⚠️</span>
                         </td>
-                        <td style="padding:6px 10px;color:#e6c074;font-weight:700;">
+                        <td style="padding:6px 8px;color:#e6c074;font-weight:700;">
                           {{ formatSAR(row.heroesSumFromDays) }}
-                          <span v-if="row.heroesMismatch" style="color:#fcd34d;font-size:10px;margin-right:4px;">⚠️</span>
+                          <span v-if="row.heroesMismatch" style="color:#fcd34d;font-size:10px;margin-inline-start:4px;">⚠️</span>
                         </td>
-                        <td style="padding:6px 10px;">
+                        <td style="padding:6px 8px;">
                           <span v-if="row.matchedBranchId" style="color:#34d399;">✅</span>
                           <span v-else style="color:#fb7185;">❌</span>
                         </td>
@@ -2067,133 +2072,105 @@
                 </div>
               </div>
 
-              <p style="font-size:10px;color:#94a3b8;margin:10px 0 0;text-align:center;">
+              <p style="font-size:10px;color:#94a3b8;margin:8px 0 0;text-align:center;">
                 {{ t('modal.import.note') }}
               </p>
             </div>
+          </div>
 
-            <div style="display:flex;gap:8px;margin-top:16px;">
-              <button @click="confirmImport" :disabled="importPreview.length===0" class="btn-gold"
-                :style="{border:'none', borderRadius:'12px', padding:'14px', fontSize:'14px', flex:1,
-                  cursor: importPreview.length===0 ? 'not-allowed' : 'pointer',
-                  fontWeight:'700', opacity: importPreview.length===0 ? 0.5 : 1}">
-                {{ t('modal.import.confirm', '', { count: importPreview.length }) }}
-              </button>
-              <button @click="showImportModal=false; importPreview=[]; importMeta=null;" class="btn-ghost" style="border-radius:12px;padding:14px 18px;cursor:pointer;">
-                {{ t('modal.import.cancel') }}
-              </button>
-            </div>
+          <!-- Footer -->
+          <div class="modal-footer-pro">
+            <button @click="showImportModal=false; importPreview=[]; importMeta=null;" class="btn-ghost btn-md">
+              {{ t('modal.import.cancel') }}
+            </button>
+            <button @click="confirmImport" :disabled="importPreview.length===0" class="btn-gold btn-md"
+              :style="{opacity: importPreview.length===0 ? 0.5 : 1, cursor: importPreview.length===0 ? 'not-allowed' : 'pointer'}">
+              {{ t('modal.import.confirm', '', { count: importPreview.length }) }}
+            </button>
           </div>
         </div>
       </div>
     </transition>
+
     <!-- ============================================================
          BULK IMPORT MODAL: استيراد الفروع والموظفين
          ============================================================ -->
     <transition name="fade">
       <div v-if="showBulkImportModal" class="bottom-sheet-overlay" @click.self="showBulkImportModal=false">
-        <div class="bottom-sheet" style="max-width:800px;">
+        <div class="bottom-sheet" style="max-width:780px;">
           <div class="bottom-sheet-handle"></div>
-          <div style="padding:20px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <h3 style="font-size:16px;font-weight:bold;color:#34d399;margin:0;display:flex;align-items:center;gap:8px;">
-                <span>📥</span>
-                <span>{{ t('modal.bulk.title') }}</span>
-              </h3>
-              <button @click="showBulkImportModal=false" class="modal-close-btn" aria-label="Close">✕</button>
-            </div>
 
-            <div style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:12px;font-size:12px;color:#93c5fd;margin-bottom:16px;">
-              <p style="margin:0 0 6px;font-weight:bold;">{{ t('modal.bulk.format.title') }}</p>
-              <p style="margin:0 0 4px;">{{ t('modal.bulk.format.colA') }}</p>
-              <p style="margin:0 0 4px;">{{ t('modal.bulk.format.colB') }}</p>
-              <p style="margin:0 0 4px;">{{ t('modal.bulk.format.colC') }}</p>
-              <p style="margin:0 0 4px;">{{ t('modal.bulk.format.colD') }}</p>
-              <p style="margin:0 0 4px;">{{ t('modal.bulk.format.colE') }}</p>
-              <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(59,130,246,.2);">
+          <!-- Header -->
+          <div class="modal-header-pro">
+            <h3 class="modal-title-pro">
+              <span>📥</span>
+              <span>{{ t('modal.bulk.title') }}</span>
+            </h3>
+            <button @click="showBulkImportModal=false" class="modal-close-btn" aria-label="Close">✕</button>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body-pro">
+            <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:12px;font-size:12px;color:#93c5fd;margin-bottom:14px;line-height:1.6;">
+              <p style="margin:0 0 4px;font-weight:700;">{{ t('modal.bulk.format.title') }}</p>
+              <p style="margin:0 0 2px;">{{ t('modal.bulk.format.colA') }}</p>
+              <p style="margin:0 0 2px;">{{ t('modal.bulk.format.colB') }}</p>
+              <p style="margin:0 0 2px;">{{ t('modal.bulk.format.colC') }}</p>
+              <p style="margin:0 0 2px;">{{ t('modal.bulk.format.colD') }}</p>
+              <p style="margin:0 0 2px;">{{ t('modal.bulk.format.colE') }}</p>
+              <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(59,130,246,.2);">
                 <p style="margin:0 0 4px;font-size:11px;color:#c4b5fd;">{{ t('modal.bulk.format.jobs') }}</p>
                 <div style="display:flex;flex-wrap:wrap;gap:4px;">
-                  <span v-for="jt in jobTitles" :key="jt" style="background:rgba(139,92,246,.2);color:#c4b5fd;padding:2px 8px;border-radius:4px;font-size:10px;">{{ jobTitleLabel(jt) }}</span>
+                  <span v-for="jt in jobTitles" :key="jt" style="background:rgba(139,92,246,.2);color:#c4b5fd;padding:2px 6px;border-radius:4px;font-size:10px;">{{ jobTitleLabel(jt) }}</span>
                 </div>
-                <p style="margin:6px 0 0;font-size:10px;color:#94a3b8;">{{ t('modal.bulk.format.jobsDefault') }}</p>
               </div>
-              <p style="margin:6px 0 0;color:#fcd34d;">{{ t('modal.bulk.format.skipFirst') }}</p>
             </div>
 
-            <label class="btn-ghost" style="display:block;width:100%;border-radius:12px;padding:16px;font-size:14px;cursor:pointer;text-align:center;margin-bottom:16px;">
+            <label class="btn-ghost btn-md" style="display:block;width:100%;cursor:pointer;text-align:center;margin-bottom:14px;">
               {{ t('modal.bulk.chooseFile') }}
               <input type="file" accept=".xlsx,.xls,.csv" @change="handleBulkImport" style="display:none;">
             </label>
 
-            <div v-if="bulkPreview.loaded" style="border:1px solid #243356;border-radius:12px;padding:16px;margin-bottom:16px;background:rgba(15,23,42,.3);">
-              <h4 style="font-size:13px;font-weight:bold;color:#e6c074;margin:0 0 12px;">{{ t('modal.bulk.preview.title') }}</h4>
+            <div v-if="bulkPreview.loaded" style="border:1px solid #243356;border-radius:10px;padding:14px;background:rgba(15,23,42,.35);">
+              <h4 style="font-size:12px;font-weight:bold;color:#e6c074;margin:0 0 10px;">{{ t('modal.bulk.preview.title') }}</h4>
 
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;">
-                <div style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:12px;text-align:center;">
-                  <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('modal.bulk.stats.newBranches') }}</p>
-                  <p style="font-size:22px;font-weight:900;color:#93c5fd;margin:0;">{{ bulkPreview.newBranches.length }}</p>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px;">
+                <div style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:10px;text-align:center;">
+                  <p style="font-size:10px;color:#94a3b8;margin:0 0 4px;">{{ t('modal.bulk.stats.newBranches') }}</p>
+                  <p style="font-size:20px;font-weight:900;color:#93c5fd;margin:0;">{{ bulkPreview.newBranches.length }}</p>
                 </div>
-                <div style="background:rgba(212,168,75,.1);border:1px solid rgba(212,168,75,.3);border-radius:10px;padding:12px;text-align:center;">
-                  <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('modal.bulk.stats.existingBranches') }}</p>
-                  <p style="font-size:22px;font-weight:900;color:#e6c074;margin:0;">{{ bulkPreview.existingBranches.length }}</p>
+                <div style="background:rgba(212,168,75,.1);border:1px solid rgba(212,168,75,.3);border-radius:8px;padding:10px;text-align:center;">
+                  <p style="font-size:10px;color:#94a3b8;margin:0 0 4px;">{{ t('modal.bulk.stats.existingBranches') }}</p>
+                  <p style="font-size:20px;font-weight:900;color:#e6c074;margin:0;">{{ bulkPreview.existingBranches.length }}</p>
                 </div>
-                <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:12px;text-align:center;">
-                  <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('modal.bulk.stats.newStaff') }}</p>
-                  <p style="font-size:22px;font-weight:900;color:#6ee7b7;margin:0;">{{ bulkPreview.newStaff.length }}</p>
+                <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:10px;text-align:center;">
+                  <p style="font-size:10px;color:#94a3b8;margin:0 0 4px;">{{ t('modal.bulk.stats.newStaff') }}</p>
+                  <p style="font-size:20px;font-weight:900;color:#6ee7b7;margin:0;">{{ bulkPreview.newStaff.length }}</p>
                 </div>
-                <div style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:10px;padding:12px;text-align:center;">
-                  <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('modal.bulk.stats.duplicates') }}</p>
-                  <p style="font-size:22px;font-weight:900;color:#fda4af;margin:0;">{{ bulkPreview.duplicateStaff.length }}</p>
-                </div>
-              </div>
-
-              <div v-if="bulkPreview.newBranches.length > 0" style="margin-bottom:12px;">
-                <p style="font-size:12px;font-weight:bold;color:#93c5fd;margin:0 0 8px;">{{ t('modal.bulk.newBranches.header') }}</p>
-                <div style="display:flex;flex-wrap:wrap;gap:6px;">
-                  <span v-for="b in bulkPreview.newBranches" :key="b.code" style="background:rgba(59,130,246,.2);color:#93c5fd;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;">
-                    {{ b.code }} — {{ b.name }}
-                  </span>
-                </div>
-              </div>
-
-              <div v-if="bulkPreview.existingBranches.length > 0" style="margin-bottom:12px;">
-                <p style="font-size:12px;font-weight:bold;color:#e6c074;margin:0 0 8px;">{{ t('modal.bulk.existingBranches.header') }}</p>
-                <div style="display:flex;flex-wrap:wrap;gap:6px;">
-                  <span v-for="b in bulkPreview.existingBranches" :key="b.code" style="background:rgba(212,168,75,.2);color:#e6c074;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;">
-                    {{ b.code }} — {{ b.name }} ({{ t('modal.bulk.existingBranches.count', '', { count: b.staffCount }) }})
-                  </span>
+                <div style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:8px;padding:10px;text-align:center;">
+                  <p style="font-size:10px;color:#94a3b8;margin:0 0 4px;">{{ t('modal.bulk.stats.duplicates') }}</p>
+                  <p style="font-size:20px;font-weight:900;color:#fda4af;margin:0;">{{ bulkPreview.duplicateStaff.length }}</p>
                 </div>
               </div>
 
               <div v-if="bulkPreview.newStaff.length > 0" style="margin-bottom:12px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-                  <p style="font-size:12px;font-weight:bold;color:#6ee7b7;margin:0;">{{ t('modal.bulk.newStaff.header', '', { count: bulkPreview.newStaff.length }) }}</p>
-                  <p style="font-size:10px;color:#94a3b8;margin:0;">{{ t('modal.bulk.newStaff.hint') }}</p>
-                </div>
-                <div style="max-height:280px;overflow-y:auto;border:1px solid #243356;border-radius:8px;">
-                  <table style="width:100%;font-size:12px;border-collapse:collapse;">
+                <div style="max-height:240px;overflow-y:auto;border:1px solid #243356;border-radius:8px;">
+                  <table style="width:100%;font-size:11px;border-collapse:collapse;">
                     <thead style="position:sticky;top:0;background:#1a2540;z-index:1;">
                       <tr style="color:#94a3b8;font-size:10px;">
-                        <th style="text-align:right;padding:6px 10px;">{{ t('modal.bulk.col.employee') }}</th>
-                        <th style="text-align:right;padding:6px 10px;">{{ t('modal.bulk.col.code') }}</th>
-                        <th style="text-align:right;padding:6px 10px;">{{ t('modal.bulk.col.branch') }}</th>
-                        <th style="text-align:right;padding:6px 10px;">{{ t('modal.bulk.col.jobTitle') }}</th>
+                        <th style="text-align:start;padding:6px 8px;">{{ t('modal.bulk.col.employee') }}</th>
+                        <th style="text-align:start;padding:6px 8px;">{{ t('modal.bulk.col.code') }}</th>
+                        <th style="text-align:start;padding:6px 8px;">{{ t('modal.bulk.col.branch') }}</th>
+                        <th style="text-align:start;padding:6px 8px;">{{ t('modal.bulk.col.jobTitle') }}</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr v-for="(s, idx) in bulkPreview.newStaff" :key="s.code + '_' + idx" style="border-top:1px solid #243356;">
-                        <td style="padding:6px 10px;color:#fff;">{{ s.name }}</td>
-                        <td style="padding:6px 10px;color:#94a3b8;">{{ s.code }}</td>
-                        <td style="padding:6px 10px;color:#93c5fd;font-size:11px;">{{ s.branchName }}</td>
-                        <td style="padding:6px 10px;">
-                          <select v-model="bulkPreview.newStaff[idx].jobTitle"
-                            :style="{
-                              background: isJobTitleValid(s.jobTitle) ? 'rgba(139,92,246,.15)' : 'rgba(244,63,94,.15)',
-                              border: '1px solid ' + (isJobTitleValid(s.jobTitle) ? 'rgba(139,92,246,.5)' : 'rgba(244,63,94,.5)'),
-                              color: isJobTitleValid(s.jobTitle) ? '#c4b5fd' : '#fda4af',
-                              borderRadius: '6px', padding: '4px 8px', fontSize: '11px',
-                              fontFamily: 'inherit', fontWeight: '600', width: '100%', cursor: 'pointer'
-                            }">
+                        <td style="padding:6px 8px;color:#fff;font-weight:600;">{{ s.name }}</td>
+                        <td style="padding:6px 8px;color:#94a3b8;">{{ s.code }}</td>
+                        <td style="padding:6px 8px;color:#93c5fd;font-size:11px;">{{ s.branchName }}</td>
+                        <td style="padding:6px 8px;">
+                          <select v-model="bulkPreview.newStaff[idx].jobTitle" class="input" style="min-height:30px;padding:4px 8px;font-size:11px;">
                             <option v-for="jt in jobTitles" :key="jt" :value="jt">{{ jobTitleLabel(jt) }}</option>
                             <option v-if="!isJobTitleValid(s.jobTitle)" :value="s.jobTitle">⚠️ {{ jobTitleLabel(s.jobTitle) }}</option>
                           </select>
@@ -2202,45 +2179,16 @@
                     </tbody>
                   </table>
                 </div>
-                <div v-if="staffJobStats.length > 0" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
-                  <span v-for="stat in staffJobStats" :key="stat.title"
-                    :style="{
-                      background: stat.valid ? 'rgba(139,92,246,.15)' : 'rgba(244,63,94,.15)',
-                      border: '1px solid ' + (stat.valid ? 'rgba(139,92,246,.4)' : 'rgba(244,63,94,.4)'),
-                      color: stat.valid ? '#c4b5fd' : '#fda4af',
-                      padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600'
-                    }">
-                    {{ stat.title }}: {{ stat.count }}
-                  </span>
-                </div>
-              </div>
-
-              <div v-if="bulkPreview.duplicateStaff.length > 0" style="margin-bottom:12px;">
-                <p style="font-size:12px;font-weight:bold;color:#fda4af;margin:0 0 8px;">{{ t('modal.bulk.duplicates.header') }}</p>
-                <div style="max-height:120px;overflow-y:auto;background:rgba(244,63,94,.05);border:1px solid rgba(244,63,94,.2);border-radius:8px;padding:8px;">
-                  <p v-for="s in bulkPreview.duplicateStaff.slice(0, 20)" :key="s.code" style="font-size:11px;color:#fda4af;margin:4px 0;">
-                    • {{ s.name }} ({{ s.code }}) — {{ s.reason }}
-                  </p>
-                  <p v-if="bulkPreview.duplicateStaff.length > 20" style="text-align:center;font-size:10px;color:#64748b;margin:4px 0;">
-                    {{ t('modal.bulk.duplicates.more', '', { count: bulkPreview.duplicateStaff.length - 20 }) }}
-                  </p>
-                </div>
-              </div>
-
-              <div v-if="bulkPreview.branchNameConflicts.length > 0" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:10px;margin-top:12px;">
-                <p style="font-size:11px;color:#fcd34d;margin:0;font-weight:bold;">{{ t('modal.bulk.conflicts.title') }}</p>
-                <ul style="font-size:11px;color:#fcd34d;margin:6px 0 0;padding-right:20px;">
-                  <li v-for="(c, i) in bulkPreview.branchNameConflicts" :key="i">{{ c }}</li>
-                </ul>
               </div>
             </div>
+          </div>
 
-            <div style="display:flex;gap:8px;">
-              <button @click="confirmBulkImport" :disabled="!bulkPreview.loaded || (bulkPreview.newBranches.length===0 && bulkPreview.newStaff.length===0)" class="btn-gold" style="border:none;border-radius:12px;padding:14px;font-size:14px;flex:1;cursor:pointer;font-weight:700;">
-                {{ t('modal.bulk.confirm', '', { branches: bulkPreview.newBranches.length, staff: bulkPreview.newStaff.length }) }}
-              </button>
-              <button @click="showBulkImportModal=false" class="btn-ghost" style="border-radius:12px;padding:14px 18px;cursor:pointer;">{{ t('modal.bulk.cancel') }}</button>
-            </div>
+          <!-- Footer -->
+          <div class="modal-footer-pro">
+            <button @click="showBulkImportModal=false" class="btn-ghost btn-md">{{ t('modal.bulk.cancel') }}</button>
+            <button @click="confirmBulkImport" :disabled="!bulkPreview.loaded || (bulkPreview.newBranches.length===0 && bulkPreview.newStaff.length===0)" class="btn-gold btn-md">
+              {{ t('modal.bulk.confirm', '', { branches: bulkPreview.newBranches.length, staff: bulkPreview.newStaff.length }) }}
+            </button>
           </div>
         </div>
       </div>
@@ -2252,16 +2200,18 @@
       <div v-if="showShareModal" class="bottom-sheet-overlay" @click.self="showShareModal=false" style="z-index:80;">
         <div class="bottom-sheet" style="max-width:560px;">
           <div class="bottom-sheet-handle"></div>
-          <div style="padding:20px;">
 
-            <!-- Header -->
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <h3 style="font-size:16px;font-weight:bold;color:#e6c074;margin:0;display:flex;align-items:center;gap:8px;">
-                <span>📤</span>
-                <span>{{ t('modal.share.title') }}</span>
-              </h3>
-              <button @click="showShareModal=false" class="modal-close-btn" aria-label="Close">✕</button>
-            </div>
+          <!-- Header -->
+          <div class="modal-header-pro">
+            <h3 class="modal-title-pro">
+              <span>📤</span>
+              <span>{{ t('modal.share.title') }}</span>
+            </h3>
+            <button @click="showShareModal=false" class="modal-close-btn" aria-label="Close">✕</button>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body-pro">
 
             <!-- Options -->
             <div class="share-options-panel">
@@ -2474,39 +2424,50 @@
     <!-- ============================================================
          BACKUP MODAL
          ============================================================ -->
+    <!-- ============================================================
+         BACKUP MODAL
+         ============================================================ -->
     <transition name="fade">
       <div v-if="showBackupModal" class="bottom-sheet-overlay" @click.self="showBackupModal=false">
         <div class="bottom-sheet" style="max-width:520px;">
           <div class="bottom-sheet-handle"></div>
-          <div style="padding:20px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <h3 style="font-size:16px;font-weight:bold;color:#e6c074;margin:0;display:flex;align-items:center;gap:8px;">
-                <span>💾</span>
-                <span>{{ t('modal.backup.title') }}</span>
-              </h3>
-              <button @click="showBackupModal=false" class="modal-close-btn" aria-label="Close">✕</button>
-            </div>
-            <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:12px;font-size:12px;color:#6ee7b7;margin-bottom:16px;">
+          <!-- Header -->
+          <div class="modal-header-pro">
+            <h3 class="modal-title-pro">
+              <span>💾</span>
+              <span>{{ t('modal.backup.title') }}</span>
+            </h3>
+            <button @click="showBackupModal=false" class="modal-close-btn" aria-label="Close">✕</button>
+          </div>
+          <!-- Body -->
+          <div class="modal-body-pro">
+            <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:10px 12px;font-size:12px;color:#6ee7b7;margin-bottom:14px;line-height:1.5;">
               {{ t('modal.backup.info') }}
             </div>
-            <div style="display:flex;flex-direction:column;gap:12px;">
-              <button @click="exportBackup" class="btn-gold" style="border:none;border-radius:12px;padding:14px;cursor:pointer;font-size:14px;">{{ t('modal.backup.export') }}</button>
-              <label class="btn-ghost" style="border-radius:12px;padding:14px;cursor:pointer;text-align:center;display:block;font-size:14px;">
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <button @click="exportBackup" class="btn-gold btn-md" style="width:100%;font-weight:700;">{{ t('modal.backup.export') }}</button>
+              <label class="btn-ghost btn-md" style="width:100%;cursor:pointer;text-align:center;display:block;">
                 {{ t('modal.backup.import') }}
                 <input type="file" accept=".json" @change="importBackup" style="display:none;">
               </label>
-              <div style="border-top:1px solid #243356;padding-top:12px;">
-                <h4 style="font-size:12px;color:#e6c074;margin:0 0 8px;">{{ t('modal.backup.auto.header', '', { count: autoBackups.length }) }}</h4>
-                <div v-if="autoBackups.length===0" style="font-size:11px;color:#94a3b8;text-align:center;padding:8px;">{{ t('modal.backup.auto.empty') }}</div>
-                <div v-else style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;">
-                  <div v-for="(bk,i) in autoBackups" :key="i" style="background:rgba(15,23,42,.5);border-radius:8px;padding:10px 12px;font-size:11px;display:flex;justify-content:space-between;align-items:center;">
+              <div style="border-top:1px solid #243356;padding-top:12px;margin-top:4px;">
+                <h4 style="font-size:12px;color:#e6c074;margin:0 0 8px;font-weight:700;">{{ t('modal.backup.auto.header', '', { count: autoBackups.length }) }}</h4>
+                <div v-if="autoBackups.length===0" style="font-size:11px;color:#94a3b8;text-align:center;padding:10px;">{{ t('modal.backup.auto.empty') }}</div>
+                <div v-else style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;padding-right:2px;">
+                  <div v-for="(bk,i) in autoBackups" :key="i" style="background:rgba(15,23,42,.5);border:1px solid #243356;border-radius:8px;padding:8px 12px;font-size:11px;display:flex;justify-content:space-between;align-items:center;">
                     <span style="color:#94a3b8;">{{ bk.date }}</span>
-                    <button @click="restoreAutoBackup(i)" style="color:#e6c074;background:none;border:none;cursor:pointer;font-size:11px;font-weight:700;">{{ t('modal.backup.auto.restore') }}</button>
+                    <button @click="restoreAutoBackup(i)" class="btn-ghost btn-sm" style="color:#e6c074;padding:3px 8px;font-size:11px;font-weight:700;">{{ t('modal.backup.auto.restore') }}</button>
                   </div>
                 </div>
               </div>
-              <button v-if="currentUser.role==='admin'" @click="clearAll" class="btn-danger" style="border-radius:12px;padding:14px;cursor:pointer;font-size:14px;">{{ t('modal.backup.clearAll') }}</button>
+              <button v-if="currentUser.role==='admin'" @click="clearAll" class="btn-danger-subtle btn-sm" style="width:100%;margin-top:6px;">{{ t('modal.backup.clearAll') }}</button>
             </div>
+          </div>
+          <!-- Footer -->
+          <div class="modal-footer-pro">
+            <button @click="showBackupModal=false" class="btn-ghost btn-md" style="width:100%;">
+              {{ t('common.close', 'إغلاق') }}
+            </button>
           </div>
         </div>
       </div>
@@ -2516,22 +2477,31 @@
          ============================================================ -->
     <transition name="fade">
       <div v-if="showActivityLog" class="bottom-sheet-overlay" @click.self="showActivityLog=false">
-        <div class="bottom-sheet" style="max-width:520px;">
+        <div class="bottom-sheet" style="max-width:540px;">
           <div class="bottom-sheet-handle"></div>
-          <div style="padding:20px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <h3 style="font-size:16px;font-weight:bold;color:#e6c074;margin:0;">{{ t('modal.activity.title') }}</h3>
-              <button @click="showActivityLog=false" style="color:#94a3b8;font-size:24px;background:none;border:none;cursor:pointer;">✕</button>
-            </div>
-            <div v-if="activityLog.length===0" style="text-align:center;color:#94a3b8;padding:24px;">{{ t('modal.activity.empty') }}</div>
-            <div v-else style="display:flex;flex-direction:column;gap:6px;max-height:500px;overflow-y:auto;">
-              <div v-for="(log, i) in activityLog" :key="i" style="background:rgba(15,23,42,.5);border-radius:8px;padding:10px 12px;font-size:12px;">
-                <p style="color:#fff;margin:0;font-weight:600;">{{ log.action }}</p>
-                <p style="color:#94a3b8;margin:4px 0 0;font-size:11px;">{{ log.details }}</p>
-                <p style="color:#64748b;margin:4px 0 0;font-size:10px;">{{ log.time }} • {{ log.user }}</p>
+          <!-- Header -->
+          <div class="modal-header-pro">
+            <h3 class="modal-title-pro">
+              <span>📜</span>
+              <span>{{ t('modal.activity.title') }}</span>
+            </h3>
+            <button @click="showActivityLog=false" class="modal-close-btn" aria-label="Close">✕</button>
+          </div>
+          <!-- Body -->
+          <div class="modal-body-pro">
+            <div v-if="activityLog.length===0" style="text-align:center;color:#94a3b8;padding:28px 16px;font-size:12px;">{{ t('modal.activity.empty') }}</div>
+            <div v-else style="display:flex;flex-direction:column;gap:6px;max-height:420px;overflow-y:auto;padding-right:2px;">
+              <div v-for="(log, i) in activityLog" :key="i" style="background:rgba(15,23,42,.5);border:1px solid #243356;border-radius:8px;padding:8px 12px;font-size:12px;">
+                <p style="color:#fff;margin:0;font-weight:600;font-size:12px;">{{ log.action }}</p>
+                <p style="color:#94a3b8;margin:3px 0 0;font-size:11px;">{{ log.details }}</p>
+                <p style="color:#64748b;margin:3px 0 0;font-size:10px;">{{ log.time }} • {{ log.user }}</p>
               </div>
             </div>
-            <button @click="clearActivityLog" class="btn-ghost" style="width:100%;border-radius:10px;padding:10px;margin-top:12px;cursor:pointer;font-size:12px;color:#fda4af;">{{ t('modal.activity.clear') }}</button>
+          </div>
+          <!-- Footer -->
+          <div class="modal-footer-pro">
+            <button @click="clearActivityLog" class="btn-danger-subtle btn-sm">{{ t('modal.activity.clear') }}</button>
+            <button @click="showActivityLog=false" class="btn-ghost btn-sm">{{ t('common.close', 'إغلاق') }}</button>
           </div>
         </div>
       </div>
@@ -2541,25 +2511,26 @@
          ============================================================ -->
     <transition name="fade">
       <div v-if="showCompareModal" class="bottom-sheet-overlay" @click.self="showCompareModal=false">
-        <div class="bottom-sheet" style="max-width:900px;">
+        <div class="bottom-sheet" style="max-width:880px;">
           <div class="bottom-sheet-handle"></div>
-          <div style="padding:20px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <h3 style="font-size:16px;font-weight:bold;color:#93c5fd;margin:0;display:flex;align-items:center;gap:8px;">
-                <span>👥</span>
-                <span>{{ t('modal.compare.title') }}</span>
-              </h3>
-              <button @click="showCompareModal=false" class="modal-close-btn" aria-label="Close">✕</button>
-            </div>
-
-            <div v-if="!selectedBranch" style="text-align:center;padding:30px;color:#94a3b8;">
+          <!-- Header -->
+          <div class="modal-header-pro">
+            <h3 class="modal-title-pro">
+              <span>👥</span>
+              <span>{{ t('modal.compare.title') }}</span>
+            </h3>
+            <button @click="showCompareModal=false" class="modal-close-btn" aria-label="Close">✕</button>
+          </div>
+          <!-- Body -->
+          <div class="modal-body-pro">
+            <div v-if="!selectedBranch" style="text-align:center;padding:24px;color:#94a3b8;font-size:12px;">
               {{ t('modal.compare.noBranch') }}
             </div>
-            <div v-else-if="staffRowsComputed.length === 0" style="text-align:center;padding:30px;color:#94a3b8;">
+            <div v-else-if="staffRowsComputed.length === 0" style="text-align:center;padding:24px;color:#94a3b8;font-size:12px;">
               {{ t('modal.compare.noStaff') }}
             </div>
             <div v-else>
-              <p style="font-size:12px;color:#94a3b8;margin:0 0 16px;">
+              <p style="font-size:11px;color:#94a3b8;margin:0 0 12px;">
                 {{ t('modal.compare.subtitle', '', { branch: selectedBranch.name, date: selectedDate }) }}
               </p>
 
@@ -2568,46 +2539,52 @@
                      :class="['compare-card', idx===0 ? 'rank-1' : idx===1 ? 'rank-2' : idx===2 ? 'rank-3' : '']">
                   <div class="compare-rank-badge">#{{ idx + 1 }}</div>
 
-                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-                    <div class="staff-avatar">
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <div class="staff-avatar" style="width:36px;height:36px;font-size:14px;">
                       <img v-if="getStaffPhoto(emp.id)" :src="getStaffPhoto(emp.id)" :alt="emp.name">
                       <span v-else>{{ emp.name.charAt(0) }}</span>
                     </div>
                     <div style="flex:1;min-width:0;">
-                      <p style="font-weight:800;color:#fff;margin:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                      <p style="font-weight:700;color:#fff;margin:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                         {{ emp.name }}
                         <span v-if="emp.isTop" style="color:#e6c074;">🏆</span>
                       </p>
-                      <p style="font-size:11px;color:#93c5fd;margin:2px 0 0;">{{ jobTitleLabel(emp.jobTitle) }}</p>
+                      <p style="font-size:10px;color:#93c5fd;margin:1px 0 0;">{{ jobTitleLabel(emp.jobTitle) }}</p>
                     </div>
                   </div>
 
-                  <div class="compare-metric-grid">
-                    <div class="compare-metric">
-                      <p class="label">{{ t('modal.compare.sales') }}</p>
-                      <p class="value">{{ formatSAR(emp.sales) }}</p>
+                  <div class="compare-metric-grid" style="gap:6px;margin-bottom:10px;">
+                    <div class="compare-metric" style="padding:6px 8px;">
+                      <p class="label" style="font-size:9px;">{{ t('modal.compare.sales') }}</p>
+                      <p class="value" style="font-size:12px;">{{ formatSAR(emp.sales) }}</p>
                     </div>
-                    <div class="compare-metric">
-                      <p class="label">{{ t('modal.compare.target') }}</p>
-                      <p class="value" style="color:#60a5fa;">{{ formatSAR(emp.target) }}</p>
+                    <div class="compare-metric" style="padding:6px 8px;">
+                      <p class="label" style="font-size:9px;">{{ t('modal.compare.target') }}</p>
+                      <p class="value" style="color:#60a5fa;font-size:12px;">{{ formatSAR(emp.target) }}</p>
                     </div>
-                    <div class="compare-metric">
-                      <p class="label">{{ t('modal.compare.achievement') }}</p>
-                      <p class="value" :style="{color: emp.pct>=100 ? '#34d399' : emp.pct>=70 ? '#fbbf24' : '#fb7185'}">{{ emp.pct.toFixed(0) }}%</p>
+                    <div class="compare-metric" style="padding:6px 8px;">
+                      <p class="label" style="font-size:9px;">{{ t('modal.compare.achievement') }}</p>
+                      <p class="value" :style="{color: emp.pct>=100 ? '#34d399' : emp.pct>=70 ? '#fbbf24' : '#fb7185', fontSize:'12px'}">{{ emp.pct.toFixed(0) }}%</p>
                     </div>
-                    <div class="compare-metric">
-                      <p class="label">{{ t('modal.compare.heroes') }}</p>
-                      <p class="value" :style="{color: emp.heroesPct>=100 ? '#34d399' : emp.heroesPct>=70 ? '#fbbf24' : '#fb7185'}">{{ emp.heroesPct.toFixed(0) }}%</p>
+                    <div class="compare-metric" style="padding:6px 8px;">
+                      <p class="label" style="font-size:9px;">{{ t('modal.compare.heroes') }}</p>
+                      <p class="value" :style="{color: emp.heroesPct>=100 ? '#34d399' : emp.heroesPct>=70 ? '#fbbf24' : '#fb7185', fontSize:'12px'}">{{ emp.heroesPct.toFixed(0) }}%</p>
                     </div>
                   </div>
 
-                  <div class="compare-bar">
+                  <div class="compare-bar" style="height:4px;">
                     <div class="compare-bar-fill"
                          :style="{width: Math.min(emp.pct,100)+'%', background: emp.pct>=100 ? '#10b981' : emp.pct>=70 ? '#f59e0b' : '#ef4444'}"></div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+          <!-- Footer -->
+          <div class="modal-footer-pro">
+            <button @click="showCompareModal=false" class="btn-ghost btn-md" style="width:100%;">
+              {{ t('common.close', 'إغلاق') }}
+            </button>
           </div>
         </div>
       </div>
@@ -2669,73 +2646,71 @@
          ============================================================ -->
     <transition name="fade">
       <div v-if="showSettings" class="bottom-sheet-overlay" @click.self="showSettings=false" style="z-index:80;">
-        <div class="bottom-sheet" style="max-width:680px;">
+        <div class="bottom-sheet" style="max-width:660px;">
           <div class="bottom-sheet-handle"></div>
-          <div style="padding:20px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <h2 style="font-size:18px;font-weight:900;color:#e6c074;margin:0;display:flex;align-items:center;gap:8px;">
-                <span>⚙️</span>
-                <span>{{ t('settings.title').replace('⚙️ ', '') }}</span>
-              </h2>
-              <button @click="showSettings=false" class="modal-close-btn" aria-label="Close">✕</button>
-            </div>
 
-            <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:12px;border-bottom:1px solid #243356;margin-bottom:16px;">
+          <!-- Header -->
+          <div class="modal-header-pro">
+            <h3 class="modal-title-pro">
+              <span>⚙️</span>
+              <span>{{ t('settings.title').replace('⚙️ ', '') }}</span>
+            </h3>
+            <button @click="showSettings=false" class="modal-close-btn" aria-label="Close">✕</button>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body-pro">
+            <!-- Modern Segmented Tabs Navigation -->
+            <div class="settings-tabs-nav">
               <button v-for="st in settingsTabs" :key="st.id" @click="settingsTab=st.id"
-                :class="['settings-option', settingsTab===st.id ? 'active' : '']"
-                style="flex:none;white-space:nowrap;padding:8px 14px;font-size:12px;">
-                {{ st.icon }} {{ t('settings.tabs.' + st.id, st.label) }}
+                :class="['settings-tab-btn', settingsTab===st.id ? 'active' : '']">
+                <span>{{ st.icon }}</span>
+                <span>{{ t('settings.tabs.' + st.id, st.label) }}</span>
               </button>
             </div>
 
-            <!-- TAB: appearance -->
+            <!-- ==========================================
+                 TAB 1: APPEARANCE & THEME (المظهر والسمة)
+                 ========================================== -->
             <div v-show="settingsTab==='appearance'">
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.appearance.fontSize') }}</h4>
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <span style="font-size:12px;color:#94a3b8;">{{ t('settings.appearance.small') }}</span>
-                  <input type="range" min="13" max="20" step="1" v-model.number="settings.fontSize" @input="applyFontSize" class="settings-range">
-                  <span style="font-size:12px;color:#94a3b8;">{{ t('settings.appearance.large') }}</span>
-                </div>
-                <p style="text-align:center;margin:8px 0 0;font-size:12px;color:#e6c074;font-weight:700;">{{ t('settings.appearance.currentSize', '', { size: settings.fontSize }) }}</p>
-              </div>
-
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.appearance.fontFamily') }}</h4>
+              <!-- Mode Selection -->
+              <div class="settings-card">
+                <h4 class="settings-label">🌓 {{ t('settings.appearance.mode') }}</h4>
                 <div class="settings-option-row">
-                  <button @click="settings.fontFamily='cairo'; applyFontFamily()" :class="['settings-option', settings.fontFamily==='cairo' ? 'active' : '']">Cairo</button>
-                  <button @click="settings.fontFamily='tajawal'; applyFontFamily()" :class="['settings-option', settings.fontFamily==='tajawal' ? 'active' : '']">Tajawal</button>
-                  <button @click="settings.fontFamily='ibm'; applyFontFamily()" :class="['settings-option', settings.fontFamily==='ibm' ? 'active' : '']">IBM Plex</button>
-                  <button @click="settings.fontFamily='almarai'; applyFontFamily()" :class="['settings-option', settings.fontFamily==='almarai' ? 'active' : '']">Almarai</button>
+                  <button @click="setTheme('dark')" :class="['settings-option', settings.themeMode==='dark' ? 'active' : '']">🌙 {{ t('settings.appearance.mode.dark') }}</button>
+                  <button @click="setTheme('light')" :class="['settings-option', settings.themeMode==='light' ? 'active' : '']">☀️ {{ t('settings.appearance.mode.light') }}</button>
+                  <button @click="setTheme('auto')" :class="['settings-option', settings.themeMode==='auto' ? 'active' : '']">⚙️ {{ t('settings.appearance.mode.auto') }}</button>
                 </div>
               </div>
 
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.appearance.density') }}</h4>
+              <!-- Light Theme Variant (if light mode) -->
+              <div v-if="!darkMode" class="settings-card">
+                <h4 class="settings-label">🎨 {{ t('settings.appearance.lightTheme') }}</h4>
                 <div class="settings-option-row">
-                  <button @click="settings.density='compact'; applyDensity()" :class="['settings-option', settings.density==='compact' ? 'active' : '']">{{ t('settings.appearance.density.compact') }}</button>
-                  <button @click="settings.density='normal'; applyDensity()" :class="['settings-option', settings.density==='normal' ? 'active' : '']">{{ t('settings.appearance.density.normal') }}</button>
-                  <button @click="settings.density='cozy'; applyDensity()" :class="['settings-option', settings.density==='cozy' ? 'active' : '']">{{ t('settings.appearance.density.cozy') }}</button>
+                  <button @click="settings.lightTheme='classic'; applyLightTheme()" :class="['settings-option', settings.lightTheme==='classic' ? 'active' : '']">{{ t('settings.appearance.lightTheme.classic') }}</button>
+                  <button @click="settings.lightTheme='warm'; applyLightTheme()" :class="['settings-option', settings.lightTheme==='warm' ? 'active' : '']">{{ t('settings.appearance.lightTheme.warm') }}</button>
+                  <button @click="settings.lightTheme='gray'; applyLightTheme()" :class="['settings-option', settings.lightTheme==='gray' ? 'active' : '']">{{ t('settings.appearance.lightTheme.gray') }}</button>
                 </div>
               </div>
 
-              <!-- ⭐ v23.13: اختيار شكل رمز العملة (الرمز الجديد أو ر.س) -->
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.appearance.currencyFormat') }}</h4>
-                <div class="settings-option-row">
-                  <button @click="settings.currencyFormat='symbol'; saveSettingsToStorage()" :class="['settings-option', (settings.currencyFormat||'symbol')==='symbol' ? 'active' : '']">
-                    {{ t('settings.appearance.currencySymbol') }}
-                  </button>
-                  <button @click="settings.currencyFormat='text'; saveSettingsToStorage()" :class="['settings-option', settings.currencyFormat==='text' ? 'active' : '']">
-                    {{ t('settings.appearance.currencyText') }}
-                  </button>
+              <!-- Primary Color Palette -->
+              <div class="settings-card">
+                <h4 class="settings-label">🌈 {{ t('settings.colors.title') }}</h4>
+                <p class="settings-subtext">{{ t('settings.colors.subtitle') }}</p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:6px 0;">
+                  <div v-for="c in colorPalette" :key="c.id" @click="setPrimaryColor(c)"
+                    :class="['color-swatch-sm', settings.primaryColor===c.id ? 'active' : '']"
+                    :style="{background:'linear-gradient(135deg, ' + c.primary + ', ' + c.secondary + ')'}"
+                    :title="t('color.' + c.id, c.name)">
+                    <span v-if="settings.primaryColor===c.id">✓</span>
+                  </div>
                 </div>
-                <p style="margin:8px 0 0;font-size:11px;color:#94a3b8;line-height:1.4;">{{ t('settings.appearance.currencyHint') }}</p>
               </div>
 
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.appearance.presets') }}</h4>
-                <div style="display:flex;flex-direction:column;gap:8px;">
+              <!-- Theme Presets -->
+              <div class="settings-card">
+                <h4 class="settings-label">✨ {{ t('settings.appearance.presets') }}</h4>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;">
                   <button v-for="preset in themePresets" :key="preset.id"
                     @click="applyThemePreset(preset)"
                     :class="['theme-preset', (settings.primaryColor===preset.primary && settings.themeMode===preset.mode) ? 'active' : '']"
@@ -2752,229 +2727,247 @@
                 </div>
               </div>
 
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.appearance.mode') }}</h4>
-                <div class="settings-option-row">
-                  <button @click="setTheme('dark')" :class="['settings-option', settings.themeMode==='dark' ? 'active' : '']">{{ t('settings.appearance.mode.dark') }}</button>
-                  <button @click="setTheme('light')" :class="['settings-option', settings.themeMode==='light' ? 'active' : '']">{{ t('settings.appearance.mode.light') }}</button>
-                  <button @click="setTheme('auto')" :class="['settings-option', settings.themeMode==='auto' ? 'active' : '']">{{ t('settings.appearance.mode.auto') }}</button>
+              <!-- Typography & Size -->
+              <div class="settings-card">
+                <h4 class="settings-label">🔤 {{ t('settings.appearance.fontFamily') }}</h4>
+                <div class="settings-option-row" style="margin-bottom:14px;">
+                  <button @click="settings.fontFamily='cairo'; applyFontFamily()" :class="['settings-option', settings.fontFamily==='cairo' ? 'active' : '']">Cairo</button>
+                  <button @click="settings.fontFamily='tajawal'; applyFontFamily()" :class="['settings-option', settings.fontFamily==='tajawal' ? 'active' : '']">Tajawal</button>
+                  <button @click="settings.fontFamily='ibm'; applyFontFamily()" :class="['settings-option', settings.fontFamily==='ibm' ? 'active' : '']">IBM Plex</button>
+                  <button @click="settings.fontFamily='almarai'; applyFontFamily()" :class="['settings-option', settings.fontFamily==='almarai' ? 'active' : '']">Almarai</button>
                 </div>
+
+                <h4 class="settings-label">{{ t('settings.appearance.fontSize') }}</h4>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="font-size:11px;color:#94a3b8;">{{ t('settings.appearance.small') }}</span>
+                  <input type="range" min="13" max="20" step="1" v-model.number="settings.fontSize" @input="applyFontSize" class="settings-range" style="flex:1;">
+                  <span style="font-size:11px;color:#94a3b8;">{{ t('settings.appearance.large') }}</span>
+                </div>
+                <p style="text-align:center;margin:6px 0 0;font-size:11px;color:#e6c074;font-weight:700;">{{ t('settings.appearance.currentSize', '', { size: settings.fontSize }) }}</p>
               </div>
 
-              <div v-if="!darkMode" class="settings-section">
-                <h4 class="settings-label">{{ t('settings.appearance.lightTheme') }}</h4>
-                <div class="settings-option-row">
-                  <button @click="settings.lightTheme='classic'; applyLightTheme()" :class="['settings-option', settings.lightTheme==='classic' ? 'active' : '']">{{ t('settings.appearance.lightTheme.classic') }}</button>
-                  <button @click="settings.lightTheme='warm'; applyLightTheme()" :class="['settings-option', settings.lightTheme==='warm' ? 'active' : '']">{{ t('settings.appearance.lightTheme.warm') }}</button>
-                  <button @click="settings.lightTheme='gray'; applyLightTheme()" :class="['settings-option', settings.lightTheme==='gray' ? 'active' : '']">{{ t('settings.appearance.lightTheme.gray') }}</button>
+              <!-- UI Density & Currency -->
+              <div class="settings-card">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                  <div>
+                    <h4 class="settings-label">📐 {{ t('settings.appearance.density') }}</h4>
+                    <div class="settings-option-row">
+                      <button @click="settings.density='compact'; applyDensity()" :class="['settings-option', settings.density==='compact' ? 'active' : '']">{{ t('settings.appearance.density.compact') }}</button>
+                      <button @click="settings.density='normal'; applyDensity()" :class="['settings-option', settings.density==='normal' ? 'active' : '']">{{ t('settings.appearance.density.normal') }}</button>
+                      <button @click="settings.density='cozy'; applyDensity()" :class="['settings-option', settings.density==='cozy' ? 'active' : '']">{{ t('settings.appearance.density.cozy') }}</button>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 class="settings-label">💰 {{ t('settings.appearance.currencyFormat') }}</h4>
+                    <div class="settings-option-row">
+                      <button @click="settings.currencyFormat='symbol'; saveSettingsToStorage()" :class="['settings-option', (settings.currencyFormat||'symbol')==='symbol' ? 'active' : '']">
+                        {{ t('settings.appearance.currencySymbol') }}
+                      </button>
+                      <button @click="settings.currencyFormat='text'; saveSettingsToStorage()" :class="['settings-option', settings.currencyFormat==='text' ? 'active' : '']">
+                        {{ t('settings.appearance.currencyText') }}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- TAB: identity -->
+            <!-- ==========================================
+                 TAB 2: IDENTITY & BRANDING (الهوية والمنشأة)
+                 ========================================== -->
             <div v-show="settingsTab==='identity'">
-              <div class="settings-section" style="padding-top:0;">
-                <div style="background:linear-gradient(135deg,rgba(212,168,75,.1),transparent);border:1px solid rgba(212,168,75,.3);border-radius:12px;padding:14px;font-size:12px;color:#e6c074;line-height:1.7;">
-                  <p style="margin:0 0 6px;font-weight:800;font-size:13px;">{{ t('settings.identity.intro.title') }}</p>
-                  <p style="margin:0;color:#94a3b8;">{{ t('settings.identity.intro.desc') }}</p>
-                </div>
+              <div class="settings-card" style="background:linear-gradient(135deg,rgba(212,168,75,.08),transparent);border-color:rgba(212,168,75,.25);">
+                <p style="margin:0 0 4px;font-weight:800;font-size:13px;color:#e6c074;">{{ t('settings.identity.intro.title') }}</p>
+                <p style="margin:0;color:#94a3b8;font-size:11px;line-height:1.5;">{{ t('settings.identity.intro.desc') }}</p>
               </div>
 
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.identity.logo.title') }}</h4>
+              <!-- Logo Management -->
+              <div class="settings-card">
+                <h4 class="settings-label">🖼️ {{ t('settings.identity.logo.title') }}</h4>
                 <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
                   <div style="text-align:center;">
-                    <div class="logo-badge" style="width:100px;height:100px;border-radius:18px;padding:10px;margin:0 auto 8px;">
+                    <div class="logo-badge" style="width:84px;height:84px;border-radius:14px;padding:8px;margin:0 auto 6px;">
                       <img :src="activeLogo" alt="Logo" onerror="this.style.display='none'">
                     </div>
                     <p style="font-size:10px;color:#94a3b8;margin:0;">{{ t('settings.identity.logo.preview') }}</p>
                   </div>
 
-                  <div style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:8px;">
-                    <button @click="triggerLogoUpload" class="btn-gold" style="border:none;border-radius:10px;padding:12px;font-size:13px;cursor:pointer;font-weight:700;">
+                  <div style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:6px;">
+                    <button @click="triggerLogoUpload" class="btn-gold btn-sm" style="width:100%;">
                       {{ t('settings.identity.logo.upload') }}
                     </button>
                     <input ref="logoInput" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" @change="handleLogoUpload" style="display:none;">
-                    <button v-if="hasCustomLogo" @click="removeCustomLogo" class="btn-ghost" style="border-radius:10px;padding:10px;font-size:12px;cursor:pointer;color:#fda4af;">
+                    <button v-if="hasCustomLogo" @click="removeCustomLogo" class="btn-danger-subtle" style="width:100%;">
                       {{ t('settings.identity.logo.remove') }}
                     </button>
-                    <p style="font-size:10px;color:#94a3b8;margin:4px 0 0;line-height:1.6;">
-                      {{ t('settings.identity.logo.specs') }}<br>
-                      {{ t('settings.identity.logo.formats') }}<br>
-                      {{ t('settings.identity.logo.maxSize') }}
+                    <p style="font-size:10px;color:#64748b;margin:4px 0 0;line-height:1.4;">
+                      {{ t('settings.identity.logo.specs') }} • {{ t('settings.identity.logo.maxSize') }}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.identity.info.title') }}</h4>
-                <div style="display:flex;flex-direction:column;gap:12px;">
+              <!-- Company Information -->
+              <div class="settings-card">
+                <h4 class="settings-label">🏢 {{ t('settings.identity.info.title') }}</h4>
+                <div style="display:flex;flex-direction:column;gap:10px;">
                   <div>
-                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:6px;font-weight:600;">{{ t('settings.identity.info.companyName') }}</label>
-                    <input v-model="brandingForm.companyName" type="text" maxlength="30" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;" :placeholder="t('settings.identity.info.namePlaceholder')">
+                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600;">{{ t('settings.identity.info.companyName') }}</label>
+                    <input v-model="brandingForm.companyName" type="text" maxlength="30" class="input" style="width:100%;" :placeholder="t('settings.identity.info.namePlaceholder')">
                   </div>
                   <div>
-                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:6px;font-weight:600;">{{ t('settings.identity.info.companyDesc') }}</label>
-                    <input v-model="brandingForm.companyDesc" type="text" maxlength="40" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;" :placeholder="t('settings.identity.info.descPlaceholder')">
+                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600;">{{ t('settings.identity.info.companyDesc') }}</label>
+                    <input v-model="brandingForm.companyDesc" type="text" maxlength="40" class="input" style="width:100%;" :placeholder="t('settings.identity.info.descPlaceholder')">
                   </div>
                   <div>
-                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:6px;font-weight:600;">{{ t('settings.identity.info.copyright') }}</label>
-                    <input v-model="brandingForm.copyrightText" type="text" maxlength="50" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;" :placeholder="t('settings.identity.info.copyrightPlaceholder')">
+                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600;">{{ t('settings.identity.info.copyright') }}</label>
+                    <input v-model="brandingForm.copyrightText" type="text" maxlength="50" class="input" style="width:100%;" :placeholder="t('settings.identity.info.copyrightPlaceholder')">
                   </div>
                 </div>
-                <button @click="saveBranding" class="btn-gold" style="width:100%;border:none;border-radius:10px;padding:12px;font-size:14px;cursor:pointer;font-weight:800;margin-top:14px;">
+                <button @click="saveBranding" class="btn-gold btn-md" style="width:100%;margin-top:12px;">
                   {{ t('settings.identity.info.save') }}
                 </button>
               </div>
 
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.identity.wizard.title') }}</h4>
-                <p style="font-size:12px;color:#94a3b8;margin:0 0 12px;">{{ t('settings.identity.wizard.desc') }}</p>
-                <button @click="restartSetupWizard" class="btn-ghost" style="width:100%;border-radius:10px;padding:12px;font-size:13px;cursor:pointer;">
-                  {{ t('settings.identity.wizard.restart') }}
-                </button>
-              </div>
-
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.identity.manage.title') }}</h4>
-                <div style="display:flex;flex-direction:column;gap:8px;">
-                  <button @click="exportBranding" class="btn-ghost" style="border-radius:10px;padding:10px;font-size:12px;cursor:pointer;text-align:right;">{{ t('settings.identity.manage.export') }}</button>
-                  <label class="btn-ghost" style="border-radius:10px;padding:10px;font-size:12px;cursor:pointer;display:block;text-align:right;">
+              <!-- Setup Wizard & Backup -->
+              <div class="settings-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                  <div>
+                    <h4 class="settings-label" style="margin:0 0 2px;">🧙 {{ t('settings.identity.wizard.title') }}</h4>
+                    <p class="settings-subtext" style="margin:0;">{{ t('settings.identity.wizard.desc') }}</p>
+                  </div>
+                  <button @click="restartSetupWizard" class="btn-ghost btn-sm">
+                    {{ t('settings.identity.wizard.restart') }}
+                  </button>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);flex-wrap:wrap;">
+                  <button @click="exportBranding" class="btn-ghost btn-sm" style="flex:1;">{{ t('settings.identity.manage.export') }}</button>
+                  <label class="btn-ghost btn-sm" style="flex:1;cursor:pointer;text-align:center;">
                     {{ t('settings.identity.manage.import') }}
                     <input type="file" accept=".json" @change="importBranding" style="display:none;">
                   </label>
-                  <button @click="resetBranding" class="btn-ghost" style="border-radius:10px;padding:10px;font-size:12px;cursor:pointer;color:#fcd34d;text-align:right;">{{ t('settings.identity.manage.reset') }}</button>
+                  <button @click="resetBranding" class="btn-danger-subtle btn-sm">{{ t('settings.identity.manage.reset') }}</button>
                 </div>
               </div>
             </div>
 
-                        <!-- TAB: labels -->
+            <!-- ==========================================
+                 TAB 3: LABELS & SECTOR (المصطلحات والقطاع)
+                 ========================================== -->
             <div v-show="settingsTab==='labels'">
-              <div class="settings-section" style="padding-top:0;">
-                <div style="background:linear-gradient(135deg,rgba(139,92,246,.1),transparent);border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:14px;font-size:12px;color:#c4b5fd;line-height:1.7;">
-                  <p style="margin:0 0 6px;font-weight:800;font-size:13px;">{{ t('settings.labels.intro.title') }}</p>
-                  <p style="margin:0;color:#94a3b8;">{{ t('settings.labels.intro.desc') }}</p>
-                </div>
+              <div class="settings-card" style="background:linear-gradient(135deg,rgba(139,92,246,.08),transparent);border-color:rgba(139,92,246,.25);">
+                <p style="margin:0 0 4px;font-weight:800;font-size:13px;color:#c4b5fd;">{{ t('settings.labels.intro.title') }}</p>
+                <p style="margin:0;color:#94a3b8;font-size:11px;line-height:1.5;">{{ t('settings.labels.intro.desc') }}</p>
               </div>
 
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.labels.templates.title') }}</h4>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
+              <!-- Sector Templates -->
+              <div class="settings-card">
+                <h4 class="settings-label">🏢 {{ t('settings.labels.templates.title') }}</h4>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;">
                   <button v-for="tpl in sectorTemplates" :key="tpl.id" @click="applySectorTemplate(tpl)"
                     :style="{
                       background: branding.sectorTemplate === tpl.id ? 'linear-gradient(135deg,rgba(139,92,246,.25),rgba(139,92,246,.1))' : 'rgba(15,23,42,.5)',
                       border: '1.5px solid ' + (branding.sectorTemplate === tpl.id ? 'rgba(139,92,246,.6)' : '#243356'),
-                      borderRadius: '12px', padding: '14px 10px', cursor: 'pointer', textAlign: 'center', color: '#fff'
+                      borderRadius: '10px', padding: '10px 8px', cursor: 'pointer', textAlign: 'center', color: '#fff'
                     }">
-                    <div style="font-size:28px;margin-bottom:6px;">{{ tpl.icon }}</div>
-                    <p style="font-size:12px;font-weight:800;margin:0 0 4px;color:#fff;">{{ t('sector.' + tpl.id + '.name', tpl.name) }}</p>
+                    <div style="font-size:22px;margin-bottom:4px;">{{ tpl.icon }}</div>
+                    <p style="font-size:12px;font-weight:700;margin:0 0 2px;color:#fff;">{{ t('sector.' + tpl.id + '.name', tpl.name) }}</p>
                     <p style="font-size:10px;color:#94a3b8;margin:0;">{{ t('sector.' + tpl.id + '.desc', tpl.desc) }}</p>
                   </button>
                 </div>
               </div>
 
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.labels.edit.title') }}</h4>
-                <div style="display:flex;flex-direction:column;gap:10px;">
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('settings.labels.edit.branch') }}</label><input :value="branding.labels.branch" @change="updateLabel('branch', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;border-radius:8px;padding:8px;font-size:13px;"></div>
-                    <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('settings.labels.edit.branchPlural') }}</label><input :value="branding.labels.branchPlural" @change="updateLabel('branchPlural', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;border-radius:8px;padding:8px;font-size:13px;"></div>
+              <!-- Labels Customization Grid -->
+              <div class="settings-card">
+                <h4 class="settings-label">✏️ {{ t('settings.labels.edit.title') }}</h4>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                  <div>
+                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:3px;">{{ t('settings.labels.edit.branch') }}</label>
+                    <input :value="branding.labels.branch" @change="updateLabel('branch', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;">
                   </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('settings.labels.edit.staff') }}</label><input :value="branding.labels.staff" @change="updateLabel('staff', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;border-radius:8px;padding:8px;font-size:13px;"></div>
-                    <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('settings.labels.edit.staffPlural') }}</label><input :value="branding.labels.staffPlural" @change="updateLabel('staffPlural', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;border-radius:8px;padding:8px;font-size:13px;"></div>
+                  <div>
+                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:3px;">{{ t('settings.labels.edit.branchPlural') }}</label>
+                    <input :value="branding.labels.branchPlural" @change="updateLabel('branchPlural', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;">
                   </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('settings.labels.edit.invoice') }}</label><input :value="branding.labels.invoice" @change="updateLabel('invoice', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;border-radius:8px;padding:8px;font-size:13px;"></div>
-                    <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('settings.labels.edit.invoicePlural') }}</label><input :value="branding.labels.invoicePlural" @change="updateLabel('invoicePlural', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;border-radius:8px;padding:8px;font-size:13px;"></div>
+                  <div>
+                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:3px;">{{ t('settings.labels.edit.staff') }}</label>
+                    <input :value="branding.labels.staff" @change="updateLabel('staff', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;">
                   </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('settings.labels.edit.piece') }}</label><input :value="branding.labels.piece" @change="updateLabel('piece', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;border-radius:8px;padding:8px;font-size:13px;"></div>
-                    <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('settings.labels.edit.piecePlural') }}</label><input :value="branding.labels.piecePlural" @change="updateLabel('piecePlural', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;border-radius:8px;padding:8px;font-size:13px;"></div>
+                  <div>
+                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:3px;">{{ t('settings.labels.edit.staffPlural') }}</label>
+                    <input :value="branding.labels.staffPlural" @change="updateLabel('staffPlural', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;">
                   </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('settings.labels.edit.target') }}</label><input :value="branding.labels.target" @change="updateLabel('target', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;border-radius:8px;padding:8px;font-size:13px;"></div>
-                    <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('settings.labels.edit.manager') }}</label><input :value="branding.labels.manager" @change="updateLabel('manager', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;border-radius:8px;padding:8px;font-size:13px;"></div>
+                  <div>
+                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:3px;">{{ t('settings.labels.edit.invoice') }}</label>
+                    <input :value="branding.labels.invoice" @change="updateLabel('invoice', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:3px;">{{ t('settings.labels.edit.invoicePlural') }}</label>
+                    <input :value="branding.labels.invoicePlural" @change="updateLabel('invoicePlural', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:3px;">{{ t('settings.labels.edit.piece') }}</label>
+                    <input :value="branding.labels.piece" @change="updateLabel('piece', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:3px;">{{ t('settings.labels.edit.piecePlural') }}</label>
+                    <input :value="branding.labels.piecePlural" @change="updateLabel('piecePlural', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:3px;">{{ t('settings.labels.edit.target') }}</label>
+                    <input :value="branding.labels.target" @change="updateLabel('target', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:3px;">{{ t('settings.labels.edit.manager') }}</label>
+                    <input :value="branding.labels.manager" @change="updateLabel('manager', $event.target.value)" type="text" maxlength="15" class="input" style="width:100%;">
                   </div>
                 </div>
-                <p style="font-size:10px;color:#94a3b8;margin:12px 0 0;text-align:center;">{{ t('settings.labels.edit.hint') }}</p>
+                <p style="font-size:10px;color:#64748b;margin:10px 0 0;text-align:center;">{{ t('settings.labels.edit.hint') }}</p>
               </div>
             </div>
 
-            <!-- TAB: language -->
-            <div v-show="settingsTab==='language'">
-              <div class="settings-section" style="padding-top:0;">
-                <div style="background:linear-gradient(135deg,rgba(59,130,246,.1),transparent);border:1px solid rgba(59,130,246,.3);border-radius:12px;padding:14px;font-size:12px;color:#93c5fd;line-height:1.7;">
-                  <p style="margin:0 0 6px;font-weight:800;font-size:13px;">{{ t('settings.language.intro.title') }}</p>
-                  <p style="margin:0;color:#94a3b8;">{{ t('settings.language.intro.desc') }}</p>
-                </div>
-              </div>
-
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.language.choose') }}</h4>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <!-- ==========================================
+                 TAB 4: SYSTEM & PREFERENCES (النظام والبيانات)
+                 ========================================== -->
+            <div v-show="settingsTab==='system'">
+              <!-- Language Card -->
+              <div class="settings-card">
+                <h4 class="settings-label">🌍 {{ t('settings.language.choose') }}</h4>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                   <button @click="setLanguage('ar')"
                     :style="{
                       background: currentLang === 'ar' ? 'linear-gradient(135deg, rgba(212,168,75,.25), rgba(212,168,75,.08))' : 'rgba(15,23,42,.5)',
-                      border: '2px solid ' + (currentLang === 'ar' ? 'rgba(212,168,75,.7)' : '#243356'),
-                      borderRadius: '14px', padding: '20px 14px', cursor: 'pointer', textAlign: 'center', color: '#fff'
+                      border: '1.5px solid ' + (currentLang === 'ar' ? 'rgba(212,168,75,.7)' : '#243356'),
+                      borderRadius: '10px', padding: '12px 10px', cursor: 'pointer', textAlign: 'center', color: '#fff'
                     }">
-                    <div style="font-size:36px;margin-bottom:8px;">🇸🇦</div>
-                    <p style="font-size:14px;font-weight:900;margin:0 0 4px;color:#fff;">{{ t('settings.language.ar') }}</p>
+                    <div style="font-size:24px;margin-bottom:4px;">🇸🇦</div>
+                    <p style="font-size:13px;font-weight:800;margin:0 0 2px;color:#fff;">{{ t('settings.language.ar') }}</p>
                     <p style="font-size:10px;color:#94a3b8;margin:0;">{{ t('settings.language.arDesc') }}</p>
-                    <p v-if="currentLang === 'ar'" style="font-size:11px;color:#e6c074;margin:8px 0 0;font-weight:800;">{{ t('settings.language.active') }}</p>
                   </button>
 
                   <button @click="setLanguage('en')"
                     :style="{
                       background: currentLang === 'en' ? 'linear-gradient(135deg, rgba(212,168,75,.25), rgba(212,168,75,.08))' : 'rgba(15,23,42,.5)',
-                      border: '2px solid ' + (currentLang === 'en' ? 'rgba(212,168,75,.7)' : '#243356'),
-                      borderRadius: '14px', padding: '20px 14px', cursor: 'pointer', textAlign: 'center', color: '#fff'
+                      border: '1.5px solid ' + (currentLang === 'en' ? 'rgba(212,168,75,.7)' : '#243356'),
+                      borderRadius: '10px', padding: '12px 10px', cursor: 'pointer', textAlign: 'center', color: '#fff'
                     }">
-                    <div style="font-size:36px;margin-bottom:8px;">🇬🇧</div>
-                    <p style="font-size:14px;font-weight:900;margin:0 0 4px;color:#fff;">{{ t('settings.language.en') }}</p>
+                    <div style="font-size:24px;margin-bottom:4px;">🇬🇧</div>
+                    <p style="font-size:13px;font-weight:800;margin:0 0 2px;color:#fff;">{{ t('settings.language.en') }}</p>
                     <p style="font-size:10px;color:#94a3b8;margin:0;">{{ t('settings.language.enDesc') }}</p>
-                    <p v-if="currentLang === 'en'" style="font-size:11px;color:#e6c074;margin:8px 0 0;font-weight:800;">{{ t('settings.language.activeEn') }}</p>
                   </button>
                 </div>
               </div>
 
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.language.info.title') }}</h4>
-                <div class="info-row"><span class="info-row-label">{{ t('settings.language.info.current') }}</span><span class="info-row-value">{{ currentLang === 'ar' ? t('settings.language.ar') : t('settings.language.en') }}</span></div>
-                <div class="info-row"><span class="info-row-label">{{ t('settings.language.info.dir') }}</span><span class="info-row-value">{{ langDir.toUpperCase() }}</span></div>
-                <div class="info-row"><span class="info-row-label">{{ t('settings.language.info.keys') }}</span><span class="info-row-value">{{ i18nKeyCount }}</span></div>
-              </div>
-
-              <div class="settings-section">
-                <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:12px;font-size:12px;color:#fcd34d;line-height:1.7;">
-                  <p style="margin:0;font-weight:700;">{{ t('settings.language.warning.title') }}</p>
-                  <p style="margin:6px 0 0;color:#94a3b8;font-size:11px;">{{ t('settings.language.warning.desc') }}</p>
+              <!-- Distribution & Layout -->
+              <div class="settings-card">
+                <h4 class="settings-label">⚡ {{ t('settings.layout.autoDist') }}</h4>
+                <p class="settings-subtext">{{ t('settings.layout.autoDist.desc') }}</p>
+                <div class="settings-option-row" style="margin-bottom:12px;">
+                  <button @click="settings.autoDistribute=true; saveSettingsToStorage()" :class="['settings-option', settings.autoDistribute===true ? 'active' : '']">{{ t('settings.layout.autoDist.on') }}</button>
+                  <button @click="settings.autoDistribute=false; saveSettingsToStorage()" :class="['settings-option', settings.autoDistribute===false ? 'active' : '']">{{ t('settings.layout.autoDist.off') }}</button>
                 </div>
-              </div>
-            </div>
 
-            <!-- TAB: colors -->
-            <div v-show="settingsTab==='colors'">
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.colors.title') }}</h4>
-                <p style="font-size:12px;color:#94a3b8;margin:0 0 12px;">{{ t('settings.colors.subtitle') }}</p>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
-                  <div v-for="c in colorPalette" :key="c.id" @click="setPrimaryColor(c)"
-                    :class="['color-swatch-sm', settings.primaryColor===c.id ? 'active' : '']"
-                    :style="{background:'linear-gradient(135deg, ' + c.primary + ', ' + c.secondary + ')'}"
-                    :title="t('color.' + c.id, c.name)">
-                    <span v-if="settings.primaryColor===c.id">✓</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- TAB: layout -->
-            <div v-show="settingsTab==='layout'">
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.layout.staffPerPage') }}</h4>
+                <h4 class="settings-label">📄 {{ t('settings.layout.staffPerPage') }}</h4>
                 <div class="settings-option-row">
                   <button @click="settings.staffPerPage=10" :class="['settings-option', settings.staffPerPage===10 ? 'active' : '']">10</button>
                   <button @click="settings.staffPerPage=20" :class="['settings-option', settings.staffPerPage===20 ? 'active' : '']">20</button>
@@ -2982,98 +2975,52 @@
                   <button @click="settings.staffPerPage=50" :class="['settings-option', settings.staffPerPage===50 ? 'active' : '']">50</button>
                 </div>
               </div>
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.layout.autoDist') }}</h4>
-                <p style="font-size:12px;color:#94a3b8;margin:0 0 12px;">{{ t('settings.layout.autoDist.desc') }}</p>
-                <div class="settings-option-row">
-                  <button @click="settings.autoDistribute=true; saveSettingsToStorage()" :class="['settings-option', settings.autoDistribute===true ? 'active' : '']">{{ t('settings.layout.autoDist.on') }}</button>
-                  <button @click="settings.autoDistribute=false; saveSettingsToStorage()" :class="['settings-option', settings.autoDistribute===false ? 'active' : '']">{{ t('settings.layout.autoDist.off') }}</button>
-                </div>
-              </div>
-            </div>
 
-            <!-- TAB: about -->
-            <div v-show="settingsTab==='about'">
-              <div class="settings-section" style="text-align:center;padding-bottom:20px;">
-                <div class="logo-badge" style="width:100px;height:100px;border-radius:22px;padding:12px;margin:0 auto 12px;">
-                  <img :src="activeLogo" :alt="activeCompanyName" onerror="this.style.display='none'">
-                </div>
-                <h3 style="font-size:20px;font-weight:900;color:#fff;margin:0 0 4px;">{{ activeCompanyName }}</h3>
-                <p style="font-size:12px;color:#94a3b8;margin:0 0 8px;">{{ t('settings.about.tagline') }}</p>
-                <span class="version-badge-large">{{ t('settings.about.version') }} {{ appVersion }}</span>
-              </div>
-
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.about.owner.title') }}</h4>
-                <div class="info-row"><span class="info-row-label">{{ t('settings.about.owner.name') }}</span><span class="info-row-value">Smeer.S.A</span></div>
-              </div>
-
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.about.dev.title') }}</h4>
-                <div class="info-row"><span class="info-row-label">{{ t('settings.about.dev.name') }}</span><span class="info-row-value">SAMX Team</span></div>
-              </div>
-
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.about.contact.title') }}</h4>
-                <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-                  <a :href="'https://wa.me/966533642710?text=' + encodeURIComponent('مرحباً، أحتاج دعم بخصوص تطبيق ' + activeCompanyName)" target="_blank" class="settings-contact-btn">
-                    <span style="font-size:20px;">💬</span>
-                    <div style="flex:1;">
-                      <p style="margin:0;font-weight:700;">{{ t('settings.about.contact.whatsapp') }}</p>
-                      <p style="margin:2px 0 0;font-size:11px;color:#94a3b8;">0533642710</p>
-                    </div>
-                    <span style="color:#e6c074;">←</span>
-                  </a>
-                  <a href="mailto:sameer.sulta1@outlook.com" class="settings-contact-btn">
-                    <span style="font-size:20px;">📧</span>
-                    <div style="flex:1;">
-                      <p style="margin:0;font-weight:700;">{{ t('settings.about.contact.email') }}</p>
-                      <p style="margin:2px 0 0;font-size:11px;color:#94a3b8;">sameer.sulta1@outlook.com</p>
-                    </div>
-                    <span style="color:#e6c074;">←</span>
-                  </a>
-                </div>
-              </div>
-
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.about.copyright.title') }}</h4>
-                <div class="copyright-box">
-                  <strong>{{ activeCopyright }}</strong> — {{ t('settings.about.copyright.reserved') }}<br>
-                  <span style="font-size:11px;opacity:.8;">{{ t('settings.about.copyright.protected') }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- TAB: data -->
-            <div v-show="settingsTab==='data'">
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.data.title') }}</h4>
-                <div style="display:flex;flex-direction:column;gap:8px;">
-                  <button @click="exportSeed" class="btn-ghost" style="border-radius:10px;padding:12px;cursor:pointer;font-size:13px;text-align:right;background:linear-gradient(135deg,rgba(212,168,75,.15),transparent);border-color:rgba(212,168,75,.5);color:#e6c074;">{{ t('seed.export.btn') }}</button>
-                  <button @click="forceSaveNow" class="btn-ghost" style="border-radius:10px;padding:12px;cursor:pointer;font-size:13px;text-align:right;background:linear-gradient(135deg,rgba(16,185,129,.15),transparent);border-color:rgba(16,185,129,.5);color:#6ee7b7;">🔒 {{ t('settings.data.saveNow', 'حفظ الآن (Force Save)') }}</button>
-                  <button @click="forceReloadSeed" class="btn-ghost" style="border-radius:10px;padding:12px;cursor:pointer;font-size:13px;text-align:right;background:linear-gradient(135deg,rgba(59,130,246,.15),transparent);border-color:rgba(59,130,246,.5);color:#93c5fd;">{{ t('seed.reload.btn') }}</button>
-                  <button @click="exportSettings" class="btn-ghost" style="border-radius:10px;padding:12px;cursor:pointer;font-size:13px;text-align:right;">{{ t('settings.data.export') }}</button>
-                  <label class="btn-ghost" style="border-radius:10px;padding:12px;cursor:pointer;font-size:13px;display:block;text-align:right;">
+              <!-- Data Management -->
+              <div class="settings-card">
+                <h4 class="settings-label">💾 {{ t('settings.data.title') }}</h4>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+                  <button @click="forceSaveNow" class="btn-success-subtle btn-sm">🔒 {{ t('settings.data.saveNow', 'حفظ الآن') }}</button>
+                  <button @click="exportSeed" class="btn-ghost btn-sm">{{ t('seed.export.btn') }}</button>
+                  <button @click="forceReloadSeed" class="btn-ghost btn-sm">{{ t('seed.reload.btn') }}</button>
+                  <button @click="exportSettings" class="btn-ghost btn-sm">{{ t('settings.data.export') }}</button>
+                  <label class="btn-ghost btn-sm" style="cursor:pointer;text-align:center;">
                     {{ t('settings.data.import') }}
                     <input type="file" accept=".json" @change="importSettings" style="display:none;">
                   </label>
-                  <button @click="resetSettings" class="btn-ghost" style="border-radius:10px;padding:12px;cursor:pointer;font-size:13px;color:#fcd34d;text-align:right;">{{ t('settings.data.reset') }}</button>
+                  <button @click="resetSettings" class="btn-danger-subtle btn-sm">{{ t('settings.data.reset') }}</button>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);">
+                  <span>{{ t('settings.data.storage.branches') }}: <strong style="color:#fff;">{{ branches.length }}</strong></span>
+                  <span>{{ t('settings.data.storage.staff') }}: <strong style="color:#fff;">{{ staff.length }}</strong></span>
+                  <span>{{ t('settings.data.storage.days') }}: <strong style="color:#fff;">{{ Object.keys(daily).length }}</strong></span>
                 </div>
               </div>
 
-              <div class="settings-section">
-                <h4 class="settings-label">{{ t('settings.data.storage.title') }}</h4>
-                <div class="info-row"><span class="info-row-label">{{ t('settings.data.storage.branches') }}</span><span class="info-row-value">{{ branches.length }}</span></div>
-                <div class="info-row"><span class="info-row-label">{{ t('settings.data.storage.staff') }}</span><span class="info-row-value">{{ staff.length }}</span></div>
-                <div class="info-row"><span class="info-row-label">{{ t('settings.data.storage.days') }}</span><span class="info-row-value">{{ Object.keys(daily).length }}</span></div>
-                <div class="info-row"><span class="info-row-label">{{ t('settings.data.storage.backups') }}</span><span class="info-row-value">{{ autoBackups.length }}</span></div>
+              <!-- About & Contact Support -->
+              <div class="settings-card" style="text-align:center;">
+                <h4 style="font-size:14px;font-weight:800;color:#fff;margin:0 0 2px;">{{ activeCompanyName }}</h4>
+                <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('settings.about.tagline') }}</p>
+                <span class="version-badge-large" style="display:inline-block;padding:2px 8px;font-size:11px;">{{ t('settings.about.version') }} {{ appVersion }}</span>
+
+                <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;">
+                  <a :href="'https://wa.me/966533642710?text=' + encodeURIComponent('مرحباً، أحتاج دعم بخصوص تطبيق ' + activeCompanyName)" target="_blank" class="btn-ghost btn-sm" style="text-decoration:none;">
+                    <span>💬</span>
+                    <span>{{ t('settings.about.contact.whatsapp') }}</span>
+                  </a>
+                  <a href="mailto:sameer.sulta1@outlook.com" class="btn-ghost btn-sm" style="text-decoration:none;">
+                    <span>📧</span>
+                    <span>{{ t('settings.about.contact.email') }}</span>
+                  </a>
+                </div>
               </div>
             </div>
+          </div>
 
-            <div style="position:sticky;bottom:0;background:#0e1628;padding-top:16px;padding-bottom:20px;margin-top:20px;display:flex;gap:8px;">
-              <button @click="saveSettings" class="btn-gold" style="flex:1;border:none;border-radius:12px;padding:14px;font-size:14px;cursor:pointer;font-weight:800;">{{ t('settings.saveFooter') }}</button>
-              <button @click="showSettings=false" class="btn-ghost" style="border-radius:12px;padding:14px 20px;cursor:pointer;font-size:14px;">{{ t('settings.closeFooter') }}</button>
-            </div>
+          <!-- Sticky Footer -->
+          <div class="modal-footer-pro">
+            <button @click="showSettings=false" class="btn-ghost btn-md">{{ t('settings.closeFooter') }}</button>
+            <button @click="saveSettings" class="btn-gold btn-md">{{ t('settings.saveFooter') }}</button>
           </div>
         </div>
       </div>

@@ -59,14 +59,10 @@ const THEME_PRESETS_CONST = Object.freeze([
 ]);
 
 const SETTINGS_TABS_CONST = Object.freeze([
-  { id: 'appearance', icon: '🎨', label: 'المظهر' },
-  { id: 'colors', icon: '🌈', label: 'الألوان' },
-  { id: 'identity', icon: '🏢', label: 'الهوية' },
-  { id: 'labels', icon: '🏷️', label: 'المسميات' },
-  { id: 'layout', icon: '📐', label: 'التخطيط' },
-  { id: 'language', icon: '🌍', label: 'اللغة' },   // ⭐ v23.3 جديد
-  { id: 'about', icon: 'ℹ️', label: 'عن التطبيق' },
-  { id: 'data', icon: '💾', label: 'البيانات' },
+  { id: 'appearance', icon: '🎨', label: 'المظهر والسمة' },
+  { id: 'identity', icon: '🏢', label: 'الهوية والمنشأة' },
+  { id: 'labels', icon: '🏷️', label: 'المصطلحات والقطاع' },
+  { id: 'system', icon: '⚙️', label: 'النظام والبيانات' },
 ]);
 
 const SECTOR_TEMPLATES_CONST = Object.freeze([
