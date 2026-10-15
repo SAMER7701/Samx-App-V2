@@ -4704,7 +4704,7 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
         rowHeights.push({ hpt: 8 });
 
         wsData.push(['', this.t('excel.daily.kpi.totalSales'), this.branchSales, '', this.t('excel.daily.kpi.baseTarget'), this.dayData.baseTarget || 0, this.basePct / 100, '']);
-        wsData.push(['', this.t('excel.daily.kpi.heroesTarget'), this.dayData.heroesTarget || 0, '', this.t('excel.daily.kpi.basePct'), this.basePct / 100, '', '']);
+        wsData.push(['', this.t('excel.daily.kpi.heroesTarget'), this.dayData.heroesTarget || 0, '', this.t('excel.daily.kpi.heroesPct'), this.heroesPct / 100, '', '']);
         wsData.push(['', this.t('excel.daily.kpi.invoices'), this.branchInvoices, '', this.t('excel.daily.kpi.pieces'), this.branchPieces, '', '']);
         wsData.push(['', this.t('excel.daily.kpi.upt'), this.branchUPT, '', this.t('excel.daily.kpi.atv'), this.branchATV, '', '']);
         wsData.push(['', this.t('excel.daily.kpi.attendance'), `${this.presentCount} / ${this.branchStaff.length}`, '', '', '', '', '']);

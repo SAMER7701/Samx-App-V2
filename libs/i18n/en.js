@@ -1239,6 +1239,7 @@
     'excel.daily.kpi.baseTarget': '🎯 Base Target',
     'excel.daily.kpi.heroesTarget': '🏆 Heroes Target',
     'excel.daily.kpi.basePct': '📊 Base %',
+    'excel.daily.kpi.heroesPct': '🏆 Heroes %',
     'excel.daily.kpi.invoices': '📄 Invoices',
     'excel.daily.kpi.pieces': '📦 Pieces',
     'excel.daily.kpi.upt': '🎯 UPT',

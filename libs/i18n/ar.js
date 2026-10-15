@@ -1239,6 +1239,7 @@
     'excel.daily.kpi.baseTarget': '🎯 التارجت الأساسي',
     'excel.daily.kpi.heroesTarget': '🏆 تارجت الأبطال',
     'excel.daily.kpi.basePct': '📊 نسبة الأساسي',
+    'excel.daily.kpi.heroesPct': '🏆 نسبة الأبطال',
     'excel.daily.kpi.invoices': '📄 الفواتير',
     'excel.daily.kpi.pieces': '📦 القطع',
     'excel.daily.kpi.upt': '🎯 UPT',
