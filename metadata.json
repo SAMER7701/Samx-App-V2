@@ -1,0 +1,8 @@
+{
+  "name": "Remix SAMX — نظام إدارة مبيعات الفروع",
+  "description": "نظام PWA متكامل لإدارة ومتابعة مبيعات الفروع، يعمل بدون إنترنت ويدعم اللغتين العربية والإنجليزية.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
