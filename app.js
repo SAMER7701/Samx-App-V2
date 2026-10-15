@@ -187,7 +187,7 @@ async function getLogoDataURL(logoUrl) {
   });
 }
 
-const { createApp, nextTick } = Vue;
+const { createApp, nextTick, markRaw, toRaw } = Vue;
 
 createApp({
   data() {
@@ -205,6 +205,8 @@ createApp({
       loginError: '',
       loggingIn: false,
       rememberMe: false,
+      showLoginPassword: false,
+      showLockPassword: false,
 
       // ============ التنقل ============
       currentView: 'welcome',
@@ -1125,7 +1127,11 @@ createApp({
       this.staffPage = 1;
       nextTick(() => this.autoDistributeCurrentDay());
     },
-         currentView(val) {
+    currentView(val) {
+      if (val !== 'dashboard' && val !== 'kpi') this.safeDestroyChart('staffChartInstance');
+      if (val !== 'monthly') this.safeDestroyChart('monthlyChartInstance');
+      if (val !== 'analytics') this.safeDestroyChart('trendChartInstance');
+      if (val !== 'yoy') this.safeDestroyChart('yoyChartInstance');
       nextTick(() => {
         setTimeout(() => {
           if (val === 'analytics') this.renderTrendChart();
@@ -1354,21 +1360,40 @@ createApp({
       return g;
     },
 
-             setStaffChartType(type) {
+    safeDestroyChart(key) {
+      const inst = this[key];
+      if (inst) {
+        try {
+          if (typeof inst.stop === 'function') inst.stop();
+          if (window.Chart && window.Chart.animator && typeof window.Chart.animator.remove === 'function') {
+            try { window.Chart.animator.remove(inst); } catch (e) {}
+            const raw = typeof toRaw === 'function' ? toRaw(inst) : inst;
+            if (raw) {
+              try { window.Chart.animator.remove(raw); } catch (e) {}
+            }
+          }
+          if (typeof inst.destroy === 'function') {
+            inst.destroy();
+          }
+        } catch (e) {
+          console.warn('[Chart] safeDestroyChart error for', key, e);
+        }
+        this[key] = null;
+      }
+    },
+
+    setStaffChartType(type) {
       if (!['bar', 'doughnut', 'pie'].includes(type)) return;
       if (type === this.staffChartType) return;
 
-      // 1. دمّر الـ instance القديمة
-      if (this.staffChartInstance) {
-        try { this.staffChartInstance.destroy(); } catch(e) {}
-        this.staffChartInstance = null;
-      }
+      // 1. دمّر الـ instance القديمة بأمان
+      this.safeDestroyChart('staffChartInstance');
 
       // 2. غيّر النوع + احفظه
       this.staffChartType = type;
       try { localStorage.setItem('samx_staff_chart_type', type); } catch(e) {}
 
-      // 3. ⭐⭐⭐ السر: زيادة الـ key → Vue يستبدل canvas بعنصر جديد
+      // 3. زيادة الـ key
       this.staffChartKey++;
 
       // 4. انتظر Vue ثم ارسم على الـ canvas الجديدة
@@ -1376,13 +1401,16 @@ createApp({
         setTimeout(() => this.renderStaffChart(), 50);
       });
     },   
-        openView(viewName) {
+    openView(viewName) {
       this.showMoreMenu = false;
       this.previousView = this.currentView;
       this.currentView = viewName;
+      if (viewName !== 'dashboard' && viewName !== 'kpi') this.safeDestroyChart('staffChartInstance');
+      if (viewName !== 'monthly') this.safeDestroyChart('monthlyChartInstance');
+      if (viewName !== 'analytics') this.safeDestroyChart('trendChartInstance');
+      if (viewName !== 'yoy') this.safeDestroyChart('yoyChartInstance');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       try { history.replaceState(null, '', '#' + viewName); } catch (e) {}
-      // ⭐ v23.9-FIX#4: إجبار رسم المخطط بعد فتح العرض
       nextTick(() => {
         setTimeout(() => {
           if (viewName === 'dashboard' || viewName === 'kpi') this.renderStaffChart();
@@ -1396,6 +1424,10 @@ createApp({
     closeView() {
       this.showMoreMenu = false;
       this.currentView = 'welcome';
+      this.safeDestroyChart('staffChartInstance');
+      this.safeDestroyChart('monthlyChartInstance');
+      this.safeDestroyChart('trendChartInstance');
+      this.safeDestroyChart('yoyChartInstance');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       try { history.replaceState(null, '', '#'); } catch (e) {}
     },
@@ -1771,7 +1803,7 @@ createApp({
           [this.staffChartInstance, this.monthlyChartInstance,
            this.trendChartInstance, this.yoyChartInstance]
             .forEach(inst => {
-              if (inst && typeof inst.resize === 'function') {
+              if (inst && typeof inst.resize === 'function' && inst.canvas && document.body.contains(inst.canvas)) {
                 try { inst.resize(); } catch(e) {}
               }
             });
@@ -4275,19 +4307,27 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
     refreshCharts() {
       nextTick(() => {
         if (this.currentView === 'dashboard' || this.currentView === 'kpi') this.renderStaffChart();
+        else this.safeDestroyChart('staffChartInstance');
+
         if (this.currentView === 'analytics') this.renderTrendChart();
+        else this.safeDestroyChart('trendChartInstance');
+
         if (this.currentView === 'monthly') this.renderMonthlyChart();
+        else this.safeDestroyChart('monthlyChartInstance');
+
         if (this.currentView === 'yoy') this.renderYoYChart();
+        else this.safeDestroyChart('yoyChartInstance');
       });
     },
+
     renderStaffChart() {
       try {
         const canvas = this.$refs.staffChart;
-        if (!canvas) return;
+        if (!canvas || !document.body.contains(canvas)) {
+          return;
+        }
 
-        const presentStaff = this.staffRowsComputed.filter(s => s.present);
-
-        // ⭐ إذا لا موظفين → لا تُدمِّر! احتفظ بالمخطط (قد يعودون لاحقاً)
+        const presentStaff = (this.staffRowsComputed || []).filter(s => s.present);
         if (presentStaff.length === 0) {
           console.log('[Chart] لا موظفون حاضرون — تخطي');
           return;
@@ -4317,21 +4357,26 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
           canvas.parentElement.style.height = Math.max(200, sorted.length * 45 + 80) + 'px';
         }
 
-        // ⭐⭐⭐ الحل: إذا المخطط موجود → حُدِّث فقط (لا destroy)
-        if (this.staffChartInstance) {
+        if (this.staffChartInstance && this.staffChartInstance.canvas === canvas && document.body.contains(canvas)) {
           this.staffChartInstance.data.labels = names;
           this.staffChartInstance.data.datasets[0].data = sales;
           this.staffChartInstance.data.datasets[0].backgroundColor = colors;
           this.staffChartInstance.data.datasets[0].borderColor = borders;
           this.staffChartInstance.$sorted = sorted;
           this.staffChartInstance.$pcts = pcts;
-          this.staffChartInstance.update('none');
-          console.log('[Chart] 🔄 staffChart updated with ' + sorted.length + ' staff');
-          return;
+          try {
+            this.staffChartInstance.update('none');
+            console.log('[Chart] 🔄 staffChart updated with ' + sorted.length + ' staff');
+            return;
+          } catch (e) {
+            console.warn('[Chart] update failed, recreating:', e);
+            this.safeDestroyChart('staffChartInstance');
+          }
+        } else if (this.staffChartInstance) {
+          this.safeDestroyChart('staffChartInstance');
         }
 
-        // ⭐ إنشاء لأول مرة
-        this.staffChartInstance = new Chart(canvas, {
+        const chart = new Chart(canvas, {
           type: type,
           data: {
             labels: names,
@@ -4359,13 +4404,13 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
                 callbacks: {
                   title: (items) => {
                     if (!items.length) return '';
-                    const s = this.staffChartInstance.$sorted?.[items[0].dataIndex];
+                    const s = chart.$sorted?.[items[0].dataIndex];
                     return s ? s.name : '';
                   },
                   label: (ctx) => {
                     const i = ctx.dataIndex;
-                    const s = this.staffChartInstance.$sorted?.[i];
-                    const p = this.staffChartInstance.$pcts?.[i] || 0;
+                    const s = chart.$sorted?.[i];
+                    const p = chart.$pcts?.[i] || 0;
                     return [
                       ' 💰 ' + this.formatNum(s?.sales || 0),
                       ' 🎯 ' + this.formatNum(s?.target || 0),
@@ -4384,18 +4429,18 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
             },
           },
         });
-        this.staffChartInstance.$sorted = sorted;
-        this.staffChartInstance.$pcts = pcts;
+        chart.$sorted = sorted;
+        chart.$pcts = pcts;
+        this.staffChartInstance = typeof markRaw === 'function' ? markRaw(chart) : chart;
 
         console.log('[Chart] ✅ staffChart (' + type + ') with ' + sorted.length + ' staff');
 
-        // ⭐ ResizeObserver (للتعامل مع v-show)
         if (window.ResizeObserver && canvas.parentElement) {
           if (this._staffResizeObserver) {
             try { this._staffResizeObserver.disconnect(); } catch(e) {}
           }
           this._staffResizeObserver = new ResizeObserver(() => {
-            if (this.staffChartInstance) {
+            if (this.staffChartInstance && this.staffChartInstance.canvas && document.body.contains(this.staffChartInstance.canvas)) {
               try { this.staffChartInstance.resize(); } catch(e) {}
             }
           });
@@ -4405,82 +4450,94 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
         console.error('[Chart] renderStaffChart failed:', e);
       }
     },
+
     renderTrendChart() {
-      const canvas = this.$refs.trendChart;
-      if (!canvas || !this.analyticsBranchId) return;
-      if (this.trendChartInstance) this.trendChartInstance.destroy();
-      const t = this.getChartThemeColors();
-      const series = this.analyticsSeries;
-      this.trendChartInstance = new Chart(canvas, {
-        type: 'line',
-        data: {
-          labels: series.map(x => x.date.slice(5)),
-          datasets: [
-            { label: 'المبيعات', data: series.map(x => x.sales), borderColor: t.primary, backgroundColor: t.primaryAlpha(0.15), fill: true, tension: .35, borderWidth: 2 },
-            { label: 'التارجت', data: series.map(x => x.target), borderColor: t.targetColor, borderDash: [6, 4], borderWidth: 2 },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: t.textColor, font: { family: 'Cairo' } } } },
-          scales: {
-            x: { ticks: { color: t.textColor, font: { family: 'Cairo', size: 10 } }, grid: { color: t.gridColor } },
-            y: { ticks: { color: t.textColor, font: { family: 'Cairo', size: 10 } }, grid: { color: t.gridColor } },
-          },
-        },
-      });
-    },
-    renderMonthlyChart() {
-      const canvas = this.$refs.monthlyChart;
-      if (!canvas || !this.monthlyBranchId) return;
-      if (this.monthlyChartInstance) this.monthlyChartInstance.destroy();
-      const t = this.getChartThemeColors();
-      const days = this.monthlyDays;
-      let cumBase = 0, cumHeroes = 0;
-      const baseLine = days.map(d => { cumBase += d.baseTarget; return cumBase; });
-      const heroesLine = days.map(d => { cumHeroes += d.heroesTarget; return cumHeroes; });
-      this.monthlyChartInstance = new Chart(canvas, {
-        type: 'line',
-        data: {
-          labels: days.map(d => d.date.slice(8)),
-          datasets: [
-            { label: 'المبيعات', data: days.map(d => d.cumulative), borderColor: t.primary, backgroundColor: t.primaryAlpha(0.15), fill: true, tension: .35, borderWidth: 2 },
-            { label: '🎯 أساسي', data: baseLine, borderColor: t.targetColor, borderDash: [6, 4], borderWidth: 2 },
-            { label: '🏆 أبطال', data: heroesLine, borderColor: t.heroesColor, borderDash: [3, 3], borderWidth: 2 },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: t.textColor, font: { family: 'Cairo' } } } },
-          scales: {
-            x: { ticks: { color: t.textColor, font: { family: 'Cairo', size: 10 } }, grid: { color: t.gridColor } },
-            y: { ticks: { color: t.textColor, font: { family: 'Cairo', size: 10 } }, grid: { color: t.gridColor } },
-          },
-        },
-      });
-    },
-        renderYoYChart() {
       try {
-        const canvas = this.$refs.yoyChart || document.getElementById('yoyChart');
-        if (!canvas) return;
-        if (!this.yoyBranchId) {
-          if (this.yoyChartInstance) {
-            try { this.yoyChartInstance.destroy(); } catch(e) {}
-            this.yoyChartInstance = null;
-          }
+        const canvas = this.$refs.trendChart;
+        if (!canvas || !this.analyticsBranchId || !document.body.contains(canvas)) {
+          this.safeDestroyChart('trendChartInstance');
           return;
         }
-        if (this.yoyChartInstance) {
-          try { this.yoyChartInstance.destroy(); } catch(e) {}
-          this.yoyChartInstance = null;
+        this.safeDestroyChart('trendChartInstance');
+        const t = this.getChartThemeColors();
+        const series = this.analyticsSeries || [];
+        const chart = new Chart(canvas, {
+          type: 'line',
+          data: {
+            labels: series.map(x => x.date.slice(5)),
+            datasets: [
+              { label: 'المبيعات', data: series.map(x => x.sales), borderColor: t.primary, backgroundColor: t.primaryAlpha(0.15), fill: true, tension: .35, borderWidth: 2 },
+              { label: 'التارجت', data: series.map(x => x.target), borderColor: t.targetColor, borderDash: [6, 4], borderWidth: 2 },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: t.textColor, font: { family: 'Cairo' } } } },
+            scales: {
+              x: { ticks: { color: t.textColor, font: { family: 'Cairo', size: 10 } }, grid: { color: t.gridColor } },
+              y: { ticks: { color: t.textColor, font: { family: 'Cairo', size: 10 } }, grid: { color: t.gridColor } },
+            },
+          },
+        });
+        this.trendChartInstance = typeof markRaw === 'function' ? markRaw(chart) : chart;
+      } catch (e) {
+        console.error('[Chart] renderTrendChart failed:', e);
+      }
+    },
+
+    renderMonthlyChart() {
+      try {
+        const canvas = this.$refs.monthlyChart;
+        if (!canvas || !this.monthlyBranchId || !document.body.contains(canvas)) {
+          this.safeDestroyChart('monthlyChartInstance');
+          return;
         }
+        this.safeDestroyChart('monthlyChartInstance');
+        const t = this.getChartThemeColors();
+        const days = this.monthlyDays || [];
+        let cumBase = 0, cumHeroes = 0;
+        const baseLine = days.map(d => { cumBase += (d.baseTarget || 0); return cumBase; });
+        const heroesLine = days.map(d => { cumHeroes += (d.heroesTarget || 0); return cumHeroes; });
+        const chart = new Chart(canvas, {
+          type: 'line',
+          data: {
+            labels: days.map(d => d.date.slice(8)),
+            datasets: [
+              { label: 'المبيعات', data: days.map(d => d.cumulative), borderColor: t.primary, backgroundColor: t.primaryAlpha(0.15), fill: true, tension: .35, borderWidth: 2 },
+              { label: '🎯 أساسي', data: baseLine, borderColor: t.targetColor, borderDash: [6, 4], borderWidth: 2 },
+              { label: '🏆 أبطال', data: heroesLine, borderColor: t.heroesColor, borderDash: [3, 3], borderWidth: 2 },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: t.textColor, font: { family: 'Cairo' } } } },
+            scales: {
+              x: { ticks: { color: t.textColor, font: { family: 'Cairo', size: 10 } }, grid: { color: t.gridColor } },
+              y: { ticks: { color: t.textColor, font: { family: 'Cairo', size: 10 } }, grid: { color: t.gridColor } },
+            },
+          },
+        });
+        this.monthlyChartInstance = typeof markRaw === 'function' ? markRaw(chart) : chart;
+      } catch (e) {
+        console.error('[Chart] renderMonthlyChart failed:', e);
+      }
+    },
+
+    renderYoYChart() {
+      try {
+        const canvas = this.$refs.yoyChart || document.getElementById('yoyChart');
+        if (!canvas || !this.yoyBranchId || !document.body.contains(canvas)) {
+          this.safeDestroyChart('yoyChartInstance');
+          return;
+        }
+        this.safeDestroyChart('yoyChartInstance');
 
         const t = this.getChartThemeColors();
-        const arr = this.yoyMonthlyComparison;
+        const arr = this.yoyMonthlyComparison || [];
 
-        this.yoyChartInstance = new Chart(canvas, {
+        const chart = new Chart(canvas, {
           type: 'bar',
           data: {
             labels: arr.map(r => r.monthName),
@@ -4498,6 +4555,7 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
             },
           },
         });
+        this.yoyChartInstance = typeof markRaw === 'function' ? markRaw(chart) : chart;
         console.log('[Chart] ✅ YoY chart created');
       } catch (e) {
         console.error('[Chart] renderYoYChart failed:', e);

@@ -108,45 +108,107 @@ html[data-density="cozy"] .card { padding: 20px !important; }
 html[data-density="cozy"] main { padding: 28px 20px 100px !important; }
 html[data-density="cozy"] button { padding-top: 12px !important; padding-bottom: 12px !important; }
 
-/* ============ البطاقات ============ */
+/* ============ البطاقات (Cards UX) ============ */
 .card {
-  background: linear-gradient(180deg, #111a2e 0%, #0e1628 100%);
-  border: 1px solid #1f2b48;
-  transition: border-color .2s;
+  background: linear-gradient(180deg, #121c32 0%, #0d1526 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
 }
 html.light .card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
 }
-.card:hover { border-color: rgba(var(--theme-primary-rgb, 212,168,75), .3); }
+.card:hover {
+  border-color: rgba(var(--theme-primary-rgb, 212,168,75), .4);
+  box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(var(--theme-primary-rgb, 212,168,75), 0.15);
+}
+html.light .card:hover {
+  border-color: rgba(var(--theme-primary-rgb, 212,168,75), .5);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08);
+}
 
 .card-elevated {
-  background: linear-gradient(180deg, #111a2e 0%, #0e1628 100%);
-  border: 1px solid #1f2b48;
-  box-shadow: 0 10px 30px rgba(0,0,0,.3);
+  background: linear-gradient(180deg, #142038 0%, #0e1628 100%);
+  border: 1px solid rgba(var(--theme-primary-rgb, 212,168,75), 0.25);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 html.light .card-elevated {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 10px 30px rgba(0,0,0,.05);
+  border: 1px solid rgba(var(--theme-primary-rgb, 212,168,75), 0.35);
+  box-shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.08), inset 0 1px 0 #ffffff;
 }
 
-/* ============ المدخلات ============ */
+/* ============ المدخلات وحقول النماذج (Inputs UX) ============ */
 .input {
   background: #0e1628;
   border: 1px solid #243356;
   color: #e5e7eb;
-  transition: all .2s;
+  border-radius: 12px;
+  font-size: 14px;
+  min-height: 44px;
+  padding: 10px 14px;
+  font-family: inherit;
+  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.2s ease;
+  box-sizing: border-box;
 }
 html.light .input {
   background: #f8fafc;
   border: 1px solid #cbd5e1;
   color: #0f172a;
 }
+.input::placeholder {
+  color: #64748b;
+  opacity: 0.85;
+}
+html.light .input::placeholder {
+  color: #94a3b8;
+}
+.input:hover:not(:disabled) {
+  border-color: rgba(var(--theme-primary-rgb, 212,168,75), 0.45);
+}
 .input:focus {
   outline: none;
+  background: #111a2e;
   border-color: var(--theme-primary, #d4a84b);
-  box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb, 212,168,75), .15);
+  box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb, 212,168,75), 0.22),
+              0 4px 16px rgba(0,0,0,0.3);
+}
+html.light .input:focus {
+  background: #ffffff;
+  border-color: var(--theme-primary, #d4a84b);
+  box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb, 212,168,75), 0.18),
+              0 4px 12px rgba(0,0,0,0.06);
+}
+.input:disabled {
+  background: rgba(14, 22, 40, 0.6);
+  border-color: #1e293b;
+  color: #64748b;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* سهم القوائم المنسدلة المخصص */
+select.input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 14px center;
+  padding-inline-end: 38px;
+  cursor: pointer;
+}
+[dir="ltr"] select.input {
+  background-position: right 14px center;
+}
+html.light select.input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 /* ============ الأزرار ============ */
@@ -248,25 +310,32 @@ html.light .btn-ghost:hover { background: #e2e8f0; }
 .sales-input {
   background: #0a1f17;
   border: 2px solid #10b981;
-  color: #fff;
+  color: #ffffff;
   font-weight: 900;
-  font-size: 16px;
-  padding: 10px 8px;
-  border-radius: 10px;
+  font-size: 17px;
+  min-height: 48px;
+  padding: 10px 12px;
+  border-radius: 12px;
   width: 100%;
   text-align: center;
-  transition: all .2s;
+  transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+  letter-spacing: 0.5px;
+  box-sizing: border-box;
 }
 .sales-input:focus {
   outline: none;
   border-color: #34d399;
-  box-shadow: 0 0 0 4px rgba(16,185,129,.25);
-  background: #0d2819;
+  box-shadow: 0 0 0 4px rgba(16,185,129,.25), 0 6px 20px rgba(16,185,129,.2);
+  background: #0e2a1d;
+  transform: scale(1.01);
 }
 .sales-input:disabled {
   background: #0e1628;
   border-color: #243356;
   color: #64748b;
+  box-shadow: none;
+  transform: none;
 }
 .sales-input::-webkit-inner-spin-button,
 .sales-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -275,46 +344,118 @@ html.light .sales-input {
   background: #ecfdf5;
   border-color: #10b981;
   color: #064e3b;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+html.light .sales-input:focus {
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(16,185,129,.2), 0 4px 14px rgba(16,185,129,.15);
 }
 
 .target-input {
   background: #0e1628;
   border: 1px solid #243356;
   color: #94a3b8;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 6px;
-  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 10px;
   width: 100%;
   text-align: center;
+  transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 .target-input:focus {
   outline: none;
   border-color: var(--theme-primary, #d4a84b);
   color: var(--theme-secondary, #e6c074);
+  box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb, 212,168,75), .2);
+  background: #111a2e;
 }
 .target-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 html.light .target-input {
   background: #f8fafc;
   color: #475569;
+  border-color: #cbd5e1;
+}
+html.light .target-input:focus {
+  background: #ffffff;
+}
+
+/* حقول التارجت الملونة دلالياً */
+.target-input-base {
+  background: rgba(59, 130, 246, 0.1);
+  border: 2px solid rgba(59, 130, 246, 0.45);
+  color: #93c5fd;
+  font-weight: 800;
+  font-size: 16px;
+  min-height: 48px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  width: 100%;
+  text-align: center;
+  transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+.target-input-base:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.18);
+  color: #ffffff;
+}
+html.light .target-input-base {
+  background: #eff6ff;
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #1d4ed8;
+}
+
+.target-input-heroes {
+  background: rgba(212, 168, 75, 0.1);
+  border: 2px solid rgba(212, 168, 75, 0.45);
+  color: #fcd34d;
+  font-weight: 800;
+  font-size: 16px;
+  min-height: 48px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  width: 100%;
+  text-align: center;
+  transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+.target-input-heroes:focus {
+  outline: none;
+  border-color: #d4a84b;
+  box-shadow: 0 0 0 4px rgba(212, 168, 75, 0.25);
+  background: rgba(212, 168, 75, 0.18);
+  color: #ffffff;
+}
+html.light .target-input-heroes {
+  background: #fffbeb;
+  border-color: rgba(212, 168, 75, 0.6);
+  color: #b45309;
 }
 
 .invoice-input {
   background: linear-gradient(135deg, rgba(59,130,246,.15), rgba(59,130,246,.05));
   border: 2px solid rgba(59,130,246,.5);
-  color: #fff;
+  color: #ffffff;
   font-weight: 900;
-  font-size: 20px;
-  padding: 12px 8px;
-  border-radius: 10px;
+  font-size: 22px;
+  min-height: 52px;
+  padding: 10px 12px;
+  border-radius: 12px;
   width: 100%;
   text-align: center;
-  transition: all .2s;
+  transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 .invoice-input:focus {
   outline: none;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59,130,246,.3);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.3), 0 6px 20px rgba(59,130,246,.25);
+  transform: scale(1.01);
 }
 .invoice-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 html.light .invoice-input {
@@ -326,19 +467,22 @@ html.light .invoice-input {
 .pieces-input {
   background: linear-gradient(135deg, rgba(139,92,246,.15), rgba(139,92,246,.05));
   border: 2px solid rgba(139,92,246,.5);
-  color: #fff;
+  color: #ffffff;
   font-weight: 900;
-  font-size: 20px;
-  padding: 12px 8px;
-  border-radius: 10px;
+  font-size: 22px;
+  min-height: 52px;
+  padding: 10px 12px;
+  border-radius: 12px;
   width: 100%;
   text-align: center;
-  transition: all .2s;
+  transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 .pieces-input:focus {
   outline: none;
   border-color: #8b5cf6;
-  box-shadow: 0 0 0 4px rgba(139,92,246,.3);
+  box-shadow: 0 0 0 4px rgba(139,92,246,.3), 0 6px 20px rgba(139,92,246,.25);
+  transform: scale(1.01);
 }
 .pieces-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 html.light .pieces-input {
@@ -368,9 +512,10 @@ html.light .progress-bar { background: #e2e8f0; }
   background: #1a2540;
   color: #cbd5e1;
   border: 1px solid #243356;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 8px 14px;
   font-size: 12px;
+  min-height: 38px;
   cursor: pointer;
   font-weight: 600;
   transition: all .15s;
@@ -380,46 +525,82 @@ html.light .progress-bar { background: #e2e8f0; }
   background: linear-gradient(135deg, var(--theme-primary, #d4a84b), var(--theme-secondary, #e6c074));
   color: #0b1220;
   border-color: transparent;
+  box-shadow: 0 4px 14px rgba(var(--theme-primary-rgb, 212,168,75), .3);
 }
 
 /* ============ بطاقة الموظف (للموبايل) ============ */
 .staff-card {
-  background: rgba(15,23,42,.5);
-  border: 1px solid #243356;
-  border-radius: 14px;
-  padding: 14px;
+  background: linear-gradient(180deg, rgba(22, 34, 58, 0.6) 0%, rgba(15, 23, 42, 0.7) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  transition: all .2s;
+  gap: 12px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.staff-card.present { border-color: rgba(16,185,129,.4); }
-.staff-card.absent { border-color: rgba(244,63,94,.3); opacity: .75; }
-.staff-card .sales-input { font-size: 20px; padding: 14px 10px; }
-html.light .staff-card { background: #f8fafc; }
+.staff-card.present {
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.12);
+}
+.staff-card.absent {
+  border-color: rgba(244, 63, 94, 0.25);
+  opacity: 0.75;
+}
+.staff-card .sales-input {
+  font-size: 22px;
+  padding: 12px 14px;
+  min-height: 52px;
+}
+html.light .staff-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+html.light .staff-card.present {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.08);
+}
 
 .quick-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 12px;
   background: #1a2540;
   color: #cbd5e1;
   border: 1px solid #243356;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 900;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all .15s;
+  transition: all .15s cubic-bezier(0.16, 1, 0.3, 1);
   flex-shrink: 0;
+  user-select: none;
+  touch-action: manipulation;
 }
-.quick-btn:hover {
+.quick-btn:hover:not(:disabled) {
   background: #243356;
   color: var(--theme-secondary, #e6c074);
+  border-color: rgba(var(--theme-primary-rgb, 212,168,75), .4);
 }
-.quick-btn:active { transform: scale(.9); }
+.quick-btn:active:not(:disabled) {
+  transform: scale(.92);
+  background: var(--theme-primary, #d4a84b);
+  color: #0b1220;
+}
 .quick-btn:disabled { opacity: .4; cursor: not-allowed; }
+html.light .quick-btn {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
 
 /* ============ Drawer ============ */
 .drawer {
@@ -436,40 +617,222 @@ html.light .staff-card { background: #f8fafc; }
 }
 html.light .drawer { background: #ffffff; }
 
-/* ============ Bottom Sheet ============ */
+/* ============ Bottom Sheet & Responsive Modals ============ */
 .bottom-sheet-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.7);
-  z-index: 70;
+  background: rgba(4, 8, 16, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 80;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  transition: opacity 0.25s ease;
+  padding: 0;
 }
 .bottom-sheet {
   background: #0e1628;
   width: 100%;
   max-width: 640px;
-  max-height: 92vh;
-  border-top-left-radius: 24px;
-  border-top-right-radius: 24px;
+  max-height: 90vh;
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: none;
   overflow-y: auto;
-  padding-bottom: env(safe-area-inset-bottom);
-  box-shadow: 0 -10px 40px rgba(0,0,0,.5);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  box-shadow: 0 -16px 48px rgba(0,0,0,.7);
+  animation: sheetSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 168, 75, 0.35) rgba(15, 23, 42, 0.5);
 }
-html.light .bottom-sheet { background: #ffffff; }
+.bottom-sheet::-webkit-scrollbar {
+  width: 6px;
+}
+.bottom-sheet::-webkit-scrollbar-thumb {
+  background: rgba(212, 168, 75, 0.35);
+  border-radius: 4px;
+}
+}
+@keyframes sheetSlideIn {
+  from { transform: translateY(100%); opacity: 0.9; }
+  to { transform: translateY(0); opacity: 1; }
+}
+html.light .bottom-sheet {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 -12px 48px rgba(0,0,0,.15);
+  scrollbar-color: rgba(212, 168, 75, 0.5) rgba(226, 232, 240, 0.6);
+}
 .bottom-sheet-handle {
-  width: 40px;
+  width: 44px;
   height: 5px;
   border-radius: 99px;
-  background: #243356;
+  background: #334155;
   margin: 12px auto 8px;
+  flex-shrink: 0;
 }
 html.light .bottom-sheet-handle { background: #cbd5e1; }
+
 @media (min-width: 768px) {
-  .bottom-sheet-overlay { align-items: center; }
-  .bottom-sheet { border-radius: 20px; max-height: 88vh; }
+  .bottom-sheet-overlay {
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .bottom-sheet {
+    border-radius: 24px;
+    border: 1px solid rgba(var(--theme-primary-rgb, 212,168,75), 0.25);
+    max-height: 86vh;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    animation: modalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes modalScaleIn {
+    from { transform: scale(0.94); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
   .bottom-sheet-handle { display: none; }
+}
+
+/* ============ مكونات النوافذ المتقدمة (Modal Pro Components) ============ */
+.modal-header-pro {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(14, 22, 40, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+html.light .modal-header-pro {
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom-color: #e2e8f0;
+}
+.modal-close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+.modal-close-btn:hover {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.35);
+  color: #fda4af;
+  transform: rotate(90deg);
+}
+.modal-close-btn:active {
+  transform: scale(0.92);
+}
+html.light .modal-close-btn {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+html.light .modal-close-btn:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+/* ============ حقول الإدخال المحسنة بأيقونات (Input Groups Pro) ============ */
+.form-group-pro {
+  margin-bottom: 14px;
+}
+.form-label-pro {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+html.light .form-label-pro {
+  color: #475569;
+}
+.input-icon-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.input-leading-icon {
+  position: absolute;
+  inset-inline-start: 14px;
+  color: #94a3b8;
+  font-size: 16px;
+  pointer-events: none;
+  z-index: 2;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.input-icon-group:focus-within .input-leading-icon {
+  color: var(--theme-primary, #d4a84b);
+}
+.input-with-icon {
+  padding-inline-start: 42px !important;
+}
+.input-with-toggle {
+  padding-inline-end: 46px !important;
+}
+
+/* ============ UX Touch Enhancements ============ */
+.password-toggle-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  inset-inline-end: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #94a3b8;
+  opacity: 0.8;
+  touch-action: manipulation;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.password-toggle-btn:hover { opacity: 1; color: #fff; }
+.password-toggle-btn:active { transform: translateY(-50%) scale(0.92); }
+
+.header-icon-btn {
+  min-width: 42px !important;
+  min-height: 42px !important;
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 16px !important;
+  touch-action: manipulation !important;
+  transition: transform 0.15s, background-color 0.15s !important;
+}
+.header-icon-btn:active {
+  transform: scale(0.93) !important;
 }
 
 /* ============ PWA Banner ============ */
@@ -633,11 +996,29 @@ html.light .notification-item { background: #f8fafc; }
   backdrop-filter: blur(8px);
 }
 
-/* ============ خلفية صفحة الدخول ============ */
+/* ============ خلفية صفحة الدخول والبطاقة ============ */
 .auth-bg {
   background: radial-gradient(circle at 20% 20%, rgba(var(--theme-primary-rgb, 212,168,75), .15), transparent 40%),
               radial-gradient(circle at 80% 80%, rgba(30,58,95,.25), transparent 40%),
               linear-gradient(135deg, #0b1220, #0e1628);
+}
+.auth-card-pro {
+  background: linear-gradient(180deg, rgba(18, 28, 50, 0.88) 0%, rgba(12, 19, 34, 0.96) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(var(--theme-primary-rgb, 212,168,75), 0.28);
+  box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.75), 
+              0 0 0 1px rgba(255, 255, 255, 0.05),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 30px 24px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+html.light .auth-card-pro {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(var(--theme-primary-rgb, 212,168,75), 0.35);
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.1),
+              0 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
 /* ============ الإعدادات ============ */
@@ -2200,42 +2581,57 @@ html.light .sector-template-btn p:first-child { color: #0f172a !important; }
    ⭐ v23.2: كثافة محسّنة — الجوال أولاً
    ======================================================================== */
 @media (max-width: 767px) {
-  .staff-card { padding: 10px 12px; gap: 8px; border-radius: 12px; }
+  .staff-card {
+    padding: 14px 12px;
+    gap: 10px;
+    border-radius: 16px;
+    background: #111a2e;
+    border: 1px solid #1f2b48;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
   .staff-card .staff-avatar {
-    width: 34px;
-    height: 34px;
-    font-size: 14px;
+    width: 38px;
+    height: 38px;
+    font-size: 15px;
     border-width: 2px;
   }
-  .staff-card .avatar-upload-btn { width: 18px; height: 18px; font-size: 8px; }
+  .staff-card .avatar-upload-btn { width: 20px; height: 20px; font-size: 10px; }
   .staff-card .target-input {
-    font-size: 13px;
-    padding: 6px 4px;
-    border-radius: 7px;
-    height: 32px;
+    font-size: 14px;
+    padding: 8px 6px;
+    border-radius: 9px;
+    min-height: 38px;
+    height: 38px;
+    font-variant-numeric: tabular-nums;
   }
   .staff-card .sales-input {
-    font-size: 16px;
-    padding: 7px 6px;
-    border-radius: 8px;
-    height: 36px;
+    font-size: 18px;
+    font-weight: 900;
+    padding: 8px 10px;
+    border-radius: 12px;
+    min-height: 46px;
+    height: 46px;
+    letter-spacing: 0.5px;
   }
   .staff-card .quick-btn {
-    width: 30px;
-    height: 30px;
-    font-size: 15px;
-    border-radius: 8px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 18px;
+    border-radius: 12px;
+    touch-action: manipulation;
   }
   .staff-card p[style*="font-size:20px"],
-  .staff-card p[style*="font-size: 20px"] { font-size: 16px !important; }
-  .staff-card .progress-bar { height: 4px; margin-top: 2px; }
+  .staff-card p[style*="font-size: 20px"] { font-size: 18px !important; }
+  .staff-card .progress-bar { height: 6px; margin-top: 4px; border-radius: 99px; }
   .staff-card label {
-    font-size: 10px !important;
-    margin-bottom: 2px !important;
-    line-height: 1.2 !important;
+    font-size: 11px !important;
+    margin-bottom: 4px !important;
+    line-height: 1.3 !important;
   }
-  .staff-card > div[style*="grid-template-columns"] { gap: 6px !important; }
-  .staff-card > div[style*="display:flex"][style*="gap:6px"] { gap: 5px !important; }
+  .staff-card > div[style*="grid-template-columns"] { gap: 8px !important; }
+  .staff-card > div[style*="display:flex"][style*="gap:6px"] { gap: 8px !important; }
   .card .sales-input:not(.staff-card .sales-input),
   .card .invoice-input,
   .card .pieces-input {
@@ -2925,49 +3321,55 @@ html.light .lang-fab:hover {
     font-size: 11px !important;
   }
 
-  /* 7. حقول الإدخال أقصر */
+  /* 7. حقول الإدخال مريحة للأصبع ومطابقة لمعايير الجوال (16px لمنع zoom الآيفون) */
   .input,
-  .sales-input,
-  .target-input,
-  .invoice-input,
-  .pieces-input {
-    padding: 6px 8px !important;
-    font-size: 13px !important;
-    min-height: 34px !important;
-    height: 34px !important;
-  }
-
-  .invoice-input,
-  .pieces-input {
+  .target-input {
+    padding: 10px 12px !important;
     font-size: 16px !important;
-    height: 40px !important;
-  }
-
-  /* 8. الأزرار السريعة (Mobile) أصغر */
-  .quick-btn {
-    width: 32px !important;
-    height: 32px !important;
-    font-size: 14px !important;
-    border-radius: 8px !important;
-  }
-
-  /* 9. Staff Cards أنحف */
-  .staff-card {
-    padding: 8px 10px !important;
-    gap: 6px !important;
+    min-height: 44px !important;
+    height: 44px !important;
     border-radius: 10px !important;
   }
 
+  .sales-input,
+  .invoice-input,
+  .pieces-input {
+    font-size: 18px !important;
+    font-weight: 900 !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    padding: 8px 10px !important;
+    border-radius: 12px !important;
+  }
+
+  /* 8. أزرار اللمس السريعة (+ / -) بمقاس 44px المعتمد للمس المريح */
+  .quick-btn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    font-size: 18px !important;
+    border-radius: 12px !important;
+    touch-action: manipulation !important;
+  }
+
+  /* 9. Staff Cards أنيقة وواضحة */
+  .staff-card {
+    padding: 14px 12px !important;
+    gap: 10px !important;
+    border-radius: 16px !important;
+  }
+
   .staff-card .staff-avatar {
-    width: 32px !important;
-    height: 32px !important;
-    font-size: 13px !important;
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 15px !important;
   }
 
   .staff-card .avatar-upload-btn {
-    width: 16px !important;
-    height: 16px !important;
-    font-size: 7px !important;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 9px !important;
   }
 
   /* 10. خدمة Welcome Cards أصغر */
@@ -3116,21 +3518,25 @@ html.light .lang-fab:hover {
     font-size: 11px !important;
   }
 
-  /* 22. Sale Input في Staff Cards أصغر */
+  /* 22. Sale Input في Staff Cards بمقاس مريح للمس */
   .staff-card .sales-input {
-    height: 32px !important;
-    font-size: 15px !important;
-    padding: 4px 6px !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    font-size: 18px !important;
+    font-weight: 900 !important;
+    padding: 8px 10px !important;
   }
 
   .staff-card .target-input {
-    height: 30px !important;
-    font-size: 12px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    font-size: 14px !important;
   }
 
-  /* 23. Progress Bar أنحف */
+  /* 23. Progress Bar واضح ومريح للعين */
   .progress-bar {
-    height: 4px !important;
+    height: 6px !important;
+    border-radius: 99px !important;
   }
 }
 

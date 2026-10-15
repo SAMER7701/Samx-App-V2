@@ -134,54 +134,79 @@
   <!-- ============ Lock Screen ============ -->
   <transition name="fade">
     <div v-if="isLocked && currentUser" class="lock-overlay">
-      <div class="card" style="border-radius:20px;padding:32px;max-width:380px;width:90%;">
-        <div style="text-align:center;margin-bottom:20px;">
-          <div class="logo-badge" style="width:80px;height:80px;border-radius:18px;padding:10px;margin:0 auto 12px;">
+      <div class="card auth-card-pro" style="max-width:420px;width:92%;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div class="logo-badge" style="width:84px;height:84px;border-radius:20px;padding:12px;margin:0 auto 14px;">
             <img :src="activeLogo" :alt="activeCompanyName" onerror="this.style.display='none'">
           </div>
-          <h2 style="font-size:18px;font-weight:800;color:#fff;margin:0;">🔒 التطبيق مقفل</h2>
-          <p style="font-size:12px;color:#94a3b8;margin:8px 0 0;">أدخل كلمة المرور للمتابعة</p>
+          <h2 style="font-size:22px;font-weight:900;color:#fff;margin:0;">🔒 التطبيق مقفل</h2>
+          <p style="font-size:13px;color:#94a3b8;margin:8px 0 0;">أدخل كلمة المرور للمتابعة</p>
         </div>
-        <div style="margin-bottom:12px;">
-          <input v-model="lockPassword" type="password" @keyup.enter="unlockApp" class="input" style="width:100%;border-radius:8px;padding:12px;font-size:14px;" placeholder="كلمة المرور">
+        <div class="form-group-pro">
+          <label class="form-label-pro">🔒 كلمة المرور</label>
+          <div class="input-icon-group">
+            <span class="input-leading-icon">🔑</span>
+            <input v-model="lockPassword" :type="showLockPassword ? 'text' : 'password'" @keyup.enter="unlockApp" class="input input-with-icon input-with-toggle" style="width:100%;font-size:16px;min-height:50px;" placeholder="كلمة المرور">
+            <button type="button" @click="showLockPassword = !showLockPassword" class="password-toggle-btn" :title="showLockPassword ? 'إخفاء' : 'إظهار'">
+              {{ showLockPassword ? '🙈' : '👁️' }}
+            </button>
+          </div>
         </div>
-        <p v-if="lockError" class="shake" style="color:#fda4af;font-size:12px;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:8px;padding:8px 12px;margin:0 0 12px;">⚠️ {{ lockError }}</p>
-        <button @click="unlockApp" class="btn-gold" style="width:100%;border:none;border-radius:8px;padding:12px;font-size:14px;cursor:pointer;margin-bottom:8px;">🔓 فتح</button>
-        <button @click="doLogout" class="btn-ghost" style="width:100%;border-radius:8px;padding:10px;font-size:12px;cursor:pointer;">تسجيل خروج</button>
+        <p v-if="lockError" class="shake" style="color:#fda4af;font-size:12px;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:10px;padding:10px 14px;margin:0 0 14px;">⚠️ {{ lockError }}</p>
+        <button @click="unlockApp" class="btn-gold" style="width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;cursor:pointer;margin-bottom:10px;min-height:50px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(var(--theme-primary-rgb, 212,168,75), .3);">🔓 فتح التطبيق</button>
+        <button @click="doLogout" class="btn-ghost" style="width:100%;border-radius:12px;padding:12px;font-size:13px;cursor:pointer;min-height:44px;">تسجيل خروج</button>
       </div>
     </div>
   </transition>
 
   <!-- ============ LOGIN SCREEN ============ -->
-  <div v-if="!currentUser" class="auth-bg" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;">
+  <div v-if="!currentUser" class="auth-bg" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;">
     <div style="width:100%;max-width:440px;">
       <div class="logo-animate" style="text-align:center;margin-bottom:28px;">
-        <div class="logo-badge" style="width:150px;height:150px;border-radius:28px;padding:18px;margin:0 auto 18px;">
+        <div class="logo-badge" style="width:140px;height:140px;border-radius:28px;padding:18px;margin:0 auto 18px;">
           <img :src="activeLogo" :alt="activeCompanyName" onerror="this.style.display='none'">
         </div>
         <h1 style="font-size:26px;font-weight:900;color:#fff;margin:0;">{{ activeCompanyName }}</h1>
-        <p style="color:#e6c074;font-size:14px;font-weight:600;margin:2px 0 0;letter-spacing:2px;">{{ activeCompanyDesc }}</p>
+        <p style="color:#e6c074;font-size:14px;font-weight:600;margin:4px 0 0;letter-spacing:1px;">{{ activeCompanyDesc }}</p>
         <p style="color:#94a3b8;font-size:12px;margin:8px 0 0;">{{ t('auth.tagline') }}</p>
-        <p style="color:#64748b;font-size:10px;margin:4px 0 0;">v{{ appVersion }} • {{ onlineStatus ? t('auth.connection.online') : t('auth.connection.offline') }}</p>
+        <p style="color:#64748b;font-size:11px;margin:6px 0 0;">v{{ appVersion }} • {{ onlineStatus ? t('auth.connection.online') : t('auth.connection.offline') }}</p>
       </div>
-      <div class="card-elevated" style="border-radius:16px;padding:24px;">
-        <h2 style="font-size:16px;font-weight:bold;color:#fff;margin:0 0 16px;text-align:center;">{{ t('auth.login.title') }}</h2>
-        <div style="margin-bottom:12px;">
-          <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('auth.username') }}</label>
-          <input v-model.trim="loginForm.username" @keyup.enter="doLogin" class="input" style="width:100%;border-radius:8px;padding:12px;font-size:14px;" :placeholder="t('auth.usernamePlaceholder')" autocomplete="username">
+      <div class="auth-card-pro">
+        <h2 style="font-size:19px;font-weight:900;color:#fff;margin:0 0 20px;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <span>🔐</span>
+          <span>{{ t('auth.login.title') }}</span>
+        </h2>
+        <div class="form-group-pro">
+          <label class="form-label-pro">
+            <span>👤</span>
+            <span>{{ t('auth.username') }}</span>
+          </label>
+          <div class="input-icon-group">
+            <span class="input-leading-icon">@</span>
+            <input v-model.trim="loginForm.username" @keyup.enter="doLogin" class="input input-with-icon" style="width:100%;font-size:15px;min-height:50px;" :placeholder="t('auth.usernamePlaceholder')" autocomplete="username">
+          </div>
         </div>
-        <div style="margin-bottom:12px;">
-          <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('auth.password') }}</label>
-          <input v-model="loginForm.password" type="password" @keyup.enter="doLogin" class="input" style="width:100%;border-radius:8px;padding:12px;font-size:14px;" :placeholder="t('auth.passwordPlaceholder')" autocomplete="current-password">
+        <div class="form-group-pro">
+          <label class="form-label-pro">
+            <span>🔒</span>
+            <span>{{ t('auth.password') }}</span>
+          </label>
+          <div class="input-icon-group">
+            <span class="input-leading-icon">🔑</span>
+            <input v-model="loginForm.password" :type="showLoginPassword ? 'text' : 'password'" @keyup.enter="doLogin" class="input input-with-icon input-with-toggle" style="width:100%;font-size:15px;min-height:50px;" :placeholder="t('auth.passwordPlaceholder')" autocomplete="current-password">
+            <button type="button" @click="showLoginPassword = !showLoginPassword" class="password-toggle-btn" :title="showLoginPassword ? 'إخفاء' : 'إظهار'">
+              {{ showLoginPassword ? '🙈' : '👁️' }}
+            </button>
+          </div>
         </div>
-        <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#94a3b8;cursor:pointer;">
-          <input type="checkbox" v-model="rememberMe" style="width:16px;height:16px;accent-color:#d4a84b;">
+        <label style="display:flex;align-items:center;gap:10px;margin-bottom:18px;font-size:13px;color:#94a3b8;cursor:pointer;user-select:none;">
+          <input type="checkbox" v-model="rememberMe" style="width:18px;height:18px;accent-color:#d4a84b;border-radius:4px;cursor:pointer;">
           <span>{{ t('auth.remember') }}</span>
         </label>
-        <p v-if="loginError" class="shake" style="color:#fda4af;font-size:12px;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:8px;padding:8px 12px;margin:0 0 12px;">⚠️ {{ loginError }}</p>
-        <button @click="doLogin" :disabled="loggingIn" class="btn-gold" style="width:100%;border:none;border-radius:8px;padding:12px;font-size:14px;cursor:pointer;">{{ loggingIn ? t('auth.loggingBtn') : t('auth.loginBtn') }}</button>
+        <p v-if="loginError" class="shake" style="color:#fda4af;font-size:12px;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:10px;padding:10px 14px;margin:0 0 16px;">⚠️ {{ loginError }}</p>
+        <button @click="doLogin" :disabled="loggingIn" class="btn-gold" style="width:100%;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;min-height:50px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(var(--theme-primary-rgb, 212,168,75), .3);">{{ loggingIn ? t('auth.loggingBtn') : t('auth.loginBtn') }}</button>
       </div>
-      <p style="text-align:center;font-size:10px;color:#64748b;margin-top:20px;">{{ activeCopyright }} — {{ t('meta.copyright') }}</p>
+      <p style="text-align:center;font-size:11px;color:#64748b;margin-top:20px;">{{ activeCopyright }} — {{ t('meta.copyright') }}</p>
     </div>
   </div>
   <!-- ============ MAIN APP ============ -->
@@ -241,12 +266,12 @@
 
           <!-- Search -->
           <div class="tooltip-container" :data-tooltip="t('header.tooltips.search')">
-            <button @click="openSearch" class="btn-ghost" style="border-radius:8px;padding:8px 10px;cursor:pointer;">🔍</button>
+            <button @click="openSearch" class="btn-ghost header-icon-btn" aria-label="Search">🔍</button>
           </div>
 
           <!-- Notifications -->
           <div class="tooltip-container" :data-tooltip="t('header.tooltips.notifications')">
-            <button @click="showNotificationsPanel = !showNotificationsPanel" class="btn-ghost" style="border-radius:8px;padding:8px 10px;cursor:pointer;position:relative;">
+            <button @click="showNotificationsPanel = !showNotificationsPanel" class="btn-ghost header-icon-btn" style="position:relative;" aria-label="Notifications">
               🔔
               <span v-if="unreadNotificationsCount > 0" class="badge" style="position:absolute;top:-4px;right:-4px;">{{ unreadNotificationsCount }}</span>
             </button>
@@ -259,24 +284,24 @@
 
           <!-- Language Toggle -->
           <div class="tooltip-container" :data-tooltip="currentLang === 'ar' ? t('header.tooltips.language.toEn') : t('header.tooltips.language.toAr')">
-            <button @click="setLanguage(currentLang === 'ar' ? 'en' : 'ar')" class="btn-ghost" style="border-radius:8px;padding:8px 10px;cursor:pointer;font-weight:800;font-size:14px;">🌍</button>
+            <button @click="setLanguage(currentLang === 'ar' ? 'en' : 'ar')" class="btn-ghost header-icon-btn" style="font-weight:800;font-size:14px;" aria-label="Language">🌍</button>
           </div>
 
           <!-- Settings -->
           <div class="tooltip-container" :data-tooltip="t('header.tooltips.settings')">
-            <button @click="showSettings=true" class="btn-ghost" style="border-radius:8px;padding:8px 10px;cursor:pointer;">⚙️</button>
+            <button @click="showSettings=true" class="btn-ghost header-icon-btn" aria-label="Settings">⚙️</button>
           </div>
 
           <!-- Activity Log -->
           <div class="tooltip-container hide-mobile" :data-tooltip="t('header.tooltips.activity')">
-            <button @click="showActivityLog=true" class="btn-ghost" style="border-radius:8px;padding:8px 10px;cursor:pointer;">📜</button>
+            <button @click="showActivityLog=true" class="btn-ghost header-icon-btn" aria-label="Activity Log">📜</button>
           </div>
 
           <!-- Backup -->
           <div class="tooltip-container hide-mobile" :data-tooltip="t('header.tooltips.backup')">
-            <button @click="showBackupModal=true" class="btn-ghost" style="border-radius:8px;padding:8px 10px;cursor:pointer;">💾</button>
+            <button @click="showBackupModal=true" class="btn-ghost header-icon-btn" aria-label="Backup">💾</button>
           </div>
-          </div>
+        </div>
       </div>
 
       <!-- Notifications Panel -->
@@ -592,18 +617,18 @@
           </div>
           <div class="card" style="border-radius:16px;padding:16px;">
             <h3 style="font-size:13px;font-weight:bold;color:#e6c074;margin:0 0 12px;">{{ t('dashboard.target.title') }}</h3>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
-              <div>
-                <label style="display:block;font-size:11px;color:#60a5fa;margin-bottom:4px;font-weight:bold;">{{ t('dashboard.target.baseLabel') }}</label>
-                <input type="number" min="0" inputmode="numeric" :value="branchBaseTarget === 0 ? '' : branchBaseTarget" @focus="$event.target.select()" @input="branchBaseTarget = Number($event.target.value) || 0" :disabled="!canEditTarget" class="sales-input" placeholder="0">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;">
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro" style="color:#60a5fa;">🎯 {{ t('dashboard.target.baseLabel') }}</label>
+                <input type="number" min="0" inputmode="numeric" :value="branchBaseTarget === 0 ? '' : branchBaseTarget" @focus="$event.target.select()" @input="branchBaseTarget = Number($event.target.value) || 0" :disabled="!canEditTarget" class="target-input-base" placeholder="0">
               </div>
-              <div>
-                <label style="display:block;font-size:11px;color:#e6c074;margin-bottom:4px;font-weight:bold;">{{ t('dashboard.target.heroesLabel') }}</label>
-                <input type="number" min="0" inputmode="numeric" :value="branchHeroesTarget === 0 ? '' : branchHeroesTarget" @focus="$event.target.select()" @input="branchHeroesTarget = Number($event.target.value) || 0" :disabled="!canEditTarget" class="sales-input" placeholder="0">
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro" style="color:#e6c074;">⭐ {{ t('dashboard.target.heroesLabel') }}</label>
+                <input type="number" min="0" inputmode="numeric" :value="branchHeroesTarget === 0 ? '' : branchHeroesTarget" @focus="$event.target.select()" @input="branchHeroesTarget = Number($event.target.value) || 0" :disabled="!canEditTarget" class="target-input-heroes" placeholder="0">
               </div>
-              <div>
-                <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('dashboard.target.manualExtraLabel') }}</label>
-                <input type="number" min="0" inputmode="numeric" :value="branchManualExtra === 0 ? '' : branchManualExtra" @focus="$event.target.select()" @input="branchManualExtra = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="sales-input" placeholder="0">
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro" style="color:#94a3b8;">➕ {{ t('dashboard.target.manualExtraLabel') }}</label>
+                <input type="number" min="0" inputmode="numeric" :value="branchManualExtra === 0 ? '' : branchManualExtra" @focus="$event.target.select()" @input="branchManualExtra = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="target-input" style="min-height:48px;font-size:16px;border-radius:12px;" placeholder="0">
               </div>
             </div>
           </div>
@@ -752,16 +777,25 @@
                     <p style="font-size:20px;font-weight:900;margin:0;" :style="{color: s.pct>=100 ? '#34d399' : s.pct>=70 ? '#fbbf24' : s.pct>0 ? '#fb7185' : '#64748b'}">{{ s.pct.toFixed(0) }}%</p>
                   </div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                  <div><label style="display:block;font-size:10px;color:#60a5fa;margin-bottom:4px;">{{ t('dashboard.staff.mobile.targetLabel') }}</label><input type="number" min="0" inputmode="numeric" :value="s.target === 0 ? '' : s.target" @focus="$event.target.select()" @input="updateStaffField(s.id, 'target', $event.target.value)" :disabled="!canEditTarget" class="target-input" placeholder="0"></div>
-                  <div><label style="display:block;font-size:10px;color:#e6c074;margin-bottom:4px;">{{ t('dashboard.staff.mobile.heroesLabel') }}</label><input type="number" min="0" inputmode="numeric" :value="s.heroesTarget === 0 ? '' : s.heroesTarget" @focus="$event.target.select()" @input="updateStaffField(s.id, 'heroesTarget', $event.target.value)" :disabled="!canEditTarget" class="target-input" placeholder="0"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                  <div style="background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.2);border-radius:12px;padding:8px 10px;">
+                    <label style="display:block;font-size:11px;color:#93c5fd;margin-bottom:4px;font-weight:700;">{{ t('dashboard.staff.mobile.targetLabel') }}</label>
+                    <input type="number" min="0" inputmode="numeric" :value="s.target === 0 ? '' : s.target" @focus="$event.target.select()" @input="updateStaffField(s.id, 'target', $event.target.value)" :disabled="!canEditTarget" class="target-input" placeholder="0" style="background:transparent;border:none;font-weight:800;font-size:16px;color:#fff;width:100%;">
+                  </div>
+                  <div style="background:rgba(230,192,116,.08);border:1px solid rgba(230,192,116,.25);border-radius:12px;padding:8px 10px;">
+                    <label style="display:block;font-size:11px;color:#fcd34d;margin-bottom:4px;font-weight:700;">{{ t('dashboard.staff.mobile.heroesLabel') }}</label>
+                    <input type="number" min="0" inputmode="numeric" :value="s.heroesTarget === 0 ? '' : s.heroesTarget" @focus="$event.target.select()" @input="updateStaffField(s.id, 'heroesTarget', $event.target.value)" :disabled="!canEditTarget" class="target-input" placeholder="0" style="background:transparent;border:none;font-weight:800;font-size:16px;color:#fff;width:100%;">
+                  </div>
                 </div>
                 <div>
-                  <label style="display:block;font-size:11px;color:#34d399;margin-bottom:4px;font-weight:bold;">{{ t('dashboard.staff.mobile.salesLabel') }}</label>
-                  <div style="display:flex;gap:6px;align-items:center;">
-                    <button class="quick-btn" @click="adjustSales(s.id, -1000)" :disabled="!canEnterDailySales || !s.present">−</button>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <label style="display:block;font-size:12px;color:#34d399;font-weight:800;">{{ t('dashboard.staff.mobile.salesLabel') }}</label>
+                    <span v-if="s.sales > 0" style="font-size:11px;color:#94a3b8;font-weight:600;">{{ formatSAR(s.sales) }}</span>
+                  </div>
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    <button class="quick-btn" @click="adjustSales(s.id, -1000)" :disabled="!canEnterDailySales || !s.present" title="-1000" aria-label="Decrease sales">−</button>
                     <input type="number" min="0" inputmode="numeric" :value="s.sales === 0 ? '' : s.sales" @focus="$event.target.select()" @input="updateStaffField(s.id, 'sales', $event.target.value)" @keydown.enter.prevent="onSalesEnter(s.id)" :data-staff-sales="s.id" :disabled="!canEnterDailySales || !s.present" class="sales-input" placeholder="0" :style="{flex:1, opacity: !s.present ? 0.4 : 1}">
-                    <button class="quick-btn" @click="adjustSales(s.id, 1000)" :disabled="!canEnterDailySales || !s.present">+</button>
+                    <button class="quick-btn" @click="adjustSales(s.id, 1000)" :disabled="!canEnterDailySales || !s.present" title="+1000" aria-label="Increase sales">+</button>
                   </div>
                 </div>
                 <div class="progress-bar" style="height:6px;"><div class="progress-bar-fill" :style="{width: Math.min(s.pct,100)+'%', background: s.pct>=100 ? '#10b981' : s.pct>=70 ? '#f59e0b' : '#ef4444'}"></div></div>
@@ -1494,17 +1528,23 @@
             </div>
           </div>
 
-          <div class="card" style="border-radius:16px;padding:16px;">
-            <h3 style="font-size:13px;font-weight:bold;color:#e6c074;margin:0 0 12px;">{{ editingBranch ? t('branches.form.editTitle') : t('branches.form.addTitle') }}</h3>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
-              <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('branches.form.name') }}</label><input v-model.trim="branchForm.name" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;"></div>
-              <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('branches.form.code') }}</label><input v-model.trim="branchForm.code" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;"></div>
+          <div class="card" style="border-radius:18px;padding:20px;">
+            <h3 style="font-size:14px;font-weight:bold;color:#e6c074;margin:0 0 16px;">{{ editingBranch ? t('branches.form.editTitle') : t('branches.form.addTitle') }}</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;">
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro">🏬 {{ t('branches.form.name') }}</label>
+                <input v-model.trim="branchForm.name" class="input" style="width:100%;font-size:14px;" :placeholder="t('branches.form.name')">
+              </div>
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro">🏷️ {{ t('branches.form.code') }}</label>
+                <input v-model.trim="branchForm.code" class="input" style="width:100%;font-size:14px;" :placeholder="t('branches.form.code')">
+              </div>
               <div style="display:flex;align-items:flex-end;gap:8px;">
-                <button @click="saveBranch" class="btn-gold" style="border:none;border-radius:8px;padding:10px;font-size:14px;flex:1;cursor:pointer;">{{ editingBranch ? t('common.save') : t('common.add') }}</button>
-                <button v-if="editingBranch" @click="cancelBranchEdit" class="btn-ghost" style="border-radius:8px;padding:10px 14px;cursor:pointer;">{{ t('common.cancel') }}</button>
+                <button @click="saveBranch" class="btn-gold" style="border:none;border-radius:12px;padding:12px 18px;font-size:14px;min-height:44px;flex:1;cursor:pointer;font-weight:700;">{{ editingBranch ? t('common.save') : t('common.add') }}</button>
+                <button v-if="editingBranch" @click="cancelBranchEdit" class="btn-ghost" style="border-radius:12px;padding:12px 16px;min-height:44px;cursor:pointer;">{{ t('common.cancel') }}</button>
               </div>
             </div>
-            <p v-if="branchError" class="shake" style="color:#fb7185;font-size:12px;margin:8px 0 0;">{{ branchError }}</p>
+            <p v-if="branchError" class="shake" style="color:#fb7185;font-size:12px;margin:10px 0 0;">{{ branchError }}</p>
           </div>
 
           <div class="card" style="border-radius:16px;padding:16px;">
@@ -1544,29 +1584,37 @@
         <div v-if="!canManageStaff" class="card" style="border-radius:12px;padding:24px;text-align:center;color:#fda4af;">{{ t('staffView.noPermission') }}</div>
 
         <template v-else>
-          <div class="card" style="border-radius:16px;padding:16px;">
-            <h3 style="font-size:13px;font-weight:bold;color:#e6c074;margin:0 0 12px;">{{ editingStaff ? t('staffView.form.editTitle') : t('staffView.form.addTitle') }}</h3>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
-              <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('staffView.form.name') }}</label><input v-model.trim="staffForm.name" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;"></div>
-              <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('staffView.form.code') }}</label><input v-model.trim="staffForm.code" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;"></div>
-              <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('staffView.form.jobTitle') }}</label>
-                <select v-model="staffForm.jobTitle" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;">
+          <div class="card" style="border-radius:18px;padding:20px;">
+            <h3 style="font-size:14px;font-weight:bold;color:#e6c074;margin:0 0 16px;">{{ editingStaff ? t('staffView.form.editTitle') : t('staffView.form.addTitle') }}</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;">
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro">👤 {{ t('staffView.form.name') }}</label>
+                <input v-model.trim="staffForm.name" class="input" style="width:100%;font-size:14px;" :placeholder="t('staffView.form.name')">
+              </div>
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro">🏷️ {{ t('staffView.form.code') }}</label>
+                <input v-model.trim="staffForm.code" class="input" style="width:100%;font-size:14px;" :placeholder="t('staffView.form.code')">
+              </div>
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro">💼 {{ t('staffView.form.jobTitle') }}</label>
+                <select v-model="staffForm.jobTitle" class="input" style="width:100%;font-size:14px;">
                   <option value="">{{ t('staffView.form.choose') }}</option>
                   <option v-for="j in jobTitles" :key="j" :value="j">{{ jobTitleLabel(j) }}</option>
                 </select>
               </div>
-              <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('staffView.form.branch') }}</label>
-                <select v-model="staffForm.branchId" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;">
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro">🏬 {{ t('staffView.form.branch') }}</label>
+                <select v-model="staffForm.branchId" class="input" style="width:100%;font-size:14px;">
                   <option value="">{{ t('staffView.form.choose') }}</option>
                   <option v-for="b in allowedBranches" :key="b.id" :value="b.id">{{ b.name }}</option>
                 </select>
               </div>
             </div>
-            <div style="display:flex;gap:8px;margin-top:12px;">
-              <button @click="saveStaff" class="btn-gold" style="border:none;border-radius:8px;padding:10px 16px;cursor:pointer;">{{ editingStaff ? t('common.save') : t('common.add') }}</button>
-              <button v-if="editingStaff" @click="cancelStaffEdit" class="btn-ghost" style="border-radius:8px;padding:10px 14px;cursor:pointer;">{{ t('common.cancel') }}</button>
+            <div style="display:flex;gap:10px;margin-top:16px;">
+              <button @click="saveStaff" class="btn-gold" style="border:none;border-radius:12px;padding:12px 22px;font-size:14px;min-height:44px;cursor:pointer;font-weight:700;">{{ editingStaff ? t('common.save') : t('common.add') }}</button>
+              <button v-if="editingStaff" @click="cancelStaffEdit" class="btn-ghost" style="border-radius:12px;padding:12px 18px;min-height:44px;cursor:pointer;">{{ t('common.cancel') }}</button>
             </div>
-            <p v-if="staffError" class="shake" style="color:#fb7185;font-size:12px;margin:8px 0 0;">{{ staffError }}</p>
+            <p v-if="staffError" class="shake" style="color:#fb7185;font-size:12px;margin:10px 0 0;">{{ staffError }}</p>
           </div>
 
           <div class="card" style="border-radius:16px;padding:16px;">
@@ -1631,21 +1679,32 @@
         <div v-if="currentUser.role!=='admin'" class="card" style="border-radius:12px;padding:24px;text-align:center;color:#fda4af;">{{ t('users.noPermission') }}</div>
 
         <template v-else>
-          <div class="card" style="border-radius:16px;padding:16px;">
-            <h3 style="font-size:13px;font-weight:bold;color:#e6c074;margin:0 0 12px;">{{ editingUser ? t('users.form.editTitle') : t('users.form.addTitle') }}</h3>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
-              <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('users.form.fullName') }}</label><input v-model.trim="userForm.fullName" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;"></div>
-              <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('users.form.username') }}</label><input v-model.trim="userForm.username" :disabled="!!editingUser" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;"></div>
-              <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('users.form.password') }}</label><input v-model="userForm.password" type="password" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;"></div>
-              <div><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('users.form.role') }}</label>
-                <select v-model="userForm.role" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;">
+          <div class="card" style="border-radius:18px;padding:20px;">
+            <h3 style="font-size:14px;font-weight:bold;color:#e6c074;margin:0 0 16px;">{{ editingUser ? t('users.form.editTitle') : t('users.form.addTitle') }}</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;">
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro">👤 {{ t('users.form.fullName') }}</label>
+                <input v-model.trim="userForm.fullName" class="input" style="width:100%;font-size:14px;" :placeholder="t('users.form.fullName')">
+              </div>
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro">📛 {{ t('users.form.username') }}</label>
+                <input v-model.trim="userForm.username" :disabled="!!editingUser" class="input" style="width:100%;font-size:14px;" :placeholder="t('users.form.username')">
+              </div>
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro">🔒 {{ t('users.form.password') }}</label>
+                <input v-model="userForm.password" type="password" class="input" style="width:100%;font-size:14px;" :placeholder="t('users.form.password')">
+              </div>
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro">🛡️ {{ t('users.form.role') }}</label>
+                <select v-model="userForm.role" class="input" style="width:100%;font-size:14px;">
                   <option value="admin">{{ t('header.role.admin') }}</option>
                   <option value="manager">{{ t('header.role.manager') }}</option>
                   <option value="branch_manager">{{ t('header.role.branch_manager') }}</option>
                 </select>
               </div>
-              <div v-if="userForm.role === 'manager' || userForm.role === 'branch_manager'"><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;">{{ t('users.form.branch') }}</label>
-                <select v-model="userForm.branchId" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;">
+              <div v-if="userForm.role === 'manager' || userForm.role === 'branch_manager'" class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro">🏬 {{ t('users.form.branch') }}</label>
+                <select v-model="userForm.branchId" class="input" style="width:100%;font-size:14px;">
                   <option value="">{{ t('users.form.choose') }}</option>
                   <option v-for="b in branches" :key="b.id" :value="b.id">{{ b.name }}</option>
                 </select>
@@ -1654,17 +1713,17 @@
             <div style="margin-top:16px;padding-top:16px;border-top:1px solid #243356;">
               <h4 style="font-size:12px;color:#e6c074;margin:0 0 12px;">{{ t('users.form.permissions') }}</h4>
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;">
-                <label v-for="perm in permissionList" :key="perm.key" style="display:flex;align-items:center;gap:8px;background:rgba(15,23,42,.5);border:1px solid #243356;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12px;">
-                  <input type="checkbox" v-model="userForm.permissions[perm.key]" style="width:16px;height:16px;accent-color:#d4a84b;">
+                <label v-for="perm in permissionList" :key="perm.key" style="display:flex;align-items:center;gap:8px;background:rgba(15,23,42,.5);border:1px solid #243356;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:12px;transition:border-color 0.15s;">
+                  <input type="checkbox" v-model="userForm.permissions[perm.key]" style="width:18px;height:18px;accent-color:#d4a84b;border-radius:4px;cursor:pointer;">
                   <span>{{ perm.icon }} {{ t('permissions.' + perm.key, perm.label) }}</span>
                 </label>
               </div>
             </div>
-            <div style="display:flex;gap:8px;margin-top:16px;">
-              <button @click="saveUser" class="btn-gold" style="border:none;border-radius:8px;padding:10px 16px;cursor:pointer;">{{ editingUser ? t('common.save') : t('common.add') }}</button>
-              <button v-if="editingUser" @click="cancelUserEdit" class="btn-ghost" style="border-radius:8px;padding:10px 14px;cursor:pointer;">{{ t('common.cancel') }}</button>
+            <div style="display:flex;gap:10px;margin-top:18px;">
+              <button @click="saveUser" class="btn-gold" style="border:none;border-radius:12px;padding:12px 22px;font-size:14px;min-height:44px;cursor:pointer;font-weight:700;">{{ editingUser ? t('common.save') : t('common.add') }}</button>
+              <button v-if="editingUser" @click="cancelUserEdit" class="btn-ghost" style="border-radius:12px;padding:12px 18px;min-height:44px;cursor:pointer;">{{ t('common.cancel') }}</button>
             </div>
-            <p v-if="userError" class="shake" style="color:#fb7185;font-size:12px;margin:8px 0 0;">{{ userError }}</p>
+            <p v-if="userError" class="shake" style="color:#fb7185;font-size:12px;margin:10px 0 0;">{{ userError }}</p>
           </div>
 
           <div class="card" style="border-radius:16px;padding:16px;">
@@ -1895,12 +1954,15 @@
          ============================================================ -->
     <transition name="fade">
       <div v-if="showImportModal" class="bottom-sheet-overlay" @click.self="showImportModal=false">
-        <div class="bottom-sheet">
+        <div class="bottom-sheet" style="max-width:640px;">
           <div class="bottom-sheet-handle"></div>
           <div style="padding:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <h3 style="font-size:16px;font-weight:bold;color:#e6c074;margin:0;">{{ t('modal.import.title') }}</h3>
-              <button @click="showImportModal=false" style="color:#94a3b8;font-size:24px;background:none;border:none;cursor:pointer;">✕</button>
+              <h3 style="font-size:16px;font-weight:bold;color:#e6c074;margin:0;display:flex;align-items:center;gap:8px;">
+                <span>📊</span>
+                <span>{{ t('modal.import.title') }}</span>
+              </h3>
+              <button @click="showImportModal=false" class="modal-close-btn" aria-label="Close">✕</button>
             </div>
             <div style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:12px;font-size:12px;color:#93c5fd;margin-bottom:16px;">
               <p style="margin:0 0 6px;font-weight:bold;">{{ t('modal.import.format.title') }}</p>
@@ -2034,8 +2096,11 @@
           <div class="bottom-sheet-handle"></div>
           <div style="padding:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <h3 style="font-size:16px;font-weight:bold;color:#34d399;margin:0;">{{ t('modal.bulk.title') }}</h3>
-              <button @click="showBulkImportModal=false" style="color:#94a3b8;font-size:24px;background:none;border:none;cursor:pointer;">✕</button>
+              <h3 style="font-size:16px;font-weight:bold;color:#34d399;margin:0;display:flex;align-items:center;gap:8px;">
+                <span>📥</span>
+                <span>{{ t('modal.bulk.title') }}</span>
+              </h3>
+              <button @click="showBulkImportModal=false" class="modal-close-btn" aria-label="Close">✕</button>
             </div>
 
             <div style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:12px;font-size:12px;color:#93c5fd;margin-bottom:16px;">
@@ -2191,8 +2256,11 @@
 
             <!-- Header -->
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <h3 style="font-size:16px;font-weight:bold;color:#e6c074;margin:0;">{{ t('modal.share.title') }}</h3>
-              <button @click="showShareModal=false" style="color:#94a3b8;font-size:24px;background:none;border:none;cursor:pointer;">✕</button>
+              <h3 style="font-size:16px;font-weight:bold;color:#e6c074;margin:0;display:flex;align-items:center;gap:8px;">
+                <span>📤</span>
+                <span>{{ t('modal.share.title') }}</span>
+              </h3>
+              <button @click="showShareModal=false" class="modal-close-btn" aria-label="Close">✕</button>
             </div>
 
             <!-- Options -->
@@ -2412,8 +2480,11 @@
           <div class="bottom-sheet-handle"></div>
           <div style="padding:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <h3 style="font-size:16px;font-weight:bold;color:#e6c074;margin:0;">{{ t('modal.backup.title') }}</h3>
-              <button @click="showBackupModal=false" style="color:#94a3b8;font-size:24px;background:none;border:none;cursor:pointer;">✕</button>
+              <h3 style="font-size:16px;font-weight:bold;color:#e6c074;margin:0;display:flex;align-items:center;gap:8px;">
+                <span>💾</span>
+                <span>{{ t('modal.backup.title') }}</span>
+              </h3>
+              <button @click="showBackupModal=false" class="modal-close-btn" aria-label="Close">✕</button>
             </div>
             <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:12px;font-size:12px;color:#6ee7b7;margin-bottom:16px;">
               {{ t('modal.backup.info') }}
@@ -2474,8 +2545,11 @@
           <div class="bottom-sheet-handle"></div>
           <div style="padding:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <h3 style="font-size:16px;font-weight:bold;color:#93c5fd;margin:0;">{{ t('modal.compare.title') }}</h3>
-              <button @click="showCompareModal=false" style="color:#94a3b8;font-size:24px;background:none;border:none;cursor:pointer;">✕</button>
+              <h3 style="font-size:16px;font-weight:bold;color:#93c5fd;margin:0;display:flex;align-items:center;gap:8px;">
+                <span>👥</span>
+                <span>{{ t('modal.compare.title') }}</span>
+              </h3>
+              <button @click="showCompareModal=false" class="modal-close-btn" aria-label="Close">✕</button>
             </div>
 
             <div v-if="!selectedBranch" style="text-align:center;padding:30px;color:#94a3b8;">
@@ -2594,13 +2668,16 @@
          SETTINGS MODAL
          ============================================================ -->
     <transition name="fade">
-      <div v-if="showSettings" class="bottom-sheet-overlay" @click.self="showSettings=false" style="align-items:flex-end;z-index:80;">
-        <div class="bottom-sheet" style="max-width:680px;max-height:95vh;">
+      <div v-if="showSettings" class="bottom-sheet-overlay" @click.self="showSettings=false" style="z-index:80;">
+        <div class="bottom-sheet" style="max-width:680px;">
           <div class="bottom-sheet-handle"></div>
           <div style="padding:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <h2 style="font-size:18px;font-weight:900;color:#e6c074;margin:0;">{{ t('settings.title') }}</h2>
-              <button @click="showSettings=false" style="color:#94a3b8;font-size:24px;background:none;border:none;cursor:pointer;">✕</button>
+              <h2 style="font-size:18px;font-weight:900;color:#e6c074;margin:0;display:flex;align-items:center;gap:8px;">
+                <span>⚙️</span>
+                <span>{{ t('settings.title').replace('⚙️ ', '') }}</span>
+              </h2>
+              <button @click="showSettings=false" class="modal-close-btn" aria-label="Close">✕</button>
             </div>
 
             <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:12px;border-bottom:1px solid #243356;margin-bottom:16px;">
