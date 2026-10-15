@@ -5,7 +5,7 @@
 //  يعمل: Cache-First للأصول، Offline-First، تحديث تلقائي
 // ================================================================
 
-const CACHE_VERSION = 'samx-v23.12.3';
+const CACHE_VERSION = 'samx-v23.13.0';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -31,6 +31,7 @@ const STATIC_ASSETS = [
   './seed-data.js',
   // ⭐ v23.9: الخطوط — ضرورية للعمل offline
   './libs/cairo-base64.css',
+  './libs/saudi-riyal-font.css',
   './libs/i18n/ar.js',
   './libs/i18n/en.js',
   './libs/i18n/index.js',
@@ -39,6 +40,10 @@ const STATIC_ASSETS = [
   './libs/fonts/cairo/Cairo-SemiBold.ttf',
   './libs/fonts/cairo/Cairo-Bold.ttf',
   './libs/fonts/cairo/Cairo-Black.ttf',
+  './libs/fonts/saudi-riyal/saudi_riyal.woff2',
+  './libs/fonts/saudi-riyal/saudi_riyal.ttf',
+  './libs/fonts/saudi-riyal/saudi_riyal_bold.woff2',
+  './libs/fonts/saudi-riyal/saudi_riyal_bold.ttf',
 ];
 
 // ================================================================

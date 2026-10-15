@@ -307,11 +307,12 @@ createApp({
       settingsTab: 'appearance',
       settingsTabs: SETTINGS_TABS_CONST,
       settings: {
-  fontSize: 15, fontFamily: 'cairo', density: 'normal',
-  themeMode: 'dark', lightTheme: 'classic',
-  primaryColor: 'gold', staffPerPage: 20,
-  autoDistribute: true,   // ⭐ v23.9-FIX
-},
+        fontSize: 15, fontFamily: 'cairo', density: 'normal',
+        themeMode: 'dark', lightTheme: 'classic',
+        primaryColor: 'gold', staffPerPage: 20,
+        autoDistribute: true,   // ⭐ v23.9-FIX
+        currencyFormat: 'symbol', // ⭐ v23.13: 'symbol' (⃁) أو 'text' (ر.س)
+      },
 
       // ⭐ v19: نظام التخصيص (White-Label)
       branding: {
@@ -403,6 +404,14 @@ createApp({
   },
 
   computed: {
+    // ⭐ v23.13: رمز العملة المتوافق (الرمز الرسمي الجديد ⃁ أو النص ر.س / SAR)
+    currencySymbol() {
+      if (this.settings && this.settings.currencyFormat === 'text') {
+        return this.currentLang === 'ar' ? 'ر.س' : 'SAR';
+      }
+      return '\u20C1';
+    },
+
     todayStr() { return localDateStr(); },
     maxDate() { return this.todayStr; },
 
@@ -1672,6 +1681,8 @@ createApp({
             document.fonts.load('900 14px Cairo'),
             document.fonts.load('400 14px Tajawal'),
             document.fonts.load('700 14px Tajawal'),
+            document.fonts.load('400 14px SaudiRiyal'),
+            document.fonts.load('700 14px SaudiRiyal'),
           ]);
         }
         // 2. تحميل الشعار في الكاش
@@ -1807,6 +1818,7 @@ this.settings = {
   themeMode: 'dark', lightTheme: 'classic',
   primaryColor: 'gold', staffPerPage: 20,
   autoDistribute: true,
+  currencyFormat: 'symbol',
 };
       this.applyAllSettings();
       this.saveSettingsToStorage();
@@ -2871,9 +2883,10 @@ this.settings = {
       n = Number(n) || 0;
       return n.toLocaleString('en-US', { maximumFractionDigits: 0 });
     },
-        // ⭐ v23.12: تنسيق العملة — رمز الريال السعودي الجديد U+20C1
+    // ⭐ v23.13: تنسيق العملة — الرمز الرسمي الجديد U+20C1 بخط مدعوم بالكامل أو النص الصريح ر.س
     formatSAR(amount) {
-      return this.formatNum(amount) + '\u00A0\u20C1';
+      const sym = this.currencySymbol || '\u20C1';
+      return this.formatNum(amount) + '\u00A0' + sym;
     },
     // ⭐ v23.2: دوال مساعدة لبطاقة الملخص
     summaryStatusIcon(pct) {
@@ -3778,7 +3791,7 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
             return true;
           },
           style: {
-            fontFamily: "'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif",
+            fontFamily: "'SaudiRiyal', 'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif",
             direction: this.currentLang === 'ar' ? 'rtl' : 'ltr',
           },
         });

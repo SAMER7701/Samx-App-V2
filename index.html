@@ -33,9 +33,11 @@
 <!-- ⭐ v23.3: خطوط Cairo مضمّنة كـ base64 — تُحمَّل أولاً حتى تعمل على file:// -->
 <!-- ⚠️ يجب أن يبقى هذا السطر قبل styles.css -->
 <link rel="stylesheet" href="libs/cairo-base64.css">
+<!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
+<link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v23.3: أنماط التطبيق (تحتوي على @import Google Fonts في أول سطر + @font-face fallback) -->
-<link href="styles.css?v=1" rel="stylesheet">
+<!-- ⭐ v23.13: أنماط التطبيق (تحتوي على @import Google Fonts في أول سطر + @font-face fallback) -->
+<link href="styles.css?v=2" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -511,7 +513,7 @@
               <!-- Main Sale Number -->
               <div class="summary-main">
                 <p class="summary-label">{{ t('summary.label.totalSales') }}</p>
-                <p class="summary-big-number">{{ formatNum(branchSales) }}<span class="sar-symbol-large">&#x20C1;</span></p>
+                <p class="summary-big-number">{{ formatNum(branchSales) }}<span class="sar-symbol-large">{{ currencySymbol }}</span></p>
               </div>
 
               <!-- Targets Row -->
@@ -849,7 +851,7 @@
 
             <div class="kpi-hero-card" style="background:linear-gradient(135deg,rgba(212,168,75,.15),transparent);border:1px solid rgba(212,168,75,.4);">
               <p class="kpi-metric-label" style="color:#e6c074;">{{ t('kpi.atv.today') }}</p>
-              <p class="kpi-metric-value" style="color:#fff;">{{ formatNum(branchATV) }}<span class="sar-symbol-large">&#x20C1;</span></p>
+              <p class="kpi-metric-value" style="color:#fff;">{{ formatNum(branchATV) }}<span class="sar-symbol-large">{{ currencySymbol }}</span></p>
               <p class="kpi-metric-sub" style="color:#94a3b8;">{{ t('kpi.atv.unit') }}</p>
               <p class="kpi-metric-hint" style="color:#64748b;">{{ formatSAR(branchSales) }} ÷ {{ formatNum(branchInvoices) }}</p>
             </div>
@@ -1033,7 +1035,7 @@
           </div>
           <div class="card" style="border-radius:16px;padding:16px;border-color:rgba(212,168,75,.4);">
             <p style="font-size:11px;color:#e6c074;margin:0 0 6px;">{{ t('admin.kpi.totalSales') }}</p>
-            <p style="font-size:26px;font-weight:900;color:#fff;margin:0;">{{ formatNum(adminTotalSales) }}<span class="sar-symbol-large">&#x20C1;</span></p>
+            <p style="font-size:26px;font-weight:900;color:#fff;margin:0;">{{ formatNum(adminTotalSales) }}<span class="sar-symbol-large">{{ currencySymbol }}</span></p>
           </div>
           <div class="card" style="border-radius:16px;padding:16px;border-color:rgba(16,185,129,.4);">
             <p style="font-size:11px;color:#34d399;margin:0 0 6px;">{{ t('admin.kpi.achieved') }}</p>
@@ -1114,7 +1116,7 @@
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;">
             <div class="card" style="border-radius:16px;padding:16px;">
               <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('monthly.summary.totalSales') }}</p>
-              <p style="font-size:24px;font-weight:900;color:#fff;margin:0;">{{ formatNum(monthlySummary.totalSales) }}<span class="sar-symbol-large">&#x20C1;</span></p>
+              <p style="font-size:24px;font-weight:900;color:#fff;margin:0;">{{ formatNum(monthlySummary.totalSales) }}<span class="sar-symbol-large">{{ currencySymbol }}</span></p>
             </div>
             <div class="card" style="border-radius:16px;padding:16px;border-color:rgba(59,130,246,.4);">
               <p style="font-size:11px;color:#60a5fa;margin:0 0 6px;font-weight:bold;">{{ t('monthly.summary.basePct') }}</p>
@@ -1323,11 +1325,11 @@
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
             <div class="card" style="border-radius:16px;padding:16px;">
               <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('yoy.summary.totalCurrent', '', { year: yoyYear }) }}</p>
-              <p style="font-size:22px;font-weight:900;color:#fff;margin:0;">{{ formatNum(yoyTotalCurrent) }}<span class="sar-symbol-large">&#x20C1;</span></p>
+              <p style="font-size:22px;font-weight:900;color:#fff;margin:0;">{{ formatNum(yoyTotalCurrent) }}<span class="sar-symbol-large">{{ currencySymbol }}</span></p>
             </div>
             <div class="card" style="border-radius:16px;padding:16px;">
               <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('yoy.summary.totalPrevious', '', { year: yoyYear - 1 }) }}</p>
-              <p style="font-size:22px;font-weight:900;color:#fff;margin:0;">{{ formatNum(yoyTotalPrevious) }}<span class="sar-symbol-large">&#x20C1;</span></p>
+              <p style="font-size:22px;font-weight:900;color:#fff;margin:0;">{{ formatNum(yoyTotalPrevious) }}<span class="sar-symbol-large">{{ currencySymbol }}</span></p>
             </div>
             <div class="card" style="border-radius:16px;padding:16px;" :style="{borderColor: yoyGrowth >= 0 ? 'rgba(16,185,129,.4)' : 'rgba(244,63,94,.4)'}">
               <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('yoy.summary.growth') }}</p>
@@ -1408,9 +1410,9 @@
 
         <template v-else>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
-            <div class="card" style="border-radius:16px;padding:16px;"><p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('analytics.summary.total') }}</p><p style="font-size:22px;font-weight:900;color:#fff;margin:0;">{{ formatNum(analyticsSummary.totalSales) }}<span class="sar-symbol-large">&#x20C1;</span></p></div>
-            <div class="card" style="border-radius:16px;padding:16px;"><p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('analytics.summary.avg') }}</p><p style="font-size:22px;font-weight:900;color:#60a5fa;margin:0;">{{ formatNum(analyticsSummary.avgSales) }}<span class="sar-symbol-large">&#x20C1;</span></p></div>
-            <div class="card" style="border-radius:16px;padding:16px;border-color:rgba(16,185,129,.4);"><p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('analytics.summary.best') }}</p><p style="font-size:22px;font-weight:900;color:#34d399;margin:0;">{{ formatNum(analyticsSummary.bestSales) }}<span class="sar-symbol-large">&#x20C1;</span></p><p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ analyticsSummary.bestDate || '—' }}</p></div>
+            <div class="card" style="border-radius:16px;padding:16px;"><p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('analytics.summary.total') }}</p><p style="font-size:22px;font-weight:900;color:#fff;margin:0;">{{ formatNum(analyticsSummary.totalSales) }}<span class="sar-symbol-large">{{ currencySymbol }}</span></p></div>
+            <div class="card" style="border-radius:16px;padding:16px;"><p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('analytics.summary.avg') }}</p><p style="font-size:22px;font-weight:900;color:#60a5fa;margin:0;">{{ formatNum(analyticsSummary.avgSales) }}<span class="sar-symbol-large">{{ currencySymbol }}</span></p></div>
+            <div class="card" style="border-radius:16px;padding:16px;border-color:rgba(16,185,129,.4);"><p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('analytics.summary.best') }}</p><p style="font-size:22px;font-weight:900;color:#34d399;margin:0;">{{ formatNum(analyticsSummary.bestSales) }}<span class="sar-symbol-large">{{ currencySymbol }}</span></p><p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ analyticsSummary.bestDate || '—' }}</p></div>
             <div class="card" style="border-radius:16px;padding:16px;"><p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('analytics.summary.days') }}</p><p style="font-size:22px;font-weight:900;color:#e6c074;margin:0;">{{ analyticsSummary.daysCount }}</p></div>
           </div>
 
@@ -2254,7 +2256,7 @@
 
                   <div class="summary-main">
                     <p class="summary-label">{{ t('summary.label.totalSales') }}</p>
-                    <p class="summary-big-number">{{ formatNum(branchSales) }}<span class="sar-symbol-large"> &#x20C1;</span></p>
+                    <p class="summary-big-number">{{ formatNum(branchSales) }}<span class="sar-symbol-large">{{ currencySymbol }}</span></p>
                   </div>
 
                   <div class="summary-targets">
@@ -2638,6 +2640,20 @@
                   <button @click="settings.density='normal'; applyDensity()" :class="['settings-option', settings.density==='normal' ? 'active' : '']">{{ t('settings.appearance.density.normal') }}</button>
                   <button @click="settings.density='cozy'; applyDensity()" :class="['settings-option', settings.density==='cozy' ? 'active' : '']">{{ t('settings.appearance.density.cozy') }}</button>
                 </div>
+              </div>
+
+              <!-- ⭐ v23.13: اختيار شكل رمز العملة (الرمز الجديد أو ر.س) -->
+              <div class="settings-section">
+                <h4 class="settings-label">{{ t('settings.appearance.currencyFormat') }}</h4>
+                <div class="settings-option-row">
+                  <button @click="settings.currencyFormat='symbol'; saveSettingsToStorage()" :class="['settings-option', (settings.currencyFormat||'symbol')==='symbol' ? 'active' : '']">
+                    {{ t('settings.appearance.currencySymbol') }}
+                  </button>
+                  <button @click="settings.currencyFormat='text'; saveSettingsToStorage()" :class="['settings-option', settings.currencyFormat==='text' ? 'active' : '']">
+                    {{ t('settings.appearance.currencyText') }}
+                  </button>
+                </div>
+                <p style="margin:8px 0 0;font-size:11px;color:#94a3b8;line-height:1.4;">{{ t('settings.appearance.currencyHint') }}</p>
               </div>
 
               <div class="settings-section">
