@@ -5,7 +5,7 @@
 //  يعمل: Cache-First للأصول، Offline-First، تحديث تلقائي
 // ================================================================
 
-const CACHE_VERSION = 'samx-v23.13.0';
+const CACHE_VERSION = 'samx-v23.13.1';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -228,4 +228,4 @@ self.addEventListener('message', (event) => {
   }
 });
 
-console.log('[SW] SAMX v23.12.3 loaded ✅');
+console.log('[SW] SAMX v23.13.1 loaded ✅');
