@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23 — app.js
+//  SAMX v23.16.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.13.1';
+const APP_VERSION = '23.16.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -310,6 +310,7 @@ createApp({
         primaryColor: 'gold', staffPerPage: 20,
         autoDistribute: true,   // ⭐ v23.9-FIX
         currencyFormat: 'symbol', // ⭐ v23.13: 'symbol' (⃁) أو 'text' (ر.س)
+        uiScale: 100, // ⭐ v23.15: حجم عرض النوافذ والخطوط (90 | 100 | 115)
       },
 
       // ⭐ v19: نظام التخصيص (White-Label)
@@ -371,6 +372,7 @@ createApp({
         showPieces: false,
         showUPT: true,
         showATV: true,
+        showMonthlyProgress: true, // ⭐ v23.15: نسبة وصول الفرع مع التارجت الشهري
         sortBy: 'best',
         mode: 'full',
       },
@@ -508,6 +510,115 @@ createApp({
         rec.pieces = Number(val) || 0;   // ⭐ إصلاح: كانت rec.invoices بالخطأ
         this.schedulePersist();
       }
+    },
+
+    // ⭐ v23.15: إجمالي تارجت الشهر المستدعى أو المجمع من تارجت أيام الشهر
+    branchMonthlyTargetInput: {
+      get() {
+        if (this.dayData && this.dayData.monthlyTarget !== undefined && this.dayData.monthlyTarget !== null && Number(this.dayData.monthlyTarget) > 0) {
+          return Number(this.dayData.monthlyTarget) || 0;
+        }
+        return this.branchMonthlyTargetTotal;
+      },
+      set(val) {
+        if (!this.selectedBranchId) return;
+        const key = `${this.selectedDate}|${this.selectedBranchId}`;
+        const rec = this.normalizeDayRecord(key);
+        if (!rec) return;
+        rec.monthlyTarget = Number(val) || 0;
+        this.schedulePersist();
+      }
+    },
+
+    // ⭐ v23.15: إجمالي مبيعات الشهر حتى اليوم (MTD Sales) المدخلة يدوياً أو المحسوبة تراكمياً
+    branchMtdSalesInput: {
+      get() {
+        if (this.dayData && this.dayData.mtdSales !== undefined && this.dayData.mtdSales !== null && Number(this.dayData.mtdSales) > 0) {
+          return Number(this.dayData.mtdSales) || 0;
+        }
+        return this.branchMtdSalesCalculated;
+      },
+      set(val) {
+        if (!this.selectedBranchId) return;
+        const key = `${this.selectedDate}|${this.selectedBranchId}`;
+        const rec = this.normalizeDayRecord(key);
+        if (!rec) return;
+        rec.mtdSales = Number(val) || 0;
+        this.schedulePersist();
+      }
+    },
+
+    // حساب التارجت الشهري الإجمالي للفرع
+    branchMonthlyTargetTotal() {
+      if (!this.selectedBranchId) return 0;
+      // 1. إذا أدخل المستخدم قيمة مخصصة في سجل اليوم
+      if (this.dayData && Number(this.dayData.monthlyTarget) > 0) {
+        return Number(this.dayData.monthlyTarget);
+      }
+      // 2. إذا تم استيراد التارجت الشهري
+      const month = this.selectedDate ? this.selectedDate.slice(0, 7) : '';
+      const monthlyKey = `${month}|${this.selectedBranchId}`;
+      if (this.monthlyTargets && Number(this.monthlyTargets[monthlyKey]) > 0) {
+        return Number(this.monthlyTargets[monthlyKey]);
+      }
+      // 3. أو حساب مجموع تارجت أيام الشهر المسجلة للفرع
+      let sumDays = 0;
+      if (this.daily) {
+        for (const [k, d] of Object.entries(this.daily)) {
+          if (k.startsWith(month + '-') && k.endsWith('|' + this.selectedBranchId)) {
+            sumDays += Number(d.baseTarget) || 0;
+          }
+        }
+      }
+      if (sumDays > 0) return sumDays;
+      return (Number(this.dayData.baseTarget) || 0) * 30;
+    },
+
+    // حساب المبيعات التراكمية من بداية الشهر حتى اليوم المختار
+    branchMtdSalesCalculated() {
+      if (!this.selectedBranchId || !this.selectedDate) return 0;
+      const month = this.selectedDate.slice(0, 7);
+      let sum = 0;
+      if (this.daily) {
+        for (const [k, d] of Object.entries(this.daily)) {
+          if (k.startsWith(month + '-') && k.endsWith('|' + this.selectedBranchId)) {
+            const datePart = k.split('|')[0];
+            if (datePart <= this.selectedDate) {
+              let daySales = 0;
+              if (d.staffData) {
+                for (const s of Object.values(d.staffData)) {
+                  daySales += Number(s.sales) || 0;
+                }
+              }
+              daySales += Number(d.manualExtra) || 0;
+              sum += daySales;
+            }
+          }
+        }
+      }
+      return sum;
+    },
+
+    // إجمالي مبيعات الشهر الفعلي المعتمد للحساب والعرض
+    branchMtdSalesTotal() {
+      if (this.dayData && Number(this.dayData.mtdSales) > 0) {
+        return Number(this.dayData.mtdSales);
+      }
+      return this.branchMtdSalesCalculated;
+    },
+
+    // نسبة وصول الفرع مع تارجت الشهر
+    branchMonthlyAchievementPct() {
+      const target = this.branchMonthlyTargetTotal;
+      if (!target || target <= 0) return 0;
+      return (this.branchMtdSalesTotal / target) * 100;
+    },
+
+    // رابط الدعم عبر الواتساب بأمان دون رمي خطأ في القالب
+    supportWhatsappUrl() {
+      const company = encodeURIComponent(this.activeCompanyName || 'SAMX');
+      const msg = encodeURIComponent('مرحباً، أحتاج دعم بخصوص تطبيق ');
+      return `https://wa.me/966533642710?text=${msg}${company}`;
     },
 
     selectedBranch() { return this.branches.find(b => b.id === this.selectedBranchId) || null; },
@@ -1770,6 +1881,22 @@ createApp({
       this.applyPrimaryColor();
       this.applyLightTheme();
       this.applyThemeMode();
+      this.applyUiScale();
+    },
+    setUiScale(scale) {
+      this.settings.uiScale = Number(scale) || 100;
+      this.applyUiScale();
+      this.saveSettingsToStorage();
+      this.showToast(this.currentLang === 'ar' ? `تم ضبط حجم العرض على ${scale}%` : `UI scale set to ${scale}%`, 'success');
+    },
+    applyUiScale() {
+      const scale = Number(this.settings.uiScale) || 100;
+      document.documentElement.setAttribute('data-ui-scale', scale.toString());
+      document.documentElement.style.setProperty('--app-ui-scale', (scale / 100).toString());
+      document.documentElement.style.fontSize = scale === 90 ? '14px' : scale === 115 ? '17px' : '15px';
+    },
+    encodeURIComponent(val) {
+      return window.encodeURIComponent(val || '');
     },
     applyFontSize() {
       document.documentElement.style.setProperty('--app-font-size', this.settings.fontSize + 'px');
@@ -1847,6 +1974,7 @@ this.settings = {
   primaryColor: 'gold', staffPerPage: 20,
   autoDistribute: true,
   currencyFormat: 'symbol',
+  uiScale: 100,
 };
       this.applyAllSettings();
       this.saveSettingsToStorage();
@@ -1937,12 +2065,23 @@ this.settings = {
       } catch (err) { console.warn('[PWA] SW registration failed:', err); }
     },
     applyUpdate() {
-      if (this.newWorker) {
-        this.newWorker.postMessage({ type: 'SKIP_WAITING' });
-        setTimeout(() => window.location.reload(), 500);
-      } else {
-        window.location.reload();
+      try {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistration().then(reg => {
+            if (reg && reg.waiting) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+          }).catch(() => {});
+        }
+        if (this.newWorker) {
+          this.newWorker.postMessage({ type: 'SKIP_WAITING' });
+        }
+      } catch (e) {
+        console.warn('[PWA] applyUpdate error:', e);
       }
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
     },
 
     // ================================================================

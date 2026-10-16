@@ -1,11 +1,11 @@
 // ================================================================
-//  SAMX — Service Worker v23.9.0
+//  SAMX — Service Worker v23.16.0
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 //  يعمل: Cache-First للأصول، Offline-First، تحديث تلقائي
 // ================================================================
 
-const CACHE_VERSION = 'samx-v23.14.0';
+const CACHE_VERSION = 'samx-v23.16.0';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 

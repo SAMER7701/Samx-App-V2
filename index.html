@@ -123,11 +123,24 @@
       <button @click="showInstallBanner=false" style="background:transparent;color:#94a3b8;padding:4px 8px;">✕</button>
     </div>
   </transition>
-  <!-- ============ Update Toast ============ -->
-  <transition name="scale">
+  <!-- ============ Update Banner (Top-Center Floating) ============ -->
+  <transition name="fade">
     <div v-if="showUpdateToast" class="update-toast">
-      <span>{{ t('update.available') }}</span>
-      <button @click="applyUpdate">{{ t('update.btn') }}</button>
+      <span class="update-toast-icon">🚀</span>
+      <div class="update-toast-content">
+        <p class="update-toast-title">
+          <span>🎉</span>
+          <span>{{ currentLang === 'ar' ? 'يتوفر إصدار جديد للتطبيق (v23.16.0)!' : 'New App Update Available (v23.16.0)!' }}</span>
+        </p>
+        <p class="update-toast-desc">{{ currentLang === 'ar' ? 'تمت إضافة تحسينات هامة للأداء وتجربة الجوال، اضغط للتحديث الفوري' : 'Performance and mobile enhancements are ready. Tap to update immediately.' }}</p>
+      </div>
+      <div class="update-toast-actions">
+        <button @click="applyUpdate" class="update-toast-btn">
+          <span>⚡</span>
+          <span>{{ currentLang === 'ar' ? 'تحديث الآن' : 'Update Now' }}</span>
+        </button>
+        <button @click="showUpdateToast = false" class="update-toast-close" title="إغلاق">✕</button>
+      </div>
     </div>
   </transition>
 
@@ -560,6 +573,7 @@
               </div>
 
               <!-- Stats Row -->
+              <!-- Stats Row -->
               <div class="summary-stats">
                 <div v-if="shareOptions.showInvoices" class="summary-stat">
                   <span>{{ t('summary.stat.invoices') }}</span>
@@ -576,6 +590,23 @@
                 <div v-if="shareOptions.showATV" class="summary-stat">
                   <span>{{ t('summary.stat.atv') }}</span>
                   <span>{{ formatSAR(branchATV) }}</span>
+                </div>
+              </div>
+
+              <!-- Monthly Progress Block: نسبة وصول الفرع مع التارجت الشهري -->
+              <div v-if="shareOptions.showMonthlyProgress && branchMonthlyTargetTotal > 0" class="summary-monthly-progress">
+                <div class="summary-monthly-header">
+                  <span class="summary-monthly-title">🎯 {{ currentLang === 'ar' ? 'نسبة وصول الفرع مع تارجت الشهر' : 'Branch Monthly Target Achievement' }}</span>
+                  <span class="summary-monthly-pct" :style="{color: summaryStatusColor(branchMonthlyAchievementPct)}">
+                    {{ summaryStatusIcon(branchMonthlyAchievementPct) }} {{ branchMonthlyAchievementPct.toFixed(1) }}%
+                  </span>
+                </div>
+                <div class="summary-monthly-bar">
+                  <div class="summary-monthly-bar-fill" :style="{width: Math.min(branchMonthlyAchievementPct, 100) + '%', background: branchMonthlyAchievementPct >= 100 ? '#10b981' : branchMonthlyAchievementPct >= 70 ? '#f59e0b' : '#ef4444'}"></div>
+                </div>
+                <div class="summary-monthly-details">
+                  <span>{{ currentLang === 'ar' ? 'المبيعات حتى اليوم:' : 'MTD Sales:' }} <strong>{{ formatSAR(branchMtdSalesTotal) }}</strong></span>
+                  <span>{{ currentLang === 'ar' ? 'تارجت الشهر:' : 'Monthly Target:' }} <strong>{{ formatSAR(branchMonthlyTargetTotal) }}</strong></span>
                 </div>
               </div>
 
@@ -634,23 +665,42 @@
           </div>
 
           <div class="card" style="border-radius:14px;padding:14px;border-color:rgba(59,130,246,.4);">
-            <h3 style="font-size:13px;font-weight:bold;color:#93c5fd;margin:0 0 4px;">{{ t('dashboard.invPcs.title') }}</h3>
-            <p style="font-size:11px;color:#94a3b8;margin:0 0 12px;">{{ t('dashboard.invPcs.subtitle') }}</p>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
               <div>
-                <label style="display:block;font-size:11px;color:#93c5fd;margin-bottom:4px;font-weight:bold;">{{ t('dashboard.invPcs.invoicesLabel') }}</label>
+                <h3 style="font-size:13px;font-weight:bold;color:#93c5fd;margin:0 0 2px;">{{ t('dashboard.invPcs.title') }}</h3>
+                <p style="font-size:11px;color:#94a3b8;margin:0;">{{ currentLang === 'ar' ? 'الفواتير والقطع ومتابعة التارجت الشهري' : 'Invoices, Pieces & Monthly Progress' }}</p>
+              </div>
+              <span v-if="branchMonthlyTargetTotal > 0" class="badge-gold" style="font-size:11px;padding:3px 10px;font-weight:800;">
+                {{ currentLang === 'ar' ? 'إنجاز الشهر:' : 'Monthly:' }} {{ branchMonthlyAchievementPct.toFixed(1) }}%
+              </span>
+            </div>
+
+            <!-- 4 Inputs: Invoices, Pieces, Monthly Target, MTD Sales -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;margin-bottom:12px;margin-top:10px;">
+              <div>
+                <label style="display:block;font-size:11px;color:#93c5fd;margin-bottom:4px;font-weight:bold;">🧾 {{ t('dashboard.invPcs.invoicesLabel') }}</label>
                 <input type="number" min="0" inputmode="numeric" :value="branchInvoicesInput === 0 ? '' : branchInvoicesInput" @focus="$event.target.select()" @input="branchInvoicesInput = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="invoice-input" placeholder="0">
                 <p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ t('dashboard.invPcs.invoicesHint') }}</p>
               </div>
               <div>
-                <label style="display:block;font-size:11px;color:#c4b5fd;margin-bottom:4px;font-weight:bold;">{{ t('dashboard.invPcs.piecesLabel') }}</label>
+                <label style="display:block;font-size:11px;color:#c4b5fd;margin-bottom:4px;font-weight:bold;">📦 {{ t('dashboard.invPcs.piecesLabel') }}</label>
                 <input type="number" min="0" inputmode="numeric" :value="branchPiecesInput === 0 ? '' : branchPiecesInput" @focus="$event.target.select()" @input="branchPiecesInput = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="pieces-input" placeholder="0">
                 <p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ t('dashboard.invPcs.piecesHint') }}</p>
               </div>
+              <div>
+                <label style="display:block;font-size:11px;color:#e6c074;margin-bottom:4px;font-weight:bold;">📅 {{ currentLang === 'ar' ? 'إجمالي تارجت الشهر' : 'Total Month Target' }} ({{ currencySymbol }})</label>
+                <input type="number" min="0" inputmode="numeric" :value="branchMonthlyTargetInput === 0 ? '' : branchMonthlyTargetInput" @focus="$event.target.select()" @input="branchMonthlyTargetInput = Number($event.target.value) || 0" :disabled="!canEditTarget" class="target-input-heroes" placeholder="0">
+                <p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ currentLang === 'ar' ? 'تارجت الشهر المستدعى أو مجموع الأيام' : 'Monthly target or days sum' }}</p>
+              </div>
+              <div>
+                <label style="display:block;font-size:11px;color:#34d399;margin-bottom:4px;font-weight:bold;">📈 {{ currentLang === 'ar' ? 'إجمالي المبيعات حتى اليوم' : 'Total MTD Sales' }} ({{ currencySymbol }})</label>
+                <input type="number" min="0" inputmode="numeric" :value="branchMtdSalesInput === 0 ? '' : branchMtdSalesInput" @focus="$event.target.select()" @input="branchMtdSalesInput = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="sales-input" placeholder="0">
+                <p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ currentLang === 'ar' ? 'المبيعات التراكمية لاحتساب نسبة الشهر' : 'Cumulative sales to date' }}</p>
+              </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <!-- Indicators: UPT, ATV, Monthly Target Achievement % -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;">
               <div style="background:linear-gradient(135deg,rgba(59,130,246,.15),transparent);border:1px solid rgba(59,130,246,.4);border-radius:10px;padding:10px 12px;">
                 <p style="font-size:10px;color:#93c5fd;margin:0 0 2px;font-weight:700;">{{ t('dashboard.invPcs.uptLabel') }}</p>
                 <p style="font-size:22px;font-weight:900;color:#fff;margin:4px 0;line-height:1;">{{ branchUPT.toFixed(2) }}</p>
@@ -660,6 +710,13 @@
                 <p style="font-size:10px;color:#e6c074;margin:0 0 2px;font-weight:700;">{{ t('dashboard.invPcs.atvLabel') }}</p>
                 <p style="font-size:22px;font-weight:900;color:#fff;margin:4px 0;line-height:1;">{{ formatSAR(branchATV) }}</p>
                 <p style="font-size:10px;color:#94a3b8;margin:0;">{{ t('dashboard.invPcs.atvHint') }}</p>
+              </div>
+              <div style="background:linear-gradient(135deg,rgba(16,185,129,.15),transparent);border:1px solid rgba(16,185,129,.4);border-radius:10px;padding:10px 12px;">
+                <p style="font-size:10px;color:#6ee7b7;margin:0 0 2px;font-weight:700;">🎯 {{ currentLang === 'ar' ? 'إنجاز الشهر (MTD)' : 'Monthly (MTD)' }}</p>
+                <p style="font-size:22px;font-weight:900;margin:4px 0;line-height:1;" :style="{color: summaryStatusColor(branchMonthlyAchievementPct)}">
+                  {{ branchMonthlyAchievementPct.toFixed(1) }}%
+                </p>
+                <div class="progress-bar" style="height:4px;margin-top:4px;"><div class="progress-bar-fill" :style="{width: Math.min(branchMonthlyAchievementPct,100)+'%', background: branchMonthlyAchievementPct>=100 ? '#10b981' : branchMonthlyAchievementPct>=70 ? '#f59e0b' : '#ef4444'}"></div></div>
               </div>
             </div>
           </div>
@@ -1803,18 +1860,19 @@
     <!-- ============================================================
          MOBILE MORE MENU BOTTOM SHEET
          ============================================================ -->
-    <div v-if="showMoreMenu" class="bottom-sheet-overlay hide-desktop" @click.self="showMoreMenu = false" style="z-index: 65;">
-      <div class="bottom-sheet" style="max-height: 85vh;">
+    <div v-if="showMoreMenu" class="bottom-sheet-overlay hide-desktop" @click.self="showMoreMenu = false">
+      <div class="bottom-sheet" style="max-height: 88dvh;">
         <div class="bottom-sheet-handle"></div>
-        <div style="padding: 14px 18px 24px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 16px; font-weight: 800; color: #e6c074; margin: 0; display: flex; align-items: center; gap: 8px;">
-              <span>⚡</span>
-              <span>{{ currentLang === 'ar' ? 'جميع الأقسام والأدوات' : 'All Sections & Tools' }}</span>
-            </h3>
-            <button @click="showMoreMenu = false" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; padding: 4px;">✕</button>
-          </div>
 
+        <div class="modal-header-pro">
+          <h3 class="modal-title-pro">
+            <span>⚡</span>
+            <span>{{ currentLang === 'ar' ? 'جميع الأقسام والأدوات' : 'All Sections & Tools' }}</span>
+          </h3>
+          <button @click="showMoreMenu = false" class="modal-close-btn" aria-label="Close">✕</button>
+        </div>
+
+        <div class="modal-body-pro" style="padding-bottom: calc(env(safe-area-inset-bottom, 24px) + 36px);">
           <div class="mobile-more-grid">
             <!-- Leaderboard -->
             <button @click="openView('leaderboard')" class="mobile-more-item" :class="{ active: currentView === 'leaderboard' }">
@@ -2197,8 +2255,8 @@
          ⭐ v23.2: Modal مشاركة بطاقة اليوم
          ============================================================ -->
     <transition name="fade">
-      <div v-if="showShareModal" class="bottom-sheet-overlay" @click.self="showShareModal=false" style="z-index:80;">
-        <div class="bottom-sheet" style="max-width:560px;">
+      <div v-if="showShareModal" class="bottom-sheet-overlay" @click.self="showShareModal=false">
+        <div class="bottom-sheet" style="max-width:580px;">
           <div class="bottom-sheet-handle"></div>
 
           <!-- Header -->
@@ -2213,10 +2271,10 @@
           <!-- Body -->
           <div class="modal-body-pro">
 
-            <!-- Options -->
+            <!-- Options (Grid 2 Columns) -->
             <div class="share-options-panel">
               <h4 class="share-section-title">{{ t('modal.share.options') }}</h4>
-              <div class="share-checks-grid">
+              <div class="share-checks-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                 <label class="share-check">
                   <input type="checkbox" v-model="shareOptions.showNames">
                   <span>{{ t('modal.share.showNames') }}</span>
@@ -2241,6 +2299,10 @@
                   <input type="checkbox" v-model="shareOptions.showATV">
                   <span>{{ t('modal.share.showATV') }}</span>
                 </label>
+                <label class="share-check" style="grid-column: span 2;">
+                  <input type="checkbox" v-model="shareOptions.showMonthlyProgress">
+                  <span>{{ currentLang === 'ar' ? '🎯 نسبة وصول الفرع مع تارجت الشهر' : '🎯 Monthly Target Achievement' }}</span>
+                </label>
               </div>
             </div>
 
@@ -2259,7 +2321,7 @@
               <h4 class="share-section-title">{{ t('modal.share.preview') }}</h4>
               <div class="share-preview-wrap">
 
-                <div class="daily-summary-card">
+                <div class="daily-summary-card" ref="dailySummaryCard">
 
                   <div class="summary-header">
                     <div class="summary-logo">
@@ -2287,29 +2349,57 @@
                     </div>
                     <div class="summary-target">
                       <p class="target-label">{{ t('summary.label.heroesTarget') }}</p>
-                      <p class="target-value">{{ formatNum(dayData.heroesTarget) }}</p>
+                      <p class="target-value">{{ formatSAR(dayData.heroesTarget) }}</p>
                       <p class="target-status" :style="{color: summaryStatusColor(heroesPct)}">
                         {{ summaryStatusIcon(heroesPct) }} {{ heroesPct.toFixed(1) }}%
                       </p>
                     </div>
                   </div>
 
+                  <!-- مؤشرات الفرع (Invoices, Pieces, UPT, ATV + المربعين الجديدين: تارجت الشهر ومبيعات الشهر حتى اليوم) -->
                   <div class="summary-stats">
                     <div v-if="shareOptions.showInvoices" class="summary-stat">
-                      <span>{{ t('summary.stat.invoices') }}</span>
+                      <span>🧾 {{ t('summary.stat.invoices') }}</span>
                       <span>{{ formatNum(branchInvoices) }}</span>
                     </div>
                     <div v-if="shareOptions.showPieces" class="summary-stat">
-                      <span>{{ t('summary.stat.pieces') }}</span>
+                      <span>📦 {{ t('summary.stat.pieces') }}</span>
                       <span>{{ formatNum(branchPieces) }}</span>
                     </div>
                     <div v-if="shareOptions.showUPT" class="summary-stat">
-                      <span>{{ t('summary.stat.upt') }}</span>
+                      <span>⚡ {{ t('summary.stat.upt') }}</span>
                       <span>{{ branchUPT.toFixed(2) }}</span>
                     </div>
                     <div v-if="shareOptions.showATV" class="summary-stat">
-                      <span>{{ t('summary.stat.atv') }}</span>
-                      <span>{{ formatNum(branchATV) }}</span>
+                      <span>💎 {{ t('summary.stat.atv') }}</span>
+                      <span>{{ formatSAR(branchATV) }}</span>
+                    </div>
+                    <!-- المربع 1: إجمالي تارجت الشهر -->
+                    <div v-if="shareOptions.showMonthlyProgress && branchMonthlyTargetTotal > 0" class="summary-stat" style="border-color:rgba(212,168,75,0.4);background:rgba(212,168,75,0.08);">
+                      <span style="color:#e6c074;">📅 {{ currentLang === 'ar' ? 'تارجت الشهر' : 'Month Target' }}</span>
+                      <span style="color:#f5cf7a;">{{ formatSAR(branchMonthlyTargetTotal) }}</span>
+                    </div>
+                    <!-- المربع 2: إجمالي المبيعات حتى اليوم -->
+                    <div v-if="shareOptions.showMonthlyProgress" class="summary-stat" style="border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.08);">
+                      <span style="color:#6ee7b7;">📈 {{ currentLang === 'ar' ? 'مبيعات حتى اليوم' : 'MTD Sales' }}</span>
+                      <span style="color:#34d399;">{{ formatSAR(branchMtdSalesTotal) }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Monthly Progress Block in Preview & Share Image -->
+                  <div v-if="shareOptions.showMonthlyProgress && branchMonthlyTargetTotal > 0" class="summary-monthly-progress">
+                    <div class="summary-monthly-header">
+                      <span class="summary-monthly-title">🎯 {{ currentLang === 'ar' ? 'نسبة وصول الفرع مع تارجت الشهر' : 'Branch Monthly Target Achievement' }}</span>
+                      <span class="summary-monthly-pct" :style="{color: summaryStatusColor(branchMonthlyAchievementPct)}">
+                        {{ summaryStatusIcon(branchMonthlyAchievementPct) }} {{ branchMonthlyAchievementPct.toFixed(1) }}%
+                      </span>
+                    </div>
+                    <div class="summary-monthly-bar">
+                      <div class="summary-monthly-bar-fill" :style="{width: Math.min(branchMonthlyAchievementPct, 100) + '%', background: branchMonthlyAchievementPct >= 100 ? '#10b981' : branchMonthlyAchievementPct >= 70 ? '#f59e0b' : '#ef4444'}"></div>
+                    </div>
+                    <div class="summary-monthly-details">
+                      <span>{{ currentLang === 'ar' ? 'المبيعات حتى اليوم:' : 'MTD Sales:' }} <strong>{{ formatSAR(branchMtdSalesTotal) }}</strong></span>
+                      <span>{{ currentLang === 'ar' ? 'تارجت الشهر:' : 'Monthly Target:' }} <strong>{{ formatSAR(branchMonthlyTargetTotal) }}</strong></span>
                     </div>
                   </div>
 
@@ -2322,7 +2412,7 @@
                            :class="{ champion: s.isTop && s.sales > 0 }">
                         <span class="rank">{{ idx + 1 }}</span>
                         <span class="name">{{ shareOptions.showNames ? s.name : t('summary.staff.anonymous', '', { n: idx + 1 }) }}</span>
-                        <span class="sales" v-if="shareOptions.showAbsolute">{{ formatNum(s.sales) }}</span>
+                        <span class="sales" v-if="shareOptions.showAbsolute">{{ formatSAR(s.sales) }}</span>
                         <span class="sales" v-else>{{ s.sales > 0 ? '✓' : '—' }}</span>
                         <span class="pct" :style="{background: 'rgba(' + (s.pct >= 100 ? '16,185,129' : s.pct >= 70 ? '245,158,11' : '244,63,94') + ',.18)', color: summaryStatusColor(s.pct)}">{{ s.pct.toFixed(0) }}%</span>
                       </div>
@@ -2645,7 +2735,7 @@
          SETTINGS MODAL
          ============================================================ -->
     <transition name="fade">
-      <div v-if="showSettings" class="bottom-sheet-overlay" @click.self="showSettings=false" style="z-index:80;">
+      <div v-if="showSettings" class="bottom-sheet-overlay" @click.self="showSettings=false">
         <div class="bottom-sheet" style="max-width:660px;">
           <div class="bottom-sheet-handle"></div>
 
@@ -2768,6 +2858,23 @@
                       </button>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <!-- ⭐ v23.16: حجم عرض النوافذ والخطوط (UI Scale & Zoom) -->
+              <div class="settings-card">
+                <h4 class="settings-label">🔍 {{ currentLang === 'ar' ? 'حجم عرض النوافذ والخطوط' : 'UI & Font Scale' }}</h4>
+                <p class="settings-subtext">{{ currentLang === 'ar' ? 'تكبير أو تصغير أبعاد الواجهات والنوافذ لتناسب مقاس شاشة هاتفك' : 'Adjust interface and modal scale for optimal viewing on your device' }}</p>
+                <div class="settings-option-row">
+                  <button @click="setUiScale(90)" :class="['settings-option', (Number(settings.uiScale)||100)===90 ? 'active' : '']">
+                    {{ currentLang === 'ar' ? 'مدمج 90%' : 'Compact 90%' }}
+                  </button>
+                  <button @click="setUiScale(100)" :class="['settings-option', (Number(settings.uiScale)||100)===100 ? 'active' : '']">
+                    {{ currentLang === 'ar' ? 'افتراضي 100%' : 'Default 100%' }}
+                  </button>
+                  <button @click="setUiScale(115)" :class="['settings-option', (Number(settings.uiScale)||100)===115 ? 'active' : '']">
+                    {{ currentLang === 'ar' ? 'كبير 115%' : 'Large 115%' }}
+                  </button>
                 </div>
               </div>
             </div>
@@ -2958,6 +3065,23 @@
                 </div>
               </div>
 
+              <!-- ⭐ v23.16: حجم عرض النوافذ والخطوط (UI Scale & Zoom) -->
+              <div class="settings-card">
+                <h4 class="settings-label">🔍 {{ currentLang === 'ar' ? 'حجم عرض النوافذ والخطوط' : 'UI & Font Scale' }}</h4>
+                <p class="settings-subtext">{{ currentLang === 'ar' ? 'تكبير أو تصغير أبعاد الواجهات والنوافذ لتناسب مقاس شاشة هاتفك' : 'Adjust interface and modal scale for optimal viewing on your device' }}</p>
+                <div class="settings-option-row">
+                  <button @click="setUiScale(90)" :class="['settings-option', (Number(settings.uiScale)||100)===90 ? 'active' : '']">
+                    {{ currentLang === 'ar' ? 'مدمج 90%' : 'Compact 90%' }}
+                  </button>
+                  <button @click="setUiScale(100)" :class="['settings-option', (Number(settings.uiScale)||100)===100 ? 'active' : '']">
+                    {{ currentLang === 'ar' ? 'افتراضي 100%' : 'Default 100%' }}
+                  </button>
+                  <button @click="setUiScale(115)" :class="['settings-option', (Number(settings.uiScale)||100)===115 ? 'active' : '']">
+                    {{ currentLang === 'ar' ? 'كبير 115%' : 'Large 115%' }}
+                  </button>
+                </div>
+              </div>
+
               <!-- Distribution & Layout -->
               <div class="settings-card">
                 <h4 class="settings-label">⚡ {{ t('settings.layout.autoDist') }}</h4>
@@ -3004,7 +3128,7 @@
                 <span class="version-badge-large" style="display:inline-block;padding:2px 8px;font-size:11px;">{{ t('settings.about.version') }} {{ appVersion }}</span>
 
                 <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;">
-                  <a :href="'https://wa.me/966533642710?text=' + encodeURIComponent('مرحباً، أحتاج دعم بخصوص تطبيق ' + activeCompanyName)" target="_blank" class="btn-ghost btn-sm" style="text-decoration:none;">
+                  <a :href="supportWhatsappUrl" target="_blank" class="btn-ghost btn-sm" style="text-decoration:none;">
                     <span>💬</span>
                     <span>{{ t('settings.about.contact.whatsapp') }}</span>
                   </a>
