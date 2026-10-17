@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.16.0 — app.js
+//  SAMX v23.16.1 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.16.0';
+const APP_VERSION = '23.16.1';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -1583,8 +1583,13 @@ createApp({
       }
 
       const storedVersion = localStorage.getItem('samx_seed_version');
-      const savedBranches = JSON.parse(localStorage.getItem('samx_branches') || '[]');
-      const hasLocalData = savedBranches.length > 0;
+      let savedBranches = [];
+      try {
+        savedBranches = JSON.parse(localStorage.getItem('samx_branches') || '[]');
+      } catch (e) {
+        savedBranches = [];
+      }
+      const hasLocalData = Array.isArray(savedBranches) && savedBranches.length > 0;
       const dismissedVersion = localStorage.getItem('samx_seed_dismissed');
 
       // ⭐ v23.9-SHIELD-CRITICAL: إذا كانت هناك بيانات محفوظة، لا تُطبِّق Seed إلا بتأكيد صريح

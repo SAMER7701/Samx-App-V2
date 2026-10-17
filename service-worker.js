@@ -1,11 +1,11 @@
 // ================================================================
-//  SAMX — Service Worker v23.16.0
+//  SAMX — Service Worker v23.16.1
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 //  يعمل: Cache-First للأصول، Offline-First، تحديث تلقائي
 // ================================================================
 
-const CACHE_VERSION = 'samx-v23.16.0';
+const CACHE_VERSION = 'samx-v23.16.1';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -118,12 +118,19 @@ self.addEventListener('fetch', (event) => {
 //  Same-origin handler
 // ================================================================
 async function handleSameOrigin(request) {
-  const cached = await caches.match(request);
+  const cached = await caches.match(request, { ignoreSearch: true });
 
   if (cached) {
     fetch(request)
       .then(response => {
         if (response && response.ok) {
+          const ct = response.headers.get('content-type') || '';
+          const url = new URL(request.url);
+          const isScriptOrStyle = request.destination === 'script' || request.destination === 'style' || url.pathname.endsWith('.js') || url.pathname.endsWith('.css');
+          if (isScriptOrStyle && ct.includes('text/html')) {
+            console.warn('[SW] Shield: Blocked HTML caching for asset:', request.url);
+            return;
+          }
           caches.open(CACHE_RUNTIME).then(cache => cache.put(request, response.clone()));
         }
       })
@@ -134,6 +141,16 @@ async function handleSameOrigin(request) {
   try {
     const response = await fetch(request);
     if (response && response.ok) {
+      const ct = response.headers.get('content-type') || '';
+      const url = new URL(request.url);
+      const isScriptOrStyle = request.destination === 'script' || request.destination === 'style' || url.pathname.endsWith('.js') || url.pathname.endsWith('.css');
+      if (isScriptOrStyle && ct.includes('text/html')) {
+        console.warn('[SW] Shield: Server returned HTML for script/style. Refusing HTML response:', request.url);
+        return new Response('// Asset not found (HTML refused)', {
+          status: 404,
+          headers: { 'Content-Type': 'application/javascript; charset=utf-8' }
+        });
+      }
       const clone = response.clone();
       caches.open(CACHE_RUNTIME).then(cache => cache.put(request, clone));
     }
@@ -155,7 +172,7 @@ async function handleCrossOrigin(request) {
     }
     return response;
   } catch (err) {
-    const cached = await caches.match(request);
+    const cached = await caches.match(request, { ignoreSearch: true });
     if (cached) return cached;
     return new Response('', { status: 503, statusText: 'Offline' });
   }
@@ -165,8 +182,26 @@ async function handleCrossOrigin(request) {
 //  Offline fallback
 // ================================================================
 async function offlineFallback(request) {
+  const url = new URL(request.url);
+  const isScript = request.destination === 'script' || url.pathname.endsWith('.js');
+  const isStyle = request.destination === 'style' || url.pathname.endsWith('.css');
+
+  if (isScript) {
+    return new Response('// offline', {
+      status: 503,
+      headers: { 'Content-Type': 'application/javascript; charset=utf-8' }
+    });
+  }
+
+  if (isStyle) {
+    return new Response('/* offline */', {
+      status: 503,
+      headers: { 'Content-Type': 'text/css; charset=utf-8' }
+    });
+  }
+
   if (request.headers.get('accept')?.includes('text/html')) {
-    const html = await caches.match('./index.html');
+    const html = await caches.match('./index.html', { ignoreSearch: true });
     if (html) return html;
     return new Response(
       '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">' +
@@ -181,20 +216,6 @@ async function offlineFallback(request) {
       '</div></body></html>',
       { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
     );
-  }
-
-  if (request.destination === 'script') {
-    return new Response('// offline', {
-      status: 503,
-      headers: { 'Content-Type': 'application/javascript; charset=utf-8' }
-    });
-  }
-
-  if (request.destination === 'style') {
-    return new Response('/* offline */', {
-      status: 503,
-      headers: { 'Content-Type': 'text/css; charset=utf-8' }
-    });
   }
 
   if (request.destination === 'image') {
