@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.17.1 — app.js
+//  SAMX v23.17.2 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.17.1';
+const APP_VERSION = '23.17.2';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -2080,11 +2080,10 @@ this.settings = {
           });
         });
 
-        // 3. إعادة تحميل الصفحة فوراً عند اكتمال تفعيل الإصدار الجديد
-        let refreshing = false;
+        // 3. إعادة تحميل الصفحة فوراً وبشكل آمن عند اكتمال تفعيل الإصدار الجديد
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            refreshing = true;
+          if (!this._isReloading) {
+            this._isReloading = true;
             window.location.reload();
           }
         });
@@ -2114,9 +2113,13 @@ this.settings = {
       } catch (e) {
         console.warn('[PWA] applyUpdate error:', e);
       }
+      // مهلة احتياطية فقط في حال لم يستجب controllerchange (1.5 ثانية لمنع تعارض الطلبات الشبكية)
       setTimeout(() => {
-        window.location.reload();
-      }, 500);
+        if (!this._isReloading) {
+          this._isReloading = true;
+          window.location.reload();
+        }
+      }, 1500);
     },
 
     // ================================================================
