@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.16.1 — app.js
+//  SAMX v23.17.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.16.1';
+const APP_VERSION = '23.17.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -1054,14 +1054,19 @@ createApp({
       }
       return arr;
     },
+    analyticsTotalTarget() {
+      return (this.analyticsSeries || []).reduce((sum, x) => sum + (Number(x.target) || 0), 0);
+    },
     analyticsSummary() {
-      const series = this.analyticsSeries.filter(x => x.sales > 0);
+      const allSeries = this.analyticsSeries || [];
+      const series = allSeries.filter(x => x.sales > 0);
       const totalSales = series.reduce((s, x) => s + x.sales, 0);
+      const totalTarget = allSeries.reduce((s, x) => s + (Number(x.target) || 0), 0);
       const daysCount = series.length;
       const avgSales = daysCount ? totalSales / daysCount : 0;
       let bestSales = 0, bestDate = '';
       series.forEach(x => { if (x.sales > bestSales) { bestSales = x.sales; bestDate = x.date; } });
-      return { totalSales, avgSales, bestSales, bestDate, daysCount };
+      return { totalSales, totalTarget, avgSales, bestSales, bestDate, daysCount };
     },
 
     allowedBranches() {
@@ -2834,6 +2839,18 @@ this.settings = {
       });
       this.showToast(this.t('toast.attendance.distributed', '', { count: present.length }), 'success');
     },
+    // ⭐ v23.17: قياس ارتفاع رأس التطبيق لتجنب قص عناوين النوافذ عند التمرير
+    syncHeaderHeight() {
+      try {
+        const header = document.querySelector('header');
+        if (header) {
+          const h = header.getBoundingClientRect().height;
+          if (h > 0) {
+            document.documentElement.style.setProperty('--app-header-height', Math.round(h) + 'px');
+          }
+        }
+      } catch (e) {}
+    },
     // ⭐ v23.10: Pull-to-Refresh
     setupPullToRefresh() {
       const app = document.getElementById('app');
@@ -3926,6 +3943,7 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       const clone = originalEl.cloneNode(true);
       // ⭐ v23.12: صورة عمودية — إزالة is-horizontal + تحديد عرض ثابت
       clone.classList.remove('is-horizontal');
+      clone.classList.add('is-export-card');
       clone.style.width = '720px';
       clone.style.maxWidth = '720px';
       clone.removeAttribute('id');
@@ -4601,13 +4619,21 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
         this.safeDestroyChart('trendChartInstance');
         const t = this.getChartThemeColors();
         const series = this.analyticsSeries || [];
+        const totalSales = (this.analyticsSummary && this.analyticsSummary.totalSales) || 0;
+        const totalTarget = this.analyticsTotalTarget || 0;
+        const salesLabel = this.currentLang === 'ar'
+          ? `المبيعات: ${this.formatNum(totalSales)} ${this.currencySymbol}`
+          : `Sales: ${this.formatNum(totalSales)} ${this.currencySymbol}`;
+        const targetLabel = this.currentLang === 'ar'
+          ? `التارجت: ${this.formatNum(totalTarget)} ${this.currencySymbol}`
+          : `Target: ${this.formatNum(totalTarget)} ${this.currencySymbol}`;
         const chart = new Chart(canvas, {
           type: 'line',
           data: {
             labels: series.map(x => x.date.slice(5)),
             datasets: [
-              { label: 'المبيعات', data: series.map(x => x.sales), borderColor: t.primary, backgroundColor: t.primaryAlpha(0.15), fill: true, tension: .35, borderWidth: 2 },
-              { label: 'التارجت', data: series.map(x => x.target), borderColor: t.targetColor, borderDash: [6, 4], borderWidth: 2 },
+              { label: salesLabel, data: series.map(x => x.sales), borderColor: t.primary, backgroundColor: t.primaryAlpha(0.15), fill: true, tension: .35, borderWidth: 2 },
+              { label: targetLabel, data: series.map(x => x.target), borderColor: t.targetColor, borderDash: [6, 4], borderWidth: 2 },
             ],
           },
           options: {
@@ -5715,6 +5741,9 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       this.setupNotifications();
           // ⭐ v23.10: Pull-to-Refresh
       this.setupPullToRefresh();
+      // ⭐ v23.17: مزامنة ارتفاع الهيدر لمنع قص العناوين
+      this.syncHeaderHeight();
+      window.addEventListener('resize', () => this.syncHeaderHeight());
 
       // ⭐ v23: حفظ البيانات عند إغلاق/تصغير الصفحة
       window.addEventListener('beforeunload', () => this.persistNow());
