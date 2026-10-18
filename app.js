@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.17.2 — app.js
+//  SAMX v23.17.3 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.17.2';
+const APP_VERSION = '23.17.3';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -2084,7 +2084,9 @@ this.settings = {
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!this._isReloading) {
             this._isReloading = true;
-            window.location.reload();
+            setTimeout(() => {
+              window.location.replace(window.location.href);
+            }, 150);
           }
         });
 
@@ -2099,11 +2101,13 @@ this.settings = {
       } catch (err) { console.warn('[PWA] SW registration failed:', err); }
     },
     applyUpdate() {
+      if (this._isReloading) return;
+      this.showUpdateToast = false;
+
       try {
         if (this.newWorker) {
           this.newWorker.postMessage({ type: 'SKIP_WAITING' });
-        }
-        if ('serviceWorker' in navigator) {
+        } else if ('serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistration().then(reg => {
             if (reg && reg.waiting) {
               reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -2113,13 +2117,13 @@ this.settings = {
       } catch (e) {
         console.warn('[PWA] applyUpdate error:', e);
       }
-      // مهلة احتياطية فقط في حال لم يستجب controllerchange (1.5 ثانية لمنع تعارض الطلبات الشبكية)
+      // مهلة احتياطية فقط في حال لم يستجب controllerchange (2.5 ثانية)
       setTimeout(() => {
         if (!this._isReloading) {
           this._isReloading = true;
-          window.location.reload();
+          window.location.replace(window.location.href);
         }
-      }, 1500);
+      }, 2500);
     },
 
     // ================================================================
