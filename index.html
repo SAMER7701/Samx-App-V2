@@ -117,7 +117,7 @@
 
   <!-- ============ PWA Install Banner ============ -->
   <transition name="slide-up">
-    <div v-if="showInstallBanner && !currentUser" class="pwa-banner">
+    <div v-if="showInstallBanner && !currentUser && !showUpdateToast" class="pwa-banner">
       <div class="logo-badge" style="width:36px;height:36px;border-radius:8px;padding:4px;flex-shrink:0;">
         <img :src="activeLogo" :alt="activeCompanyName" onerror="this.style.display='none'">
       </div>
@@ -136,7 +136,7 @@
       <div class="update-toast-content">
         <p class="update-toast-title">
           <span>🎉</span>
-          <span>{{ currentLang === 'ar' ? ('يتوفر إصدار جديد للتطبيق (v' + appVersion + ')!') : ('New App Update Available (v' + appVersion + ')!') }}</span>
+          <span>{{ currentLang === 'ar' ? ('يتوفر إصدار جديد للتطبيق (v' + appVersion + ')') : ('New App Update Available (v' + appVersion + ')') }}</span>
         </p>
         <p class="update-toast-desc">{{ currentLang === 'ar' ? 'تمت إضافة تحسينات هامة للأداء وتجربة الجوال، اضغط للتحديث الفوري' : 'Performance and mobile enhancements are ready. Tap to update immediately.' }}</p>
       </div>
@@ -2556,6 +2556,31 @@
             <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:10px 12px;font-size:12px;color:#6ee7b7;margin-bottom:14px;line-height:1.5;">
               {{ t('modal.backup.info') }}
             </div>
+
+            <!-- ⭐ v23.18: Cloudflare D1 Cloud Sync -->
+            <div style="background:linear-gradient(135deg, rgba(245,158,11,0.08), rgba(59,130,246,0.08));border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px;margin-bottom:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <span style="font-size:12px;font-weight:700;color:#fcd34d;display:flex;align-items:center;gap:6px;">
+                  <span>☁️</span>
+                  <span>مزامنة Cloudflare D1 (samx-db)</span>
+                </span>
+                <span style="font-size:10px;padding:2px 8px;border-radius:12px;font-weight:600;"
+                  :style="{
+                    background: cloudSyncStatus === 'synced' ? 'rgba(16,185,129,.2)' : cloudSyncStatus === 'syncing' ? 'rgba(59,130,246,.2)' : cloudSyncStatus === 'offline' ? 'rgba(148,163,184,.2)' : cloudSyncStatus === 'unconfigured' ? 'rgba(234,179,8,.2)' : 'rgba(239,68,68,.2)',
+                    color: cloudSyncStatus === 'synced' ? '#6ee7b7' : cloudSyncStatus === 'syncing' ? '#93c5fd' : cloudSyncStatus === 'offline' ? '#94a3b8' : cloudSyncStatus === 'unconfigured' ? '#fde047' : '#fca5a5'
+                  }">
+                  {{ cloudSyncStatus === 'synced' ? '✅ متزامن' : cloudSyncStatus === 'syncing' ? '⏳ جاري المزامنة...' : cloudSyncStatus === 'offline' ? '📴 محلي (Offline)' : cloudSyncStatus === 'unconfigured' ? '⚙️ بانتظار ربط DB' : '⚠️ تنبيه' }}
+                </span>
+              </div>
+              <div v-if="lastCloudSyncTime" style="font-size:11px;color:#94a3b8;margin-bottom:8px;">
+                آخر مزامنة سحابية: {{ lastCloudSyncTime }}
+              </div>
+              <button @click="syncNow" :disabled="cloudSyncStatus === 'syncing'" class="btn-ghost btn-sm" style="width:100%;color:#fcd34d;border-color:rgba(245,158,11,.3);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;">
+                <span>🔄</span>
+                <span>{{ cloudSyncStatus === 'syncing' ? 'جاري الاتصال بالسحابة...' : 'مزامنة فورية الآن مع D1' }}</span>
+              </button>
+            </div>
+
             <div style="display:flex;flex-direction:column;gap:10px;">
               <button @click="exportBackup" class="btn-gold btn-md" style="width:100%;font-weight:700;">{{ t('modal.backup.export') }}</button>
               <label class="btn-ghost btn-md" style="width:100%;cursor:pointer;text-align:center;display:block;">
@@ -3368,7 +3393,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.17.3"></script>
+<script src="app.js?v=23.18.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

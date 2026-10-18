@@ -1,0 +1,161 @@
+// ================================================================
+//  SAMX Cloudflare Worker — worker.js
+//  المالك: Smeer.S.A | المطور: SAMX Team
+//  © 2026 SAMX - جميع الحقوق محفوظة
+//  يدمج تقديم الأصول الثابتة (Static Assets) مع نقطة مزامنة D1 (/api/sync)
+// ================================================================
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+
+    // معالجة مسار المزامنة السحابية /api/sync
+    if (url.pathname === '/api/sync') {
+      return handleSync(request, env);
+    }
+
+    // إذا كان الطلب يبدأ بـ /api/ ولم يتم التعرف عليه
+    if (url.pathname.startsWith('/api/')) {
+      return new Response(JSON.stringify({ error: 'Endpoint not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // تمرير كافة الطلبات الأخرى للأصول الثابتة (Static Assets)
+    if (env && env.ASSETS && typeof env.ASSETS.fetch === 'function') {
+      return env.ASSETS.fetch(request);
+    }
+
+    return new Response('Assets binding unavailable', { status: 500 });
+  },
+};
+
+async function handleSync(request, env) {
+  const headers = {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { headers });
+  }
+
+  // إذا لم يكن D1 مفعل بعد، لا تسبب أي خطأ بل أرجع استجابة مرنة
+  if (!env || !env.DB) {
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: null,
+        bindingConfigured: false,
+        message: 'D1 binding (DB) is not attached yet in Cloudflare dashboard',
+      }),
+      { headers }
+    );
+  }
+
+  const db = env.DB;
+
+  try {
+    // 1. إنشاء الجدول تلقائياً إن لم يكن موجوداً
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS samx_sync (
+        id TEXT PRIMARY KEY,
+        payload TEXT NOT NULL,
+        version TEXT,
+        updated_at INTEGER NOT NULL
+      );
+    `);
+
+    // 2. معالجة طلب الحفظ (POST)
+    if (request.method === 'POST') {
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
+          status: 400,
+          headers,
+        });
+      }
+
+      const payloadStr = typeof body.payload === 'string' ? body.payload : JSON.stringify(body.payload || body);
+      const version = body.version || '23.18.0';
+      const now = Date.now();
+
+      await db.prepare(`
+        INSERT INTO samx_sync (id, payload, version, updated_at)
+        VALUES ('latest', ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          payload = excluded.payload,
+          version = excluded.version,
+          updated_at = excluded.updated_at
+      `).bind(payloadStr, version, now).run();
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          bindingConfigured: true,
+          updated_at: now,
+          version,
+        }),
+        { headers }
+      );
+    }
+
+    // 3. معالجة طلب القراءة (GET)
+    if (request.method === 'GET') {
+      const row = await db.prepare('SELECT payload, version, updated_at FROM samx_sync WHERE id = ?')
+        .bind('latest')
+        .first();
+
+      if (!row) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            bindingConfigured: true,
+            data: null,
+            updated_at: null,
+            message: 'Database is empty',
+          }),
+          { headers }
+        );
+      }
+
+      let parsedData = null;
+      try {
+        parsedData = JSON.parse(row.payload);
+      } catch (e) {
+        parsedData = row.payload;
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          bindingConfigured: true,
+          data: parsedData,
+          version: row.version,
+          updated_at: row.updated_at,
+        }),
+        { headers }
+      );
+    }
+
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers,
+    });
+  } catch (err) {
+    console.error('[Worker D1 Error]:', err);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: err.message,
+        bindingConfigured: true,
+      }),
+      { status: 500, headers }
+    );
+  }
+}

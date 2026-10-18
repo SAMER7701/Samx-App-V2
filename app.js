@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.17.3 — app.js
+//  SAMX v23.18.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.17.3';
+const APP_VERSION = '23.18.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -400,6 +400,12 @@ createApp({
         companyName: '', companyDesc: '', logoDataURL: null,
         sector: 'general', branchCode: 'BR-001', branchName: '',
       },
+
+      // ⭐ v23.18: Cloudflare D1 Cloud Sync
+      cloudSyncStatus: 'idle', // 'idle' | 'syncing' | 'synced' | 'offline' | 'error' | 'unconfigured'
+      lastCloudSyncTime: '',
+      cloudSyncError: '',
+      _cloudSyncDebounce: null,
     };
   },
 
@@ -2584,13 +2590,15 @@ this.settings = {
         localStorage.setItem('samx_attendance', JSON.stringify(this.attendance || {}));
         localStorage.setItem('samx_theme', this.darkMode ? 'dark' : 'light');
         try { localStorage.setItem('samx_staff_chart_type', this.staffChartType); } catch(e) {}
+        // ⭐ v23.18: إرسال نسخة للسحابة في الخلفية (Cloudflare D1)
+        this.triggerCloudSyncDebounced();
       } catch (e) { console.warn('persist error', e); }
     },
     persistNow() {
       clearTimeout(this._saveDebounce);
       this.persist();
     },
-        load() {
+    load() {
       try {
         this.branches = JSON.parse(localStorage.getItem('samx_branches')) || [];
         this.staff = JSON.parse(localStorage.getItem('samx_staff')) || [];
@@ -2609,6 +2617,196 @@ this.settings = {
       this.applyTheme();
       this._dataLoaded = true;   // ⭐ v23.9-SHIELD: فتح البوابة
       console.log('[load] ✅ Data loaded:', this.branches.length, 'branches,', this.staff.length, 'staff');
+    },
+
+    // ================================================================
+    //  ⭐ v23.18: Cloudflare D1 Sync Engine (Offline-First)
+    // ================================================================
+    triggerCloudSyncDebounced() {
+      clearTimeout(this._cloudSyncDebounce);
+      this._cloudSyncDebounce = setTimeout(() => {
+        this.syncToCloud();
+      }, 1500);
+    },
+
+    async syncToCloud() {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        this.cloudSyncStatus = 'offline';
+        return;
+      }
+      if (!this._dataLoaded) return;
+
+      // حماية من رفع مصفوفات فارغة تمحو السحابة
+      if ((!this.branches || this.branches.length === 0) && (!this.staff || this.staff.length === 0)) {
+        return;
+      }
+
+      try {
+        this.cloudSyncStatus = 'syncing';
+        const payload = {
+          branches: this.branches || [],
+          staff: this.staff || [],
+          daily: this.daily || {},
+          monthlyTargets: this.monthlyTargets || {},
+          monthlyHeroesTargets: this.monthlyHeroesTargets || {},
+          attendance: this.attendance || {},
+          users: this.users || [],
+          branding: this.branding || null,
+          updated_at: Date.now(),
+        };
+
+        const res = await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payload, version: APP_VERSION }),
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        if (data.bindingConfigured === false) {
+          this.cloudSyncStatus = 'unconfigured';
+          console.info('[CloudSync] D1 binding DB is not attached yet in Cloudflare dashboard');
+          return;
+        }
+
+        if (data.success) {
+          this.cloudSyncStatus = 'synced';
+          this.cloudSyncError = '';
+          const locale = this.t ? this.t('locale.time') : 'ar-SA';
+          this.lastCloudSyncTime = new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+          try { localStorage.setItem('samx_last_cloud_sync', Date.now().toString()); } catch (e) {}
+        } else {
+          this.cloudSyncStatus = 'error';
+          this.cloudSyncError = data.error || 'Failed';
+        }
+      } catch (err) {
+        console.warn('[CloudSync] Background sync postponed:', err.message);
+        this.cloudSyncStatus = (typeof navigator !== 'undefined' && !navigator.onLine) ? 'offline' : 'error';
+      }
+    },
+
+    async syncFromCloud(isManual = false) {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        this.cloudSyncStatus = 'offline';
+        if (isManual) this.showToast(this.t('toast.offline') || 'لا يوجد اتصال بالإنترنت', 'warning');
+        return;
+      }
+
+      try {
+        this.cloudSyncStatus = 'syncing';
+        const res = await fetch('/api/sync', {
+          method: 'GET',
+          headers: { 'Cache-Control': 'no-cache' },
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const resJson = await res.json();
+        if (resJson.bindingConfigured === false) {
+          this.cloudSyncStatus = 'unconfigured';
+          if (isManual) {
+            this.showToast('قاعدة بيانات Cloudflare D1 غير مربوطة بعد في لوحة التحكم (Binding Name: DB)', 'info');
+          }
+          return;
+        }
+
+        if (!resJson.data) {
+          // السحابة فارغة — ارفع البيانات المحلية لحفظ أول نسخة
+          this.cloudSyncStatus = 'synced';
+          if ((this.branches && this.branches.length > 0) || (this.staff && this.staff.length > 0)) {
+            await this.syncToCloud();
+          }
+          if (isManual) {
+            this.showToast('تم تهيئة قاعدة D1 ورفع نسختك المحلية إليها بنجاح ✅', 'success');
+          }
+          return;
+        }
+
+        const cloud = resJson.data;
+        const cloudUpdatedAt = resJson.updated_at || cloud.updated_at || 0;
+        let lastLocalSync = 0;
+        try {
+          lastLocalSync = parseInt(localStorage.getItem('samx_last_cloud_sync') || '0', 10);
+        } catch (e) {}
+
+        const localEmpty = (!this.branches || this.branches.length === 0) && (!this.staff || this.staff.length === 0);
+
+        if (localEmpty) {
+          if (Array.isArray(cloud.branches)) this.branches = cloud.branches;
+          if (Array.isArray(cloud.staff)) this.staff = cloud.staff;
+          if (cloud.daily) this.daily = cloud.daily;
+          if (cloud.monthlyTargets) this.monthlyTargets = cloud.monthlyTargets;
+          if (cloud.monthlyHeroesTargets) this.monthlyHeroesTargets = cloud.monthlyHeroesTargets;
+          if (cloud.attendance) this.attendance = cloud.attendance;
+          if (Array.isArray(cloud.users) && cloud.users.length > 0) {
+            this.users = cloud.users;
+            this.persistUsers();
+          }
+          if (cloud.branding) {
+            this.branding = { ...this.branding, ...cloud.branding };
+            this.persistBranding();
+          }
+          this.normalizeAllDailyRecords();
+          this.persist();
+        } else {
+          // دمج السجلات اليومية الذكي
+          if (cloud.daily && typeof cloud.daily === 'object') {
+            let changed = false;
+            Object.keys(cloud.daily).forEach(dayKey => {
+              if (!this.daily[dayKey]) {
+                this.daily[dayKey] = cloud.daily[dayKey];
+                changed = true;
+              } else {
+                Object.keys(cloud.daily[dayKey]).forEach(bId => {
+                  if (!this.daily[dayKey][bId]) {
+                    this.daily[dayKey][bId] = cloud.daily[dayKey][bId];
+                    changed = true;
+                  }
+                });
+              }
+            });
+            if (changed) this.normalizeAllDailyRecords();
+          }
+
+          if (cloudUpdatedAt > lastLocalSync) {
+            if (Array.isArray(cloud.branches) && cloud.branches.length > 0) this.branches = cloud.branches;
+            if (Array.isArray(cloud.staff) && cloud.staff.length > 0) this.staff = cloud.staff;
+            if (cloud.monthlyTargets) this.monthlyTargets = Object.assign({}, cloud.monthlyTargets, this.monthlyTargets);
+            if (cloud.monthlyHeroesTargets) this.monthlyHeroesTargets = Object.assign({}, cloud.monthlyHeroesTargets, this.monthlyHeroesTargets);
+            if (cloud.attendance) this.attendance = Object.assign({}, cloud.attendance, this.attendance);
+            this.persist();
+          } else {
+            // المحلي أحدث أو مساوٍ، نرسل النسخة المدمجة للسحابة
+            this.syncToCloud();
+          }
+        }
+
+        this.cloudSyncStatus = 'synced';
+        this.cloudSyncError = '';
+        const locale = this.t ? this.t('locale.time') : 'ar-SA';
+        this.lastCloudSyncTime = new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+        try { localStorage.setItem('samx_last_cloud_sync', Date.now().toString()); } catch (e) {}
+
+        if (isManual) {
+          this.showToast('تمت المزامنة بنجاح مع Cloudflare D1 ☁️', 'success');
+          this.refreshCharts();
+        }
+      } catch (err) {
+        console.warn('[CloudSync] Sync from cloud error:', err);
+        this.cloudSyncStatus = (typeof navigator !== 'undefined' && !navigator.onLine) ? 'offline' : 'error';
+        if (isManual) {
+          this.showToast('تعذر الاتصال بالسحابة: ' + (err.message || 'خطأ غير معروف'), 'error');
+        }
+      }
+    },
+
+    syncNow() {
+      this.syncFromCloud(true);
     },
     // ================================================================
     //  Users Management
@@ -2660,6 +2858,7 @@ this.settings = {
     },
     persistUsers() {
       try { localStorage.setItem('samx_users', JSON.stringify(this.users)); } catch (e) {}
+      this.triggerCloudSyncDebounced();
     },
     async doLogin() {
       this.loginError = '';
@@ -5473,6 +5672,7 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
     persistBranding() {
       try { localStorage.setItem('samx_branding', JSON.stringify(this.branding)); }
       catch (e) { console.error('[Branding] Save failed:', e); }
+      this.triggerCloudSyncDebounced();
     },
     saveBranding() {
       if (this.brandingForm.companyName) this.branding.companyName = this.brandingForm.companyName.trim();
@@ -5771,7 +5971,20 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       this.setupAutoBackup();
       this.setupAutoLock();
       this.setupNotifications();
-          // ⭐ v23.10: Pull-to-Refresh
+
+      // ⭐ v23.18: تهيئة المزامنة السحابية Cloudflare D1
+      window.addEventListener('online', () => {
+        this.cloudSyncStatus = 'syncing';
+        this.syncFromCloud();
+      });
+      window.addEventListener('offline', () => {
+        this.cloudSyncStatus = 'offline';
+      });
+      setTimeout(() => {
+        this.syncFromCloud();
+      }, 800);
+
+      // ⭐ v23.10: Pull-to-Refresh
       this.setupPullToRefresh();
       // ⭐ v23.17: مزامنة ارتفاع الهيدر لمنع قص العناوين
       this.syncHeaderHeight();

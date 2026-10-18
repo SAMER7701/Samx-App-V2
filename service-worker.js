@@ -1,11 +1,11 @@
 // ================================================================
-//  SAMX — Service Worker v23.17.3
+//  SAMX — Service Worker v23.18.0
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 //  يعمل: Cache-First للأصول، Offline-First، تحديث يدوي موجه للمستخدم
 // ================================================================
 
-const CACHE_VERSION = 'samx-v23.17.3';
+const CACHE_VERSION = 'samx-v23.18.0';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -50,7 +50,7 @@ const STATIC_ASSETS = [
 //  INSTALL
 // ================================================================
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing SAMX v23.17.1...');
+  console.log('[SW] Installing SAMX v23.18.0...');
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_STATIC);
@@ -78,7 +78,7 @@ self.addEventListener('install', (event) => {
 //  ACTIVATE
 // ================================================================
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating SAMX v23.9...');
+  console.log('[SW] Activating SAMX v23.18.0...');
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
@@ -102,6 +102,9 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // 1. تجاوز طلبات الـ API والمزامنة (تمر مباشرة إلى الخادم D1 بدون اعتراض كاش)
+  if (url.pathname.startsWith('/api/')) return;
 
   if (request.method !== 'GET') return;
   if (!url.protocol.startsWith('http')) return;

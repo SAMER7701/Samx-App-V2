@@ -32,6 +32,40 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(express.json({ limit: '15mb' }));
+
+// Local File-backed /api/sync for local development
+const LOCAL_SYNC_FILE = path.join(__dirname, '.samx-local-sync.json');
+
+app.get('/api/sync', (req, res) => {
+  try {
+    if (fs.existsSync(LOCAL_SYNC_FILE)) {
+      const content = JSON.parse(fs.readFileSync(LOCAL_SYNC_FILE, 'utf-8'));
+      return res.json({
+        success: true,
+        bindingConfigured: true,
+        data: content.payload,
+        version: content.version || '23.18.0',
+        updated_at: content.updated_at || Date.now()
+      });
+    }
+  } catch (e) {}
+  return res.json({ success: true, bindingConfigured: true, data: null, updated_at: null });
+});
+
+app.post('/api/sync', (req, res) => {
+  try {
+    const body = req.body;
+    const payload = body.payload || body;
+    const version = body.version || '23.18.0';
+    const now = Date.now();
+    fs.writeFileSync(LOCAL_SYNC_FILE, JSON.stringify({ payload, version, updated_at: now }, null, 2), 'utf-8');
+    return res.json({ success: true, bindingConfigured: true, updated_at: now, version });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 // Enable static file serving
 app.use(express.static(__dirname, {
   extensions: ['html', 'js', 'css', 'json', 'svg', 'png', 'ttf', 'woff', 'woff2'],
