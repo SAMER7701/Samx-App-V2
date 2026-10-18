@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.17.0 — app.js
+//  SAMX v23.17.1 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.17.0';
+const APP_VERSION = '23.17.1';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -2061,21 +2061,49 @@ this.settings = {
       if (!('serviceWorker' in navigator)) return;
       try {
         const registration = await navigator.serviceWorker.register('./service-worker.js', { scope: './' });
+
+        // 1. فحص فوري: إذا كان هناك عامل جديد ينتظر التفعيل بالفعل
+        if (registration.waiting && navigator.serviceWorker.controller) {
+          this.newWorker = registration.waiting;
+          this.showUpdateToast = true;
+        }
+
+        // 2. مراقبة تثبيت إصدار جديد
         registration.addEventListener('updatefound', () => {
           const nw = registration.installing;
           if (!nw) return;
           nw.addEventListener('statechange', () => {
-            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            if ((nw.state === 'installed' || nw.state === 'waiting') && navigator.serviceWorker.controller) {
               this.newWorker = nw;
               this.showUpdateToast = true;
             }
           });
         });
-        setInterval(() => registration.update().catch(() => {}), 30 * 60 * 1000);
+
+        // 3. إعادة تحميل الصفحة فوراً عند اكتمال تفعيل الإصدار الجديد
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
+
+        // 4. فحص فوري للتحديث وفحص دوري كل 15 دقيقة وعند استئناف شاشة التطبيق
+        registration.update().catch(() => {});
+        setInterval(() => registration.update().catch(() => {}), 15 * 60 * 1000);
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            registration.update().catch(() => {});
+          }
+        });
       } catch (err) { console.warn('[PWA] SW registration failed:', err); }
     },
     applyUpdate() {
       try {
+        if (this.newWorker) {
+          this.newWorker.postMessage({ type: 'SKIP_WAITING' });
+        }
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistration().then(reg => {
             if (reg && reg.waiting) {
@@ -2083,15 +2111,12 @@ this.settings = {
             }
           }).catch(() => {});
         }
-        if (this.newWorker) {
-          this.newWorker.postMessage({ type: 'SKIP_WAITING' });
-        }
       } catch (e) {
         console.warn('[PWA] applyUpdate error:', e);
       }
       setTimeout(() => {
         window.location.reload();
-      }, 300);
+      }, 500);
     },
 
     // ================================================================

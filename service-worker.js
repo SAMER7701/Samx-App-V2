@@ -1,11 +1,11 @@
 // ================================================================
-//  SAMX — Service Worker v23.17.0
+//  SAMX — Service Worker v23.17.1
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
-//  يعمل: Cache-First للأصول، Offline-First، تحديث تلقائي
+//  يعمل: Cache-First للأصول، Offline-First، تحديث يدوي موجه للمستخدم
 // ================================================================
 
-const CACHE_VERSION = 'samx-v23.17.0';
+const CACHE_VERSION = 'samx-v23.17.1';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -15,7 +15,7 @@ const STATIC_ASSETS = [
   './manifest.json',
   './styles.css',
   './app.js',
-    './samx-logo.svg',
+  './samx-logo.svg',
   './icon-192.png',
   './icon-512.png',
   './icon-maskable-512.png',
@@ -50,7 +50,7 @@ const STATIC_ASSETS = [
 //  INSTALL
 // ================================================================
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing SAMX v23.9...');
+  console.log('[SW] Installing SAMX v23.17.1...');
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_STATIC);
@@ -68,7 +68,8 @@ self.addEventListener('install', (event) => {
       } else {
         console.log(`[SW] ✅ All ${STATIC_ASSETS.length} assets cached`);
       }
-      await self.skipWaiting();
+      // ملاحظة: لا نستدعي skipWaiting هنا تلقائياً لكي يبقى العامل في حالة الانتظار (waiting)
+      // وتظهر رسالة "يوجد تحديث متاح للتطبيق" للمستخدم على الجوال والكمبيوتر
     })()
   );
 });
@@ -118,6 +119,43 @@ self.addEventListener('fetch', (event) => {
 //  Same-origin handler
 // ================================================================
 async function handleSameOrigin(request) {
+  const url = new URL(request.url);
+  const isNavigation = request.mode === 'navigate' ||
+                       request.destination === 'document' ||
+                       (request.headers.get('accept') && request.headers.get('accept').includes('text/html'));
+
+  // 1. طلبات فتح التطبيق والتنقل (PWA Launch / Navigation)
+  // يضمن فتح التطبيق فوراً من أيقونة شاشة الجوال بدون تعليق أو خطأ FAILED -2
+  if (isNavigation) {
+    const cachedPage = (await caches.match('./index.html', { ignoreSearch: true })) ||
+                       (await caches.match('./', { ignoreSearch: true })) ||
+                       (await caches.match(request, { ignoreSearch: true }));
+
+    if (cachedPage) {
+      // إعادة التحقق بهدوء في الخلفية لتحديث النسخة المخزنة عند توفر الاتصال
+      fetch(request)
+        .then(response => {
+          if (response && response.ok) {
+            caches.open(CACHE_STATIC).then(cache => cache.put('./index.html', response.clone()));
+          }
+        })
+        .catch(() => {});
+      return cachedPage;
+    }
+
+    try {
+      const response = await fetch(request);
+      if (response && response.ok) {
+        const clone = response.clone();
+        caches.open(CACHE_STATIC).then(cache => cache.put('./index.html', clone));
+        return response;
+      }
+    } catch (err) {
+      return offlineFallback(request);
+    }
+  }
+
+  // 2. باقي الأصول والملفات المحلية (Cache-First + Stale-While-Revalidate)
   const cached = await caches.match(request, { ignoreSearch: true });
 
   if (cached) {
@@ -125,7 +163,6 @@ async function handleSameOrigin(request) {
       .then(response => {
         if (response && response.ok) {
           const ct = response.headers.get('content-type') || '';
-          const url = new URL(request.url);
           const isScriptOrStyle = request.destination === 'script' || request.destination === 'style' || url.pathname.endsWith('.js') || url.pathname.endsWith('.css');
           if (isScriptOrStyle && ct.includes('text/html')) {
             console.warn('[SW] Shield: Blocked HTML caching for asset:', request.url);
@@ -142,7 +179,6 @@ async function handleSameOrigin(request) {
     const response = await fetch(request);
     if (response && response.ok) {
       const ct = response.headers.get('content-type') || '';
-      const url = new URL(request.url);
       const isScriptOrStyle = request.destination === 'script' || request.destination === 'style' || url.pathname.endsWith('.js') || url.pathname.endsWith('.css');
       if (isScriptOrStyle && ct.includes('text/html')) {
         console.warn('[SW] Shield: Server returned HTML for script/style. Refusing HTML response:', request.url);
@@ -183,25 +219,14 @@ async function handleCrossOrigin(request) {
 // ================================================================
 async function offlineFallback(request) {
   const url = new URL(request.url);
-  const isScript = request.destination === 'script' || url.pathname.endsWith('.js');
-  const isStyle = request.destination === 'style' || url.pathname.endsWith('.css');
+  const isNavigation = request.mode === 'navigate' ||
+                       request.destination === 'document' ||
+                       request.headers.get('accept')?.includes('text/html');
 
-  if (isScript) {
-    return new Response('// offline', {
-      status: 503,
-      headers: { 'Content-Type': 'application/javascript; charset=utf-8' }
-    });
-  }
-
-  if (isStyle) {
-    return new Response('/* offline */', {
-      status: 503,
-      headers: { 'Content-Type': 'text/css; charset=utf-8' }
-    });
-  }
-
-  if (request.headers.get('accept')?.includes('text/html')) {
-    const html = await caches.match('./index.html', { ignoreSearch: true });
+  if (isNavigation) {
+    const html = (await caches.match('./index.html', { ignoreSearch: true })) ||
+                 (await caches.match('./', { ignoreSearch: true })) ||
+                 (await caches.match('/index.html', { ignoreSearch: true }));
     if (html) return html;
     return new Response(
       '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">' +
