@@ -3397,7 +3397,8 @@
        ============================================================ -->
   <transition name="fade">
     <div v-if="setupWizard.active" class="setup-wizard-overlay">
-      <div class="setup-wizard-container">
+      <div class="setup-wizard-container" style="position:relative;">
+        <button @click="setupWizard.active = false" class="modal-close-btn" style="position:absolute;top:16px;left:16px;z-index:20;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#cbd5e1;width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;" title="إغلاق">✕</button>
 
         <!-- شريط التقدم -->
         <div class="setup-progress">

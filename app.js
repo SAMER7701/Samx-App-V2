@@ -6120,14 +6120,15 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
     // ================================================================
     checkSetupWizard() {
       try {
+        // ⭐ v23.23 (الخيار 1): إيقاف الظهور الإجباري التلقائي للمعالج عند فتح التطبيق
+        // لتمكين المستخدمين من تسجيل الدخول والمزامنة السحابية فوراً دون اعتراض على الجوالات
+        // مع بقاء كافة إعدادات الهوية والمنشأة والفروع متاحة ومحفوظة 100% في صفحة الإعدادات
+        this.setupWizard.isFirstRun = false;
+        this.setupWizard.active = false;
         const setupDone = localStorage.getItem('samx_setup_done');
-        if (setupDone === 'true') {
-          this.setupWizard.isFirstRun = false;
-          return;
+        if (setupDone !== 'true') {
+          localStorage.setItem('samx_setup_done', 'true');
         }
-        this.setupWizard.isFirstRun = true;
-        this.setupWizard.active = true;
-        this.setupWizard.step = 0;
       } catch (e) {
         console.warn('[SetupWizard] Check failed:', e);
       }
