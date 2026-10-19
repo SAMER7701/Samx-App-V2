@@ -885,10 +885,24 @@
     'modal.compare.achievement': '📊 التحقيق',
     'modal.compare.heroes': '🏆 الأبطال',
 
-    // ─── Activity Log Modal ───
-    'modal.activity.title': '📜 سجل النشاط',
-    'modal.activity.empty': 'لا يوجد نشاط',
-    'modal.activity.clear': '🗑️ مسح السجل',
+    // ─── Activity Log Modal (v23.22: سجل التدقيق المتقدم) ───
+    'modal.activity.title': '📜 سجل التدقيق والعمليات',
+    'modal.activity.subtitle': 'تتبع فوري ومحمي لكافة العمليات والتعديلات الحساسة',
+    'modal.activity.empty': 'لا توجد عمليات مسجلة مطابقة للبحث أو التصفية',
+    'modal.activity.clear': '🗑️ مسح السجل (للمدير العام)',
+    'modal.activity.export': '📥 تصدير السجل (CSV)',
+    'modal.activity.searchPlaceholder': 'بحث بالموظف، المستخدم، الفرع، أو نوع العملية...',
+    'modal.activity.stat.total': 'إجمالي العمليات',
+    'modal.activity.stat.today': 'عمليات اليوم',
+    'modal.activity.stat.sales': 'المبيعات والتارجت',
+    'modal.activity.stat.security': 'أمان ونظام',
+    'modal.activity.filter.all': 'الكل',
+    'modal.activity.filter.sales': '💰 مبيعات',
+    'modal.activity.filter.targets': '🎯 تارجت',
+    'modal.activity.filter.closes': '🔒 اليوميات',
+    'modal.activity.filter.users': '👥 المستخدمين',
+    'modal.activity.filter.security': '🛡️ الأمان',
+    'modal.activity.filter.system': '⚙️ النظام',
 
     // ─── Backup Modal ───
     'modal.backup.title': '💾 النسخ الاحتياطي',

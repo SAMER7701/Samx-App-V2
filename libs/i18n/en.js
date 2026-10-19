@@ -885,10 +885,24 @@
     'modal.compare.achievement': '📊 Achievement',
     'modal.compare.heroes': '🏆 Heroes',
 
-    // ─── Activity Log Modal ───
-    'modal.activity.title': '📜 Activity Log',
-    'modal.activity.empty': 'No activity',
-    'modal.activity.clear': '🗑️ Clear Log',
+    // ─── Activity Log Modal (v23.22: Audit Trail) ───
+    'modal.activity.title': '📜 Audit Trail & Activity Log',
+    'modal.activity.subtitle': 'Real-time tamper-resistant audit of all sensitive operations',
+    'modal.activity.empty': 'No activity records match your search or filter',
+    'modal.activity.clear': '🗑️ Clear Log (Admin Only)',
+    'modal.activity.export': '📥 Export Audit Log (CSV)',
+    'modal.activity.searchPlaceholder': 'Search by employee, username, branch, action...',
+    'modal.activity.stat.total': 'Total Actions',
+    'modal.activity.stat.today': 'Today Actions',
+    'modal.activity.stat.sales': 'Sales & Target',
+    'modal.activity.stat.security': 'Security & System',
+    'modal.activity.filter.all': 'All',
+    'modal.activity.filter.sales': '💰 Sales',
+    'modal.activity.filter.targets': '🎯 Target',
+    'modal.activity.filter.closes': '🔒 Shifts',
+    'modal.activity.filter.users': '👥 Users',
+    'modal.activity.filter.security': '🛡️ Security',
+    'modal.activity.filter.system': '⚙️ System',
 
     // ─── Backup Modal ───
     'modal.backup.title': '💾 Backup',

@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.20.0 — app.js
+//  SAMX v23.22.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.20.0';
+const APP_VERSION = '23.22.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -267,10 +267,16 @@ createApp({
         loaded: false, newBranches: [], existingBranches: [],
         newStaff: [], duplicateStaff: [], branchNameConflicts: [],
       },
-      autoBackups: [],
       showActivityLog: false,
       activityLog: [],
-            notifications: [],
+      activityLogFilter: 'all', // all | financial | targets | closes | users | security | system
+      activityLogSearch: '',
+      showCloseDayModal: false,
+      closeDayNote: '',
+      showReopenDayModal: false,
+      reopenDayReason: '',
+      reopenDayError: '',
+      notifications: [],
       showNotificationsPanel: false,
       showUserMenu: false,   // ⭐ v23.11.2: قائمة المستخدم في الهيدر
       showMoreMenu: false,   // ⭐ قائمة المزيد على الجوال والتابلت
@@ -1107,8 +1113,89 @@ createApp({
       return (this.selectedDate < this.todayStr) && !this.canEditPastDays;
     },
 
+    // ⭐ v23.21: حوكمة إغلاق اليوميات وسجل التدقيق
+    isDayClosed() {
+      if (!this.selectedDate || !this.selectedBranchId) return false;
+      const key = `${this.selectedDate}|${this.selectedBranchId}`;
+      const rec = this.daily[key];
+      return !!(rec && rec.isClosed);
+    },
+    dayCloseInfo() {
+      if (!this.selectedDate || !this.selectedBranchId) return null;
+      const key = `${this.selectedDate}|${this.selectedBranchId}`;
+      const rec = this.daily[key];
+      if (!rec || !rec.isClosed) return null;
+      return {
+        closedAt: rec.closedAt ? new Date(rec.closedAt).toLocaleString(this.currentLang === 'ar' ? 'ar-SA' : 'en-US') : '—',
+        closedBy: rec.closedBy || '—',
+        closedSales: rec.closedSales || 0,
+        closedInvoices: rec.closedInvoices || 0,
+        closeNote: rec.closeNote || '',
+      };
+    },
+    canCloseDay() {
+      if (!this.currentUser) return false;
+      return ['admin', 'manager', 'branch_manager'].includes(this.currentUser.role);
+    },
+    canReopenDay() {
+      if (!this.currentUser) return false;
+      return this.currentUser.role === 'admin';
+    },
+    // ⭐ v23.22: صلاحيات وسجل التدقيق والعمليات (Audit Trail)
+    canViewActivityLog() {
+      if (!this.currentUser) return false;
+      return ['admin', 'manager', 'viewer'].includes(this.currentUser.role);
+    },
+    activityLogStats() {
+      const logs = this.activityLog || [];
+      const total = logs.length;
+      const now = new Date();
+      const todayCount = logs.filter(l => {
+        if (!l.timestamp) return false;
+        const d = new Date(l.timestamp);
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+      }).length;
+      const salesCount = logs.filter(l => l.category === 'sales' || l.category === 'target' || (l.action && (l.action.includes('💰') || l.action.includes('🎯') || l.action.includes('مبيعات') || l.action.includes('تارجت')))).length;
+      const securityCount = logs.filter(l => l.category === 'security' || l.category === 'system' || (l.action && (l.action.includes('غير مصرح') || l.action.includes('مسح') || l.action.includes('⚠️') || l.action.includes('نسخ') || l.action.includes('سحاب')))).length;
+      return { total, todayCount, salesCount, securityCount };
+    },
+    filteredActivityLog() {
+      if (!this.activityLog || !Array.isArray(this.activityLog)) return [];
+      let list = this.activityLog;
+
+      if (this.activityLogFilter === 'financial') {
+        list = list.filter(l => l.category === 'sales' || (l.action && (l.action.includes('💰') || l.action.includes('مبيعات'))));
+      } else if (this.activityLogFilter === 'targets') {
+        list = list.filter(l => l.category === 'target' || (l.action && (l.action.includes('🎯') || l.action.includes('تارجت') || l.action.includes('أبطال'))));
+      } else if (this.activityLogFilter === 'closes') {
+        list = list.filter(l => l.category === 'closes' || (l.action && (l.action.includes('إغلاق') || l.action.includes('فتح يومية') || l.action.includes('🔒') || l.action.includes('🔓'))));
+      } else if (this.activityLogFilter === 'users') {
+        list = list.filter(l => l.category === 'users' || l.category === 'branches' || (l.action && (l.action.includes('مستخدم') || l.action.includes('فرع') || l.action.includes('موظف') || l.action.includes('👥') || l.action.includes('🏬'))));
+      } else if (this.activityLogFilter === 'security') {
+        list = list.filter(l => l.category === 'security' || (l.action && (l.action.includes('دخول') || l.action.includes('خروج') || l.action.includes('غير مصرح') || l.action.includes('مسح') || l.action.includes('🛡️') || l.action.includes('⚠️'))));
+      } else if (this.activityLogFilter === 'system') {
+        list = list.filter(l => l.category === 'system' || (l.action && (l.action.includes('نسخ') || l.action.includes('استيراد') || l.action.includes('تصدير') || l.action.includes('سحاب') || l.action.includes('هوية'))));
+      }
+
+      if (this.activityLogSearch && this.activityLogSearch.trim()) {
+        const q = this.activityLogSearch.trim().toLowerCase();
+        list = list.filter(l => {
+          const act = (l.action || '').toLowerCase();
+          const det = (l.details || '').toLowerCase();
+          const usr = (l.user || '').toLowerCase();
+          const un = (l.username || '').toLowerCase();
+          const br = (l.branchName || '').toLowerCase();
+          const tm = (l.time || '').toLowerCase();
+          return act.includes(q) || det.includes(q) || usr.includes(q) || un.includes(q) || br.includes(q) || tm.includes(q);
+        });
+      }
+
+      return list;
+    },
+
     canEnterDailySales() {
       if (!this.currentUser) return false;
+      if (this.isDayClosed) return false; // 🔒 اليومية مغلقة ومرحلة
       if (this.isPastDateLocked) return false;
       if (this.currentUser.role === 'admin') return true;
       const u = this.users.find(x => x.id === this.currentUser.id);
@@ -1116,6 +1203,7 @@ createApp({
     },
     canEditTarget() {
       if (!this.currentUser) return false;
+      if (this.isDayClosed) return false; // 🔒 اليومية مغلقة ومرحلة
       if (this.isPastDateLocked) return false;
       if (this.currentUser.role === 'admin') return true;
       const u = this.users.find(x => x.id === this.currentUser.id);
@@ -2425,16 +2513,54 @@ this.settings = {
     },
 
     // ================================================================
-    //  Activity Log
+    //  ⭐ v23.22: Activity Log & Enterprise Audit Trail
     // ================================================================
-    logActivity(action, details) {
-      this.activityLog.unshift({
-        action, details,
+    openActivityLog() {
+      if (!this.canViewActivityLog) {
+        this.showToast(this.currentLang === 'ar' ? '⚠️ سجل التدقيق متاح للمديرين والمدقق العام فقط' : '⚠️ Audit log is restricted', 'warning');
+        return;
+      }
+      this.showActivityLog = true;
+      this.showMoreMenu = false;
+    },
+    logActivity(action, details = '', meta = {}) {
+      const timestamp = Date.now();
+      const currentUser = this.currentUser;
+
+      let category = meta.category || '';
+      let level = meta.level || 'info';
+
+      if (!category) {
+        if (action.includes('💰') || action.includes('مبيعات')) { category = 'sales'; level = 'info'; }
+        else if (action.includes('🎯') || action.includes('تارجت') || action.includes('أبطال')) { category = 'target'; level = 'info'; }
+        else if (action.includes('🔒') || action.includes('🔓') || action.includes('إغلاق') || action.includes('فتح يومية')) { category = 'closes'; level = action.includes('🔓') ? 'warning' : 'info'; }
+        else if (action.includes('مستخدم') || action.includes('فرع') || action.includes('موظف') || action.includes('👥') || action.includes('🏬')) { category = 'users'; level = action.includes('حذف') ? 'danger' : 'info'; }
+        else if (action.includes('غير مصرح') || action.includes('مسح') || action.includes('⚠️') || action.includes('دخول') || action.includes('خروج')) { category = 'security'; level = action.includes('غير مصرح') || action.includes('مسح') ? 'danger' : 'info'; }
+        else if (action.includes('نسخ') || action.includes('استيراد') || action.includes('سحاب') || action.includes('هوية')) { category = 'system'; level = 'info'; }
+        else { category = 'system'; level = 'info'; }
+      }
+
+      const entry = {
+        id: 'act_' + timestamp + '_' + Math.random().toString(36).substr(2, 5),
+        action,
+        details: typeof details === 'string' ? details : JSON.stringify(details),
+        category,
+        level,
+        user: currentUser ? currentUser.fullName : (this.t ? this.t('log.unknown') : 'نظام'),
+        username: currentUser ? currentUser.username : 'system',
+        role: currentUser ? currentUser.role : '',
+        roleLabel: currentUser ? this.roleLabel(currentUser.role) : '',
+        branchName: meta.branchName || (this.selectedBranch ? this.selectedBranch.name : (currentUser && currentUser.branchId ? this.branchName(currentUser.branchId) : '')),
         time: this.formatDateTime(),
-        timestamp: Date.now(),
-        user: this.currentUser ? this.currentUser.fullName : this.t('log.unknown'),
-      });
-      if (this.activityLog.length > 200) this.activityLog.length = 200;
+        timestamp,
+        oldVal: meta.oldVal !== undefined ? meta.oldVal : null,
+        newVal: meta.newVal !== undefined ? meta.newVal : null,
+        diff: meta.diff !== undefined ? meta.diff : null,
+      };
+
+      if (!Array.isArray(this.activityLog)) this.activityLog = [];
+      this.activityLog.unshift(entry);
+      if (this.activityLog.length > 500) this.activityLog.length = 500;
       this.persistActivityLog();
     },
     persistActivityLog() {
@@ -2444,10 +2570,117 @@ this.settings = {
       try { this.activityLog = JSON.parse(localStorage.getItem('samx_activity_log')) || []; } catch (e) {}
     },
     clearActivityLog() {
-      if (!confirm(this.t('confirm.clearActivityLog'))) return;
+      if (!this.currentUser || this.currentUser.role !== 'admin') {
+        this.showToast(this.currentLang === 'ar' ? '⚠️ عذراً، مسح سجل العمليات متاح للمدير العام فقط' : '⚠️ Clear log restricted to Admin only', 'error');
+        return;
+      }
+      const msg = this.currentLang === 'ar'
+        ? 'هل أنت متأكد من رغبتك في مسح سجل العمليات بالكامل؟ سيتم توثيق عملية المسح أمنياً.'
+        : 'Are you sure you want to clear the audit log? This wipe action will be audited.';
+      if (!confirm(msg)) return;
+
+      const adminName = this.currentUser.fullName || this.currentUser.username;
       this.activityLog = [];
       this.persistActivityLog();
-      this.showActivityLog = false;
+
+      // Indelible audit log entry recording the wipe
+      this.logActivity(
+        this.currentLang === 'ar' ? '🗑️ مسح سجل العمليات السابق' : '🗑️ Audit Log Cleared',
+        this.currentLang === 'ar' ? `قام المدير العام (${adminName}) بمسح سجل العمليات السابق وتصفيره` : `Admin (${adminName}) wiped previous audit history`,
+        { category: 'security', level: 'danger' }
+      );
+      this.showToast(this.currentLang === 'ar' ? 'تم مسح السجل وتوثيق العملية أمنياً' : 'Audit log reset and audited', 'info');
+    },
+    exportActivityLogCSV() {
+      const logs = this.filteredActivityLog;
+      if (!logs || logs.length === 0) {
+        this.showToast(this.currentLang === 'ar' ? 'لا توجد سجلات لتصديرها' : 'No records to export', 'warning');
+        return;
+      }
+      const isAr = this.currentLang === 'ar';
+      const headers = isAr
+        ? ['المعرف', 'التاريخ والوقت', 'المستخدم', 'اسم الحساب', 'الدور', 'الفرع', 'نوع العملية', 'التفاصيل']
+        : ['ID', 'DateTime', 'User', 'Username', 'Role', 'Branch', 'Action', 'Details'];
+
+      const escapeCSV = (val) => {
+        if (val === null || val === undefined) return '""';
+        const s = String(val).replace(/"/g, '""');
+        return `"${s}"`;
+      };
+
+      const rows = logs.map(l => [
+        escapeCSV(l.id || '-'),
+        escapeCSV(l.time || '-'),
+        escapeCSV(l.user || '-'),
+        escapeCSV(l.username || '-'),
+        escapeCSV(l.roleLabel || l.role || '-'),
+        escapeCSV(l.branchName || '-'),
+        escapeCSV(l.action || '-'),
+        escapeCSV(l.details || '-')
+      ].join(','));
+
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.download = `SAMX_Audit_Log_${dateStr}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      this.showToast(isAr ? 'تم تصدير سجل العمليات (CSV) بنجاح' : 'Audit log exported to CSV', 'success');
+    },
+    getActivityLevelColor(level) {
+      if (level === 'danger') return '#ef4444';
+      if (level === 'warning') return '#f59e0b';
+      if (level === 'success') return '#10b981';
+      return '#38bdf8';
+    },
+    getActivityBadgeBg(category) {
+      const bgs = {
+        sales: 'rgba(59,130,246,0.18)',
+        target: 'rgba(234,179,8,0.18)',
+        closes: 'rgba(168,85,247,0.18)',
+        users: 'rgba(16,185,129,0.18)',
+        security: 'rgba(239,68,68,0.18)',
+        system: 'rgba(148,163,184,0.18)',
+      };
+      return bgs[category] || 'rgba(212,168,75,0.18)';
+    },
+    getActivityBadgeColor(category) {
+      const colors = {
+        sales: '#60a5fa',
+        target: '#facc15',
+        closes: '#c084fc',
+        users: '#34d399',
+        security: '#f87171',
+        system: '#94a3b8',
+      };
+      return colors[category] || '#e6c074';
+    },
+    getActivityBadgeBorder(category) {
+      const borders = {
+        sales: 'rgba(59,130,246,0.3)',
+        target: 'rgba(234,179,8,0.3)',
+        closes: 'rgba(168,85,247,0.3)',
+        users: 'rgba(16,185,129,0.3)',
+        security: 'rgba(239,68,68,0.3)',
+        system: 'rgba(148,163,184,0.3)',
+      };
+      return borders[category] || 'rgba(212,168,75,0.3)';
+    },
+    getActivityCategoryLabel(category) {
+      const isAr = this.currentLang === 'ar';
+      const labels = {
+        sales: isAr ? 'مبيعات' : 'Sales',
+        target: isAr ? 'تارجت' : 'Target',
+        closes: isAr ? 'يومية' : 'Shift',
+        users: isAr ? 'مستخدمين' : 'Users',
+        branches: isAr ? 'فروع' : 'Branches',
+        security: isAr ? 'أمان' : 'Security',
+        system: isAr ? 'نظام' : 'System',
+      };
+      return labels[category] || (isAr ? 'عام' : 'General');
     },
 
     // ================================================================
@@ -2486,6 +2719,10 @@ this.settings = {
     //  Update Staff Field
     // ================================================================
     updateStaffField(staffId, field, value) {
+      if (this.isDayClosed) {
+        this.showToast(this.currentLang === 'ar' ? 'هذه اليومية مغلقة ومرحلة ولا يمكن تعديلها 🔒' : 'This day is closed and sealed 🔒', 'warning');
+        return;
+      }
       if (this.isPastDateLocked) {
         this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
         return;
@@ -2494,18 +2731,40 @@ this.settings = {
       const key = `${this.selectedDate}|${this.selectedBranchId}`;
       const sd = this.ensureStaffRecord(key, staffId);
       if (!sd) return;
-      sd[field] = Number(value) || 0;
-      this.updateLiveTime();
-            if (field === 'sales') {
-        this.flashKpi('branchSales');
-        this.flashKpi('basePct');
-        this.flashKpi('heroesPct');
-        this.checkConfetti();
-        this.scheduleStaffChartRefresh();   // ⭐ v23.9-FIX#3
+      const oldVal = sd[field] || 0;
+      const newVal = Number(value) || 0;
+      if (oldVal !== newVal) {
+        sd[field] = newVal;
+        this.updateLiveTime();
+        const staffMember = this.staff.find(s => s.id === staffId);
+        const sName = staffMember ? staffMember.name : staffId;
+        const bName = this.selectedBranch ? this.selectedBranch.name : '';
+        if (field === 'sales') {
+          this.logActivity('💰 تعديل مبيعات', `${sName}: ${this.formatNum(oldVal)} → ${this.formatNum(newVal)} (${bName} • ${this.selectedDate})`, {
+            category: 'sales', level: 'info', oldVal, newVal, diff: newVal - oldVal, branchName: bName
+          });
+          this.flashKpi('branchSales');
+          this.flashKpi('basePct');
+          this.flashKpi('heroesPct');
+          this.checkConfetti();
+          this.scheduleStaffChartRefresh();
+        } else if (field === 'target') {
+          this.logActivity('🎯 تعديل تارجت', `${sName}: ${this.formatNum(oldVal)} → ${this.formatNum(newVal)} (${bName} • ${this.selectedDate})`, {
+            category: 'target', level: 'info', oldVal, newVal, diff: newVal - oldVal, branchName: bName
+          });
+        } else if (field === 'heroesTarget') {
+          this.logActivity('⭐ تعديل تارجت الأبطال', `${sName}: ${this.formatNum(oldVal)} → ${this.formatNum(newVal)} (${bName} • ${this.selectedDate})`, {
+            category: 'target', level: 'info', oldVal, newVal, diff: newVal - oldVal, branchName: bName
+          });
+        }
+        this.schedulePersist();
       }
-      this.schedulePersist();
     },
-        adjustSales(staffId, delta) {
+    adjustSales(staffId, delta) {
+      if (this.isDayClosed) {
+        this.showToast(this.currentLang === 'ar' ? 'هذه اليومية مغلقة ومرحلة ولا يمكن تعديلها 🔒' : 'This day is closed and sealed 🔒', 'warning');
+        return;
+      }
       if (this.isPastDateLocked) {
         this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
         return;
@@ -2515,15 +2774,24 @@ this.settings = {
       const sd = this.ensureStaffRecord(key, staffId);
       if (!sd) return;
       const cur = Number(sd.sales) || 0;
-      sd.sales = Math.max(0, cur + delta);
-      this.vibrate(8);   // ⭐ v23.10 — اهتزاز خفيف جداً
-      this.flashKpi('branchSales');
-      this.flashKpi('basePct');
-      this.flashKpi('heroesPct');
-      this.updateLiveTime();
-      this.checkConfetti();
-      this.scheduleStaffChartRefresh();
-      this.schedulePersist();
+      const nextVal = Math.max(0, cur + delta);
+      if (cur !== nextVal) {
+        sd.sales = nextVal;
+        const staffMember = this.staff.find(s => s.id === staffId);
+        const sName = staffMember ? staffMember.name : staffId;
+        const bName = this.selectedBranch ? this.selectedBranch.name : '';
+        this.logActivity('💰 تعديل سريع للمبيعات', `${sName}: (${delta > 0 ? '+' : ''}${delta}) ${this.formatNum(cur)} → ${this.formatNum(nextVal)} (${bName})`, {
+          category: 'sales', level: 'info', oldVal: cur, newVal: nextVal, diff: delta, branchName: bName
+        });
+        this.vibrate(8);
+        this.flashKpi('branchSales');
+        this.flashKpi('basePct');
+        this.flashKpi('heroesPct');
+        this.updateLiveTime();
+        this.checkConfetti();
+        this.scheduleStaffChartRefresh();
+        this.schedulePersist();
+      }
     },
 
     updateDayTarget(date, field, value) {
@@ -3107,6 +3375,10 @@ this.settings = {
     attKey(staffId) { return `${this.selectedDate}|${staffId}`; },
     isPresent(staffId) { return this.attendance[this.attKey(staffId)] !== false; },
         toggleAttendance(staffId) {
+      if (this.isDayClosed) {
+        this.showToast(this.currentLang === 'ar' ? 'هذه اليومية مغلقة ومرحلة ولا يمكن تعديلها 🔒' : 'This day is closed and sealed 🔒', 'warning');
+        return;
+      }
       if (this.isPastDateLocked) {
         this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
         return;
@@ -3119,6 +3391,10 @@ this.settings = {
       this.schedulePersist();
     },
         markAllPresent() {
+      if (this.isDayClosed) {
+        this.showToast(this.currentLang === 'ar' ? 'هذه اليومية مغلقة ومرحلة ولا يمكن تعديلها 🔒' : 'This day is closed and sealed 🔒', 'warning');
+        return;
+      }
       if (this.isPastDateLocked) {
         this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
         return;
@@ -3132,6 +3408,10 @@ this.settings = {
       this.showToast(this.t('toast.attendance.allPresent'), 'success');
     },
     redistributeTargets() {
+      if (this.isDayClosed) {
+        this.showToast(this.currentLang === 'ar' ? 'هذه اليومية مغلقة ومرحلة ولا يمكن تعديلها 🔒' : 'This day is closed and sealed 🔒', 'warning');
+        return;
+      }
       if (this.isPastDateLocked) {
         this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
         return;
@@ -3156,6 +3436,10 @@ this.settings = {
       });
     },
     distributeTargetsToStaff() {
+      if (this.isDayClosed) {
+        this.showToast(this.currentLang === 'ar' ? 'هذه اليومية مغلقة ومرحلة ولا يمكن تعديلها 🔒' : 'This day is closed and sealed 🔒', 'warning');
+        return;
+      }
       if (this.isPastDateLocked) {
         this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
         return;
@@ -3302,6 +3586,10 @@ this.settings = {
     },
 
     clearAllSales() {
+      if (this.isDayClosed) {
+        this.showToast(this.currentLang === 'ar' ? 'هذه اليومية مغلقة ومرحلة ولا يمكن تعديلها 🔒' : 'This day is closed and sealed 🔒', 'warning');
+        return;
+      }
       if (this.isPastDateLocked) {
         this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
         return;
@@ -3310,8 +3598,74 @@ this.settings = {
       const d = this.dayData;
       Object.values(d.staffData).forEach(sd => { sd.sales = 0; });
       d.manualExtra = 0;
+      this.logActivity('⚠️ مسح جميع المبيعات', `${this.selectedBranch?.name || ''} • تاريخ: ${this.selectedDate}`);
       this.showToast(this.t('toast.sales.reset'), 'success');
+      this.schedulePersist();
     },
+    // ================================================================
+    //  ⭐ v23.21: حوكمة إغلاق وترحيل اليوميات (Daily Shift Closure)
+    // ================================================================
+    openCloseDayModal() {
+      if (!this.canCloseDay) {
+        this.showToast(this.currentLang === 'ar' ? 'غير مصرح لك بإغلاق اليوميات ⛔' : 'Not authorized to close days ⛔', 'warning');
+        return;
+      }
+      this.closeDayNote = '';
+      this.showCloseDayModal = true;
+    },
+    confirmCloseDay() {
+      if (!this.canCloseDay) return;
+      if (!this.selectedDate || !this.selectedBranchId) return;
+      const key = `${this.selectedDate}|${this.selectedBranchId}`;
+      const rec = this.normalizeDayRecord(key);
+      if (!rec) return;
+
+      rec.isClosed = true;
+      rec.closedAt = Date.now();
+      rec.closedBy = this.currentUser ? this.currentUser.fullName : 'المدير';
+      rec.closedRole = this.currentUser ? this.currentUser.role : 'admin';
+      rec.closedSales = this.branchTotalSales;
+      rec.closedInvoices = this.branchInvoices;
+      rec.closeNote = (this.closeDayNote || '').trim() || (this.currentLang === 'ar' ? 'إغلاق واعتماد رسمي' : 'Official shift close');
+
+      this.logActivity('🔒 إغلاق يومية', `${this.selectedBranch?.name || ''} - تاريخ: ${this.selectedDate} • المبيعات: ${this.formatSAR(this.branchTotalSales)}`);
+      this.persist();
+      this.vibrate([20, 50, 20]);
+      this.showCloseDayModal = false;
+      this.showToast(this.currentLang === 'ar' ? 'تم اعتماد وإغلاق اليومية بنجاح 🔒✅' : 'Day shift closed & sealed successfully 🔒✅', 'success');
+    },
+    openReopenModal() {
+      if (!this.canReopenDay) {
+        this.showToast(this.currentLang === 'ar' ? 'صلاحية إعادة فتح اليومية للمدير العام فقط ⛔' : 'Only Admin can reopen closed days ⛔', 'error');
+        return;
+      }
+      this.reopenDayReason = '';
+      this.reopenDayError = '';
+      this.showReopenDayModal = true;
+    },
+    confirmReopenDay() {
+      if (!this.canReopenDay) return;
+      if (!this.reopenDayReason) {
+        this.reopenDayError = this.currentLang === 'ar' ? 'يرجى كتابة سبب إعادة فتح اليومية' : 'Please provide a reason';
+        return;
+      }
+      if (!this.selectedDate || !this.selectedBranchId) return;
+      const key = `${this.selectedDate}|${this.selectedBranchId}`;
+      const rec = this.normalizeDayRecord(key);
+      if (!rec) return;
+
+      rec.isClosed = false;
+      rec.reopenedAt = Date.now();
+      rec.reopenedBy = this.currentUser ? this.currentUser.fullName : 'المدير العام';
+      rec.reopenReason = this.reopenDayReason;
+
+      this.logActivity('🔓 إعادة فتح يومية', `${this.selectedBranch?.name || ''} (${this.selectedDate}) • السبب: ${this.reopenDayReason}`);
+      this.persist();
+      this.vibrate(25);
+      this.showReopenDayModal = false;
+      this.showToast(this.currentLang === 'ar' ? 'تمت إعادة فتح اليومية للتعديل 🔓' : 'Day reopened for editing 🔓', 'info');
+    },
+
     // ================================================================
     //  Helpers
     // ================================================================
@@ -3340,6 +3694,7 @@ this.settings = {
       if (typeof rec.manualExtra  !== 'number') rec.manualExtra  = Number(rec.manualExtra)  || 0;
       if (typeof rec.invoices     !== 'number') rec.invoices     = Number(rec.invoices)     || 0;
       if (typeof rec.pieces       !== 'number') rec.pieces       = Number(rec.pieces)       || 0;
+      if (typeof rec.isClosed     !== 'boolean') rec.isClosed     = !!rec.isClosed;
       return rec;
     },
 

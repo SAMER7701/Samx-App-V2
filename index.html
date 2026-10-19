@@ -312,8 +312,8 @@
           </div>
 
           <!-- Activity Log -->
-          <div class="tooltip-container hide-mobile" :data-tooltip="t('header.tooltips.activity')">
-            <button @click="showActivityLog=true" class="btn-ghost header-icon-btn" aria-label="Activity Log">📜</button>
+          <div v-if="canViewActivityLog" class="tooltip-container hide-mobile" :data-tooltip="t('header.tooltips.activity')">
+            <button @click="openActivityLog" class="btn-ghost header-icon-btn" aria-label="Activity Log">📜</button>
           </div>
 
           <!-- Backup -->
@@ -1971,10 +1971,10 @@
             </button>
 
             <!-- Activity Log -->
-            <button @click="showActivityLog = true; showMoreMenu = false" class="mobile-more-item">
+            <button v-if="canViewActivityLog" @click="openActivityLog" class="mobile-more-item">
               <span class="mobile-more-icon">📜</span>
-              <span class="mobile-more-title">{{ currentLang === 'ar' ? 'سجل العمليات' : 'Activity Log' }}</span>
-              <span class="mobile-more-sub">{{ currentLang === 'ar' ? 'تاريخ التعديلات' : 'Audit Trail' }}</span>
+              <span class="mobile-more-title">{{ currentLang === 'ar' ? 'سجل التدقيق' : 'Audit Trail' }}</span>
+              <span class="mobile-more-sub">{{ currentLang === 'ar' ? 'تاريخ التعديلات والأمان' : 'Security & Audit Log' }}</span>
             </button>
 
             <!-- Settings -->
@@ -2628,34 +2628,202 @@
       </div>
     </transition>
     <!-- ============================================================
-         ACTIVITY LOG MODAL
+         ACTIVITY LOG / AUDIT TRAIL MODAL (v23.22.0)
          ============================================================ -->
     <transition name="fade">
       <div v-if="showActivityLog" class="bottom-sheet-overlay" @click.self="showActivityLog=false">
-        <div class="bottom-sheet" style="max-width:540px;">
+        <div class="bottom-sheet" style="max-width:840px;width:96%;max-height:90dvh;display:flex;flex-direction:column;">
           <div class="bottom-sheet-handle"></div>
+
           <!-- Header -->
           <div class="modal-header-pro">
-            <h3 class="modal-title-pro">
-              <span>📜</span>
-              <span>{{ t('modal.activity.title') }}</span>
-            </h3>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <h3 class="modal-title-pro">
+                <span>📜</span>
+                <span>{{ t('modal.activity.title') }}</span>
+                <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(212,168,75,0.15);color:#d4a84b;border:1px solid rgba(212,168,75,0.3);margin-inline-start:6px;font-weight:600;">
+                  {{ filteredActivityLog.length }} / {{ activityLog.length }}
+                </span>
+              </h3>
+              <span style="font-size:11px;color:#94a3b8;">{{ t('modal.activity.subtitle') }}</span>
+            </div>
             <button @click="showActivityLog=false" class="modal-close-btn" aria-label="Close">✕</button>
           </div>
+
           <!-- Body -->
-          <div class="modal-body-pro">
-            <div v-if="activityLog.length===0" style="text-align:center;color:#94a3b8;padding:28px 16px;font-size:12px;">{{ t('modal.activity.empty') }}</div>
-            <div v-else style="display:flex;flex-direction:column;gap:6px;max-height:420px;overflow-y:auto;padding-right:2px;">
-              <div v-for="(log, i) in activityLog" :key="i" style="background:rgba(15,23,42,.5);border:1px solid #243356;border-radius:8px;padding:8px 12px;font-size:12px;">
-                <p style="color:#fff;margin:0;font-weight:600;font-size:12px;">{{ log.action }}</p>
-                <p style="color:#94a3b8;margin:3px 0 0;font-size:11px;">{{ log.details }}</p>
-                <p style="color:#64748b;margin:3px 0 0;font-size:10px;">{{ log.time }} • {{ log.user }}</p>
+          <div class="modal-body-pro" style="padding:14px 18px;display:flex;flex-direction:column;gap:12px;">
+
+            <!-- Stats Bar -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:8px;">
+              <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:20px;">📋</span>
+                <div>
+                  <div style="font-size:10px;color:#94a3b8;">{{ t('modal.activity.stat.total') }}</div>
+                  <div style="font-size:15px;font-weight:700;color:#fff;">{{ activityLogStats.total }}</div>
+                </div>
+              </div>
+              <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:20px;">📅</span>
+                <div>
+                  <div style="font-size:10px;color:#94a3b8;">{{ t('modal.activity.stat.today') }}</div>
+                  <div style="font-size:15px;font-weight:700;color:#10b981;">{{ activityLogStats.todayCount }}</div>
+                </div>
+              </div>
+              <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:20px;">💰</span>
+                <div>
+                  <div style="font-size:10px;color:#94a3b8;">{{ t('modal.activity.stat.sales') }}</div>
+                  <div style="font-size:15px;font-weight:700;color:#3b82f6;">{{ activityLogStats.salesCount }}</div>
+                </div>
+              </div>
+              <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:20px;">🛡️</span>
+                <div>
+                  <div style="font-size:10px;color:#94a3b8;">{{ t('modal.activity.stat.security') }}</div>
+                  <div style="font-size:15px;font-weight:700;color:#f59e0b;">{{ activityLogStats.securityCount }}</div>
+                </div>
               </div>
             </div>
+
+            <!-- Filter Tabs & Search Bar -->
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <!-- Search Input -->
+              <div style="position:relative;width:100%;">
+                <input
+                  type="text"
+                  v-model="activityLogSearch"
+                  :placeholder="t('modal.activity.searchPlaceholder')"
+                  style="width:100%;background:rgba(15,23,42,0.7);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 32px 8px 12px;color:#fff;font-size:12px;box-sizing:border-box;"
+                />
+                <button
+                  v-if="activityLogSearch"
+                  @click="activityLogSearch=''"
+                  style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px;padding:4px;"
+                >✕</button>
+              </div>
+
+              <!-- Category Tabs -->
+              <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">
+                <button
+                  v-for="cat in [
+                    { id: 'all', label: t('modal.activity.filter.all'), icon: '🌐' },
+                    { id: 'financial', label: t('modal.activity.filter.sales'), icon: '💰' },
+                    { id: 'targets', label: t('modal.activity.filter.targets'), icon: '🎯' },
+                    { id: 'closes', label: t('modal.activity.filter.closes'), icon: '🔒' },
+                    { id: 'users', label: t('modal.activity.filter.users'), icon: '👥' },
+                    { id: 'security', label: t('modal.activity.filter.security'), icon: '🛡️' },
+                    { id: 'system', label: t('modal.activity.filter.system'), icon: '⚙️' }
+                  ]"
+                  :key="cat.id"
+                  @click="activityLogFilter = cat.id"
+                  :style="{
+                    padding: '5px 12px',
+                    borderRadius: '20px',
+                    fontSize: '11px',
+                    fontWeight: activityLogFilter === cat.id ? '700' : '500',
+                    border: '1px solid ' + (activityLogFilter === cat.id ? '#d4a84b' : 'rgba(255,255,255,0.1)'),
+                    background: activityLogFilter === cat.id ? 'rgba(212,168,75,0.2)' : 'rgba(15,23,42,0.5)',
+                    color: activityLogFilter === cat.id ? '#e6c074' : '#cbd5e1',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }"
+                >
+                  <span>{{ cat.icon }}</span>
+                  <span>{{ cat.label }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Log Entries List -->
+            <div v-if="filteredActivityLog.length === 0" style="text-align:center;color:#94a3b8;padding:36px 16px;font-size:13px;background:rgba(15,23,42,0.3);border-radius:8px;border:1px dashed rgba(255,255,255,0.1);">
+              <span style="font-size:24px;display:block;margin-bottom:6px;">📭</span>
+              {{ t('modal.activity.empty') }}
+            </div>
+
+            <div v-else style="display:flex;flex-direction:column;gap:8px;max-height:440px;overflow-y:auto;padding-right:2px;">
+              <div
+                v-for="log in filteredActivityLog"
+                :key="log.id || (log.time + log.action)"
+                :style="{
+                  background: 'rgba(15,23,42,0.7)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRight: currentLang === 'ar' ? '4px solid ' + getActivityLevelColor(log.level) : '1px solid rgba(255,255,255,0.08)',
+                  borderLeft: currentLang !== 'ar' ? '4px solid ' + getActivityLevelColor(log.level) : '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '8px',
+                  padding: '10px 14px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }"
+              >
+                <!-- Row 1: Action + Category Badge + Time -->
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="color:#fff;font-weight:700;font-size:13px;">{{ log.action }}</span>
+                    <span
+                      v-if="log.category"
+                      :style="{
+                        fontSize: '10px',
+                        padding: '2px 8px',
+                        borderRadius: '10px',
+                        background: getActivityBadgeBg(log.category),
+                        color: getActivityBadgeColor(log.category),
+                        border: '1px solid ' + getActivityBadgeBorder(log.category)
+                      }"
+                    >
+                      {{ getActivityCategoryLabel(log.category) }}
+                    </span>
+                  </div>
+                  <span style="color:#64748b;font-size:11px;direction:ltr;">
+                    ⏱️ {{ log.time }}
+                  </span>
+                </div>
+
+                <!-- Row 2: Details -->
+                <div style="color:#cbd5e1;font-size:12px;line-height:1.4;background:rgba(0,0,0,0.2);padding:6px 10px;border-radius:6px;">
+                  {{ log.details }}
+                </div>
+
+                <!-- Row 3: User Info + Branch -->
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:11px;color:#94a3b8;padding-top:2px;">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span>👤</span>
+                    <span style="color:#e2e8f0;font-weight:600;">{{ log.user }}</span>
+                    <span v-if="log.username" style="color:#64748b;">(@{{ log.username }})</span>
+                    <span v-if="log.roleLabel || log.role" style="background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:4px;font-size:10px;color:#a5b4fc;">
+                      {{ log.roleLabel || roleLabel(log.role) }}
+                    </span>
+                  </div>
+                  <div v-if="log.branchName" style="display:flex;align-items:center;gap:4px;color:#38bdf8;">
+                    <span>🏬</span>
+                    <span>{{ log.branchName }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
+
           <!-- Footer -->
-          <div class="modal-footer-pro">
-            <button @click="clearActivityLog" class="btn-danger-subtle btn-sm">{{ t('modal.activity.clear') }}</button>
+          <div class="modal-footer-pro" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button @click="exportActivityLogCSV" class="btn-ghost btn-sm" style="display:flex;align-items:center;gap:4px;color:#38bdf8;border:1px solid rgba(56,189,248,0.3);">
+                <span>📥</span>
+                <span>{{ t('modal.activity.export') }}</span>
+              </button>
+              <button
+                v-if="currentUser && currentUser.role === 'admin'"
+                @click="clearActivityLog"
+                class="btn-danger-subtle btn-sm"
+                style="display:flex;align-items:center;gap:4px;"
+              >
+                <span>🗑️</span>
+                <span>{{ t('modal.activity.clear') }}</span>
+              </button>
+            </div>
             <button @click="showActivityLog=false" class="btn-ghost btn-sm">{{ t('common.close', 'إغلاق') }}</button>
           </div>
         </div>
