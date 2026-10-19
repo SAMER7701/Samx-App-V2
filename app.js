@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.22.0 — app.js
+//  SAMX v23.23.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.22.0';
+const APP_VERSION = '23.23.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -416,6 +416,7 @@ createApp({
       lastCloudSyncTime: '',
       cloudSyncError: '',
       _cloudSyncDebounce: null,
+      _cloudPulledOnce: false, // ⭐ v23.23: حماية السحابة من الـ push قبل الـ pull
     };
   },
 
@@ -1201,11 +1202,25 @@ createApp({
       const u = this.users.find(x => x.id === this.currentUser.id);
       return u && u.permissions && u.permissions.enterDailySales !== false;
     },
+    // ⭐ v23.23: صلاحية إدارة الحضور والغياب للموظفين لتوزيع التارجت
+    canManageAttendance() {
+      if (!this.currentUser) return false;
+      if (this.isDayClosed) return false; // 🔒 اليومية مغلقة ومرحلة
+      if (this.isPastDateLocked) return false; // 🔒 مقفل إذا كان قبل اليوم وبدون صلاحية تعديل الأيام السابقة
+      // المدير العام، المدير، ومدير الفرع/المعرض
+      if (['admin', 'manager', 'branch_manager'].includes(this.currentUser.role)) return true;
+      // أو أي موظف مسؤول لديه صلاحية إدخال المبيعات أو تعديل التارجت أو إدارة الموظفين
+      const u = this.users.find(x => x.id === this.currentUser.id);
+      if (u && u.permissions) {
+        if (u.permissions.enterDailySales || u.permissions.editTarget || u.permissions.manageStaff) return true;
+      }
+      return false;
+    },
     canEditTarget() {
       if (!this.currentUser) return false;
       if (this.isDayClosed) return false; // 🔒 اليومية مغلقة ومرحلة
       if (this.isPastDateLocked) return false;
-      if (this.currentUser.role === 'admin') return true;
+      if (['admin', 'manager', 'branch_manager'].includes(this.currentUser.role)) return true;
       const u = this.users.find(x => x.id === this.currentUser.id);
       return u && u.permissions && u.permissions.editTarget === true;
     },
@@ -2990,6 +3005,12 @@ this.settings = {
       }
       if (!this._dataLoaded) return;
 
+      // 🛡️ حماية السحابة: امنع أي جهاز لم يسحب أولاً من الكتابة فوق السحابة (Push Protection)
+      if (!this._cloudPulledOnce) {
+        console.warn('[CloudSync] 🛡️ Push blocked: Must pull from cloud first before pushing');
+        return;
+      }
+
       // حماية من رفع مصفوفات فارغة تمحو السحابة
       if ((!this.branches || this.branches.length === 0) && (!this.staff || this.staff.length === 0)) {
         return;
@@ -3070,7 +3091,8 @@ this.settings = {
         }
 
         if (!resJson.data) {
-          // السحابة فارغة — ارفع البيانات المحلية لحفظ أول نسخة
+          // السحابة فارغة — هذا أول تشغيل للنظام
+          this._cloudPulledOnce = true;
           this.cloudSyncStatus = 'synced';
           if ((this.branches && this.branches.length > 0) || (this.staff && this.staff.length > 0)) {
             await this.syncToCloud();
@@ -3090,22 +3112,46 @@ this.settings = {
 
         const localEmpty = (!this.branches || this.branches.length === 0) && (!this.staff || this.staff.length === 0);
 
-        if (localEmpty) {
-          if (Array.isArray(cloud.branches)) this.branches = cloud.branches;
-          if (Array.isArray(cloud.staff)) this.staff = cloud.staff;
-          if (cloud.daily) this.daily = cloud.daily;
-          if (cloud.monthlyTargets) this.monthlyTargets = cloud.monthlyTargets;
-          if (cloud.monthlyHeroesTargets) this.monthlyHeroesTargets = cloud.monthlyHeroesTargets;
-          if (cloud.attendance) this.attendance = cloud.attendance;
-          if (Array.isArray(cloud.users) && cloud.users.length > 0) {
-            this.users = cloud.users;
-            this.persistUsers();
+        // 1. مزامنة ودمج المستخدمين دائماً وتحديث الذاكرة فوراً (Pre-Login / Full State Users Sync)
+        if (Array.isArray(cloud.users) && cloud.users.length > 0) {
+          const userMap = new Map();
+          cloud.users.forEach(u => {
+            if (u && u.username) userMap.set(u.username, u);
+          });
+          (this.users || []).forEach(u => {
+            if (u && u.username && !userMap.has(u.username)) userMap.set(u.username, u);
+          });
+          const mergedUsers = Array.from(userMap.values());
+          mergedUsers.forEach(u => {
+            if (!u.permissions) {
+              u.permissions = { ...(ROLE_PERMISSIONS[u.role] || DEFAULT_PERMISSIONS) };
+            }
+          });
+          this.users = mergedUsers;
+          try { localStorage.setItem('samx_users', JSON.stringify(this.users)); } catch (e) {}
+        }
+
+        // 2. مزامنة الفروع والموظفين وحالات الحضور واليوميات
+        if (localEmpty || cloudUpdatedAt > lastLocalSync) {
+          if (Array.isArray(cloud.branches) && cloud.branches.length > 0) this.branches = cloud.branches;
+          if (Array.isArray(cloud.staff) && cloud.staff.length > 0) this.staff = cloud.staff;
+          if (cloud.daily && typeof cloud.daily === 'object') {
+            this.daily = Object.assign({}, cloud.daily, this.daily || {});
+            this.normalizeAllDailyRecords();
           }
-          if (cloud.branding) {
+          if (cloud.monthlyTargets && typeof cloud.monthlyTargets === 'object') {
+            this.monthlyTargets = Object.assign({}, cloud.monthlyTargets, this.monthlyTargets || {});
+          }
+          if (cloud.monthlyHeroesTargets && typeof cloud.monthlyHeroesTargets === 'object') {
+            this.monthlyHeroesTargets = Object.assign({}, cloud.monthlyHeroesTargets, this.monthlyHeroesTargets || {});
+          }
+          if (cloud.attendance && typeof cloud.attendance === 'object') {
+            this.attendance = Object.assign({}, cloud.attendance, this.attendance || {});
+          }
+          if (cloud.branding && typeof cloud.branding === 'object') {
             this.branding = { ...this.branding, ...cloud.branding };
-            this.persistBranding();
+            try { localStorage.setItem('samx_branding', JSON.stringify(this.branding)); } catch (e) {}
           }
-          this.normalizeAllDailyRecords();
           this.persist();
         } else {
           // دمج السجلات اليومية الذكي
@@ -3126,20 +3172,14 @@ this.settings = {
             });
             if (changed) this.normalizeAllDailyRecords();
           }
-
-          if (cloudUpdatedAt > lastLocalSync) {
-            if (Array.isArray(cloud.branches) && cloud.branches.length > 0) this.branches = cloud.branches;
-            if (Array.isArray(cloud.staff) && cloud.staff.length > 0) this.staff = cloud.staff;
-            if (cloud.monthlyTargets) this.monthlyTargets = Object.assign({}, cloud.monthlyTargets, this.monthlyTargets);
-            if (cloud.monthlyHeroesTargets) this.monthlyHeroesTargets = Object.assign({}, cloud.monthlyHeroesTargets, this.monthlyHeroesTargets);
-            if (cloud.attendance) this.attendance = Object.assign({}, cloud.attendance, this.attendance);
-            this.persist();
-          } else {
-            // المحلي أحدث أو مساوٍ، نرسل النسخة المدمجة للسحابة
-            this.syncToCloud();
+          if (cloud.attendance && typeof cloud.attendance === 'object') {
+            this.attendance = Object.assign({}, cloud.attendance, this.attendance || {});
           }
+          this.persist();
         }
 
+        // تأكيد إتمام السحب بنجاح لحماية السحابة
+        this._cloudPulledOnce = true;
         this.cloudSyncStatus = 'synced';
         this.cloudSyncError = '';
         const locale = this.t ? this.t('locale.time') : 'ar-SA';
@@ -3147,7 +3187,7 @@ this.settings = {
         try { localStorage.setItem('samx_last_cloud_sync', Date.now().toString()); } catch (e) {}
 
         if (isManual) {
-          this.showToast('تمت المزامنة بنجاح مع Cloudflare D1 ☁️', 'success');
+          this.showToast(this.currentLang === 'ar' ? 'تمت مزامنة وتحديث البيانات من السحابة بنجاح ☁️' : 'Data synchronized from cloud ☁️', 'success');
           this.refreshCharts();
         }
       } catch (err) {
@@ -3226,9 +3266,18 @@ this.settings = {
       try {
         await this.initUsers();
         const hash = await sha256(this.loginForm.password);
-        const user = this.users.find(u => u.username === this.loginForm.username && u.passwordHash === hash);
+        let user = this.users.find(u => u.username === this.loginForm.username && u.passwordHash === hash);
+        
+        // ⭐ v23.23: سحب فوري من السحابة في حال لم يُعثر على المستخدم محلياً (Pre-Login Cloud Fallback)
+        if (!user && (typeof navigator === 'undefined' || navigator.onLine)) {
+          try {
+            await this.syncFromCloud();
+            user = this.users.find(u => u.username === this.loginForm.username && u.passwordHash === hash);
+          } catch (e) {}
+        }
+
         if (!user) {
-          this.loginError = 'بيانات الدخول غير صحيحة';
+          this.loginError = this.t('users.errors.invalidCreds', 'بيانات الدخول غير صحيحة');
           this.loggingIn = false;
           return;
         }
@@ -3317,6 +3366,8 @@ this.settings = {
         fullName: '', username: '', password: '', role: 'manager', branchId: '',
         permissions: { ...DEFAULT_PERMISSIONS },
       };
+      this.persistUsers();
+      this.syncToCloud();
     },
     deleteUser(id) {
       if (!this.currentUser || this.currentUser.role !== 'admin') {
@@ -3342,6 +3393,8 @@ this.settings = {
       if (!confirm(this.t('users.confirm.delete', '', { name: u.fullName }))) return;
 
       this.users = this.users.filter(x => x.id !== id);
+      this.persistUsers();
+      this.syncToCloud();
       this.showToast(this.t('users.toast.deleted'), 'success');
       this.logActivity(this.t('log.user.delete'), u.username);
     },
@@ -3374,13 +3427,17 @@ this.settings = {
     // ================================================================
     attKey(staffId) { return `${this.selectedDate}|${staffId}`; },
     isPresent(staffId) { return this.attendance[this.attKey(staffId)] !== false; },
-        toggleAttendance(staffId) {
+    toggleAttendance(staffId) {
       if (this.isDayClosed) {
         this.showToast(this.currentLang === 'ar' ? 'هذه اليومية مغلقة ومرحلة ولا يمكن تعديلها 🔒' : 'This day is closed and sealed 🔒', 'warning');
         return;
       }
       if (this.isPastDateLocked) {
         this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
+        return;
+      }
+      if (!this.canManageAttendance) {
+        this.showToast(this.currentLang === 'ar' ? 'غير مصرح لك بتعديل حالة الحضور ⛔' : 'Not authorized to change attendance ⛔', 'warning');
         return;
       }
       const key = this.attKey(staffId);
@@ -3389,8 +3446,16 @@ this.settings = {
       this.vibrate(15);   // ⭐ v23.10
       this.autoDistributeCurrentDay();
       this.schedulePersist();
+      this.triggerCloudSyncDebounced();
+
+      const staffMember = this.staff.find(s => s.id === staffId);
+      const sName = staffMember ? staffMember.name : staffId;
+      const bName = this.selectedBranch ? this.selectedBranch.name : '';
+      this.logActivity('👥 تسجيل حضور', `${sName}: ${!cur ? 'حاضر ✅' : 'غائب ❌'} (${bName} • ${this.selectedDate})`, {
+        category: 'users', level: 'info', branchName: bName
+      });
     },
-        markAllPresent() {
+    markAllPresent() {
       if (this.isDayClosed) {
         this.showToast(this.currentLang === 'ar' ? 'هذه اليومية مغلقة ومرحلة ولا يمكن تعديلها 🔒' : 'This day is closed and sealed 🔒', 'warning');
         return;
@@ -3399,12 +3464,18 @@ this.settings = {
         this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
         return;
       }
+      if (!this.canManageAttendance) {
+        this.showToast(this.currentLang === 'ar' ? 'غير مصرح لك بتعديل حالة الحضور ⛔' : 'Not authorized to change attendance ⛔', 'warning');
+        return;
+      }
       this.branchStaff.forEach(s => { this.attendance[this.attKey(s.id)] = true; });
       this.vibrate([10, 40, 10]);   // ⭐ v23.10 — نمط مميز للحضور الجماعي
       if (this.selectedDate && this.selectedBranchId) {
         this.ensureDailyRecordFromMonthly(this.selectedDate, this.selectedBranchId);
         this.autoDistributeForDate(this.selectedDate, this.selectedBranchId);
       }
+      this.schedulePersist();
+      this.triggerCloudSyncDebounced();
       this.showToast(this.t('toast.attendance.allPresent'), 'success');
     },
     redistributeTargets() {
@@ -3414,6 +3485,10 @@ this.settings = {
       }
       if (this.isPastDateLocked) {
         this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
+        return;
+      }
+      if (!this.canManageAttendance && !this.canEditTarget) {
+        this.showToast(this.currentLang === 'ar' ? 'غير مصرح لك بإعادة توزيع التارجت ⛔' : 'Not authorized to redistribute targets ⛔', 'warning');
         return;
       }
       const present = this.branchStaff.filter(s => this.isPresent(s.id));
@@ -3434,6 +3509,9 @@ this.settings = {
           sd.heroesTarget = 0;
         }
       });
+      this.schedulePersist();
+      this.triggerCloudSyncDebounced();
+      this.showToast(this.t('toast.target.redistributed', 'تمت إعادة توزيع التارجت بنجاح'), 'success');
     },
     distributeTargetsToStaff() {
       if (this.isDayClosed) {
@@ -6489,9 +6567,8 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       window.addEventListener('offline', () => {
         this.cloudSyncStatus = 'offline';
       });
-      setTimeout(() => {
-        this.syncFromCloud();
-      }, 800);
+      // ⭐ v23.23: السحب الفوري قبل/أثناء شاشة الدخول (Pre-Login Cloud Fetch)
+      this.syncFromCloud();
 
       // ⭐ v23.10: Pull-to-Refresh
       this.setupPullToRefresh();

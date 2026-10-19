@@ -224,6 +224,13 @@
         </label>
         <p v-if="loginError" class="shake" style="color:#fda4af;font-size:12px;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:10px;padding:10px 14px;margin:0 0 16px;">⚠️ {{ loginError }}</p>
         <button @click="doLogin" :disabled="loggingIn" class="btn-gold" style="width:100%;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;min-height:50px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(var(--theme-primary-rgb, 212,168,75), .3);">{{ loggingIn ? t('auth.loggingBtn') : t('auth.loginBtn') }}</button>
+        <!-- ⭐ v23.23: زر يدوي لتحديث وسحب البيانات من السحابة قبل الدخول -->
+        <div style="margin-top:14px;text-align:center;">
+          <button type="button" @click="syncFromCloud(true)" :disabled="cloudSyncStatus==='syncing'" class="btn-ghost" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:7px 15px;border-radius:20px;border:1px solid rgba(212,168,75,0.35);color:#e6c074;background:rgba(212,168,75,0.08);cursor:pointer;transition:all 0.2s;">
+            <span :style="{ display:'inline-block', animation: cloudSyncStatus==='syncing' ? 'spin 1s linear infinite' : 'none' }">🔄</span>
+            <span>{{ currentLang === 'ar' ? 'تحديث البيانات من السحابة' : 'Refresh Data from Cloud' }}</span>
+          </button>
+        </div>
       </div>
       <p style="text-align:center;font-size:11px;color:#64748b;margin-top:20px;">{{ activeCopyright }} — {{ t('meta.copyright') }}</p>
     </div>
@@ -749,7 +756,7 @@
               <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
                 <button @click="exportDailyExcel" :disabled="!selectedBranch || !canExport" class="btn-success-subtle btn-sm">{{ t('dashboard.staff.actions.excel') }}</button>
                 <button @click="showCompareModal=true" class="btn-ghost btn-sm">{{ t('dashboard.staff.actions.compare') }}</button>
-                <button @click="markAllPresent" :disabled="!canEditTarget" class="btn-ghost btn-sm">{{ t('dashboard.staff.actions.markAllPresent') }}</button>
+                <button @click="markAllPresent" :disabled="!canManageAttendance" class="btn-ghost btn-sm">{{ t('dashboard.staff.actions.markAllPresent') }}</button>
                 <span style="font-size:10px;color:#94a3b8;padding:4px 6px;">{{ t('dashboard.staff.actions.autoDistHint') }}</span>
                 <button @click="clearAllSales" :disabled="!canEnterDailySales" class="btn-danger-subtle btn-sm">{{ t('dashboard.staff.actions.clearAll') }}</button>
               </div>
@@ -771,7 +778,7 @@
                 <tbody>
                   <tr v-for="s in paginatedStaff" :key="s.id" :class="s.present ? 'att-present' : 'att-absent'" style="border-bottom:1px solid rgba(36,51,86,.5);">
                     <td style="padding:10px 6px;text-align:center;">
-                      <input type="checkbox" class="att-cb" :checked="s.present" @change="toggleAttendance(s.id)" :disabled="!canEditTarget">
+                      <input type="checkbox" class="att-cb" :checked="s.present" @change="toggleAttendance(s.id)" :disabled="!canManageAttendance">
                     </td>
                     <td style="padding:10px 6px;">
                       <div style="display:flex;align-items:center;gap:10px;">
@@ -836,7 +843,7 @@
             <div v-else style="display:flex;flex-direction:column;gap:12px;">
               <div v-for="s in branchStaffSorted" :key="s.id" :class="['staff-card', s.present ? 'present' : 'absent']">
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <input type="checkbox" class="att-cb" :checked="s.present" @change="toggleAttendance(s.id)" :disabled="!canEditTarget" style="width:26px;height:26px;">
+                  <input type="checkbox" class="att-cb" :checked="s.present" @change="toggleAttendance(s.id)" :disabled="!canManageAttendance" style="width:26px;height:26px;">
                   <div class="avatar-wrapper">
                     <div class="staff-avatar">
                       <img v-if="getStaffPhoto(s.id)" :src="getStaffPhoto(s.id)" :alt="s.name">
