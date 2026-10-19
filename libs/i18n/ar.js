@@ -139,6 +139,8 @@
     'header.role.admin': 'مدير عام',
     'header.role.manager': 'مشرف',
     'header.role.branch_manager': 'مدير فرع',
+    'header.role.cashier': 'بائع / كاشير',
+    'header.role.viewer': 'مشاهد / مدقق',
 
     // ─── PWA ───
     'pwa.install.title': 'ثبّت التطبيق على هاتفك',
@@ -671,6 +673,8 @@
     'permissions.manageStaff': 'إدارة الموظفين',
     'permissions.exportReports': 'تصدير التقارير',
     'permissions.viewFinancialReports': 'رؤية التقارير المالية',
+    'permissions.editPastDays': 'تعديل مبيعات الأيام السابقة',
+    'toast.dateLocked': 'هذا التاريخ مقفل ولا يمكن تعديله 🔒',
 
     // ═══════════════════════════════════════════════════════
     //  Batch 6.3b.1 — Settings Modal: Shell + Appearance + Colors + Layout

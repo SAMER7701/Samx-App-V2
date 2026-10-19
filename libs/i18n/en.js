@@ -139,6 +139,8 @@
     'header.role.admin': 'Admin',
     'header.role.manager': 'Manager',
     'header.role.branch_manager': 'Branch Manager',
+    'header.role.cashier': 'Cashier / Sales',
+    'header.role.viewer': 'Viewer / Auditor',
 
     // ─── PWA ───
     'pwa.install.title': 'Install the app on your phone',
@@ -671,6 +673,8 @@
     'permissions.manageStaff': 'Manage Staff',
     'permissions.exportReports': 'Export Reports',
     'permissions.viewFinancialReports': 'View Financial Reports',
+    'permissions.editPastDays': 'Edit Past Days Sales',
+    'toast.dateLocked': 'This date is locked and cannot be edited 🔒',
 
     // ═══════════════════════════════════════════════════════
     //  Batch 6.3b.1 — Settings Modal: Shell + Appearance + Colors + Layout

@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.19.0 — app.js
+//  SAMX v23.20.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.19.0';
+const APP_VERSION = '23.20.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -21,17 +21,21 @@ const PERMISSION_LIST = Object.freeze([
   { key:'manageStaff', icon:'👥', label:'إدارة الموظفين' },
   { key:'exportReports', icon:'📄', label:'تصدير التقارير' },
   { key:'viewFinancialReports', icon:'💰', label:'رؤية التقارير المالية' },
+  { key:'editPastDays', icon:'⏳', label:'تعديل مبيعات الأيام السابقة' },
 ]);
 
 const DEFAULT_PERMISSIONS = {
   enterDailySales: true, editTarget: false, manageBranches: false,
   manageStaff: false, exportReports: true, viewFinancialReports: true,
+  editPastDays: false,
 };
 
 const ROLE_PERMISSIONS = {
-  admin: { enterDailySales: true, editTarget: true, manageBranches: true, manageStaff: true, exportReports: true, viewFinancialReports: true },
-  manager: { enterDailySales: true, editTarget: true, manageBranches: false, manageStaff: false, exportReports: true, viewFinancialReports: true },
-  branch_manager: { enterDailySales: true, editTarget: true, manageBranches: false, manageStaff: true, exportReports: true, viewFinancialReports: false },
+  admin: { enterDailySales: true, editTarget: true, manageBranches: true, manageStaff: true, exportReports: true, viewFinancialReports: true, editPastDays: true },
+  manager: { enterDailySales: true, editTarget: true, manageBranches: false, manageStaff: false, exportReports: true, viewFinancialReports: true, editPastDays: true },
+  branch_manager: { enterDailySales: true, editTarget: true, manageBranches: false, manageStaff: true, exportReports: true, viewFinancialReports: false, editPastDays: false },
+  cashier: { enterDailySales: true, editTarget: false, manageBranches: false, manageStaff: false, exportReports: false, viewFinancialReports: false, editPastDays: false },
+  viewer: { enterDailySales: false, editTarget: false, manageBranches: false, manageStaff: false, exportReports: true, viewFinancialReports: true, editPastDays: false },
 };
 
 // ================================================================
@@ -1078,21 +1082,41 @@ createApp({
     allowedBranches() {
       if (!this.currentUser) return [];
       if (this.currentUser.role === 'admin' || this.currentUser.role === 'manager') return this.branches;
-      if (this.currentUser.role === 'branch_manager') return this.branches.filter(b => b.id === this.currentUser.branchId);
+      if (this.currentUser.role === 'viewer') {
+        return this.currentUser.branchId ? this.branches.filter(b => b.id === this.currentUser.branchId) : this.branches;
+      }
+      if (this.currentUser.role === 'branch_manager' || this.currentUser.role === 'cashier') {
+        return this.branches.filter(b => b.id === this.currentUser.branchId);
+      }
       return [];
     },
     isManagement() {
       return this.currentUser && (this.currentUser.role === 'admin' || this.currentUser.role === 'manager');
     },
 
+    // ⭐ v23.20: فحص قفل اليوميات وتعديل الأيام السابقة
+    canEditPastDays() {
+      if (!this.currentUser) return false;
+      if (this.currentUser.role === 'admin') return true;
+      const u = this.users.find(x => x.id === this.currentUser.id);
+      return u && u.permissions && u.permissions.editPastDays === true;
+    },
+    isPastDateLocked() {
+      if (!this.selectedDate || !this.todayStr) return false;
+      // إذا كان التاريخ المختار قبل اليوم الحالي ولم يكن لدى المستخدم صلاحية تعديل الأيام السابقة
+      return (this.selectedDate < this.todayStr) && !this.canEditPastDays;
+    },
+
     canEnterDailySales() {
       if (!this.currentUser) return false;
+      if (this.isPastDateLocked) return false;
       if (this.currentUser.role === 'admin') return true;
       const u = this.users.find(x => x.id === this.currentUser.id);
       return u && u.permissions && u.permissions.enterDailySales !== false;
     },
     canEditTarget() {
       if (!this.currentUser) return false;
+      if (this.isPastDateLocked) return false;
       if (this.currentUser.role === 'admin') return true;
       const u = this.users.find(x => x.id === this.currentUser.id);
       return u && u.permissions && u.permissions.editTarget === true;
@@ -1575,7 +1599,33 @@ createApp({
     },
 
     roleLabel(role) {
-      return this.t('header.role.' + role, role);
+      const fallbacks = {
+        admin: 'مدير عام',
+        manager: 'مشرف',
+        branch_manager: 'مدير فرع',
+        cashier: 'بائع / كاشير',
+        viewer: 'مشاهد / مدقق',
+      };
+      return this.t('header.role.' + role, fallbacks[role] || role);
+    },
+
+    roleBadgeStyle(role) {
+      if (role === 'admin') return { background: 'rgba(212,168,75,.2)', color: '#e6c074' };
+      if (role === 'manager') return { background: 'rgba(59,130,246,.2)', color: '#93c5fd' };
+      if (role === 'branch_manager') return { background: 'rgba(139,92,246,.2)', color: '#c4b5fd' };
+      if (role === 'cashier') return { background: 'rgba(16,185,129,.2)', color: '#6ee7b7' };
+      if (role === 'viewer') return { background: 'rgba(148,163,184,.2)', color: '#cbd5e1' };
+      return { background: 'rgba(255,255,255,.1)', color: '#fff' };
+    },
+
+    onRoleChange() {
+      const role = this.userForm.role;
+      if (ROLE_PERMISSIONS[role]) {
+        this.userForm.permissions = { ...ROLE_PERMISSIONS[role] };
+      }
+      if (role === 'admin') {
+        this.userForm.branchId = '';
+      }
     },
 
     // ⭐ v23.8: طلب تخزين دائم من المتصفح
@@ -2436,6 +2486,10 @@ this.settings = {
     //  Update Staff Field
     // ================================================================
     updateStaffField(staffId, field, value) {
+      if (this.isPastDateLocked) {
+        this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
+        return;
+      }
       if (!this.selectedBranchId) return;
       const key = `${this.selectedDate}|${this.selectedBranchId}`;
       const sd = this.ensureStaffRecord(key, staffId);
@@ -2452,6 +2506,10 @@ this.settings = {
       this.schedulePersist();
     },
         adjustSales(staffId, delta) {
+      if (this.isPastDateLocked) {
+        this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
+        return;
+      }
       if (!this.selectedBranchId) return;
       const key = `${this.selectedDate}|${this.selectedBranchId}`;
       const sd = this.ensureStaffRecord(key, staffId);
@@ -2469,6 +2527,10 @@ this.settings = {
     },
 
     updateDayTarget(date, field, value) {
+      if (date < this.todayStr && !this.canEditPastDays) {
+        this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
+        return;
+      }
       const branchId = this.monthlyBranchId || this.selectedBranchId;
       if (!branchId) return;
       const key = `${date}|${branchId}`;
@@ -2841,10 +2903,12 @@ this.settings = {
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            // ⭐ v23.3: تطبيع الصلاحيات فقط — لا حذف
+            // ⭐ v23.20: تطبيع الصلاحيات ودعم editPastDays للمستخدمين القدامى
             parsed.forEach(u => {
               if (!u.permissions) {
                 u.permissions = { ...(ROLE_PERMISSIONS[u.role] || DEFAULT_PERMISSIONS) };
+              } else if (u.permissions.editPastDays === undefined) {
+                u.permissions.editPastDays = (u.role === 'admin' || u.role === 'manager');
               }
             });
 
@@ -3043,6 +3107,10 @@ this.settings = {
     attKey(staffId) { return `${this.selectedDate}|${staffId}`; },
     isPresent(staffId) { return this.attendance[this.attKey(staffId)] !== false; },
         toggleAttendance(staffId) {
+      if (this.isPastDateLocked) {
+        this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
+        return;
+      }
       const key = this.attKey(staffId);
       const cur = this.attendance[key] !== false;
       this.attendance[key] = !cur;
@@ -3051,6 +3119,10 @@ this.settings = {
       this.schedulePersist();
     },
         markAllPresent() {
+      if (this.isPastDateLocked) {
+        this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
+        return;
+      }
       this.branchStaff.forEach(s => { this.attendance[this.attKey(s.id)] = true; });
       this.vibrate([10, 40, 10]);   // ⭐ v23.10 — نمط مميز للحضور الجماعي
       if (this.selectedDate && this.selectedBranchId) {
@@ -3060,6 +3132,10 @@ this.settings = {
       this.showToast(this.t('toast.attendance.allPresent'), 'success');
     },
     redistributeTargets() {
+      if (this.isPastDateLocked) {
+        this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
+        return;
+      }
       const present = this.branchStaff.filter(s => this.isPresent(s.id));
       if (present.length === 0) return;
       if (!this.selectedBranchId) return;
@@ -3080,6 +3156,10 @@ this.settings = {
       });
     },
     distributeTargetsToStaff() {
+      if (this.isPastDateLocked) {
+        this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
+        return;
+      }
       if (!this.selectedBranch) return;
       if (!this.selectedBranchId) return;
       if (!confirm(this.t('confirm.distributeTargets'))) return;
@@ -3222,6 +3302,10 @@ this.settings = {
     },
 
     clearAllSales() {
+      if (this.isPastDateLocked) {
+        this.showToast(this.t('toast.dateLocked', 'هذا التاريخ مقفل ولا يمكن تعديله 🔒'), 'warning');
+        return;
+      }
       if (!confirm(this.t('confirm.clearAllSales'))) return;
       const d = this.dayData;
       Object.values(d.staffData).forEach(sd => { sd.sales = 0; });

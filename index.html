@@ -490,9 +490,25 @@
               <button @click="shiftDate(1)" :disabled="isTodaySelected" class="quick-date-btn" :style="{opacity: isTodaySelected ? .4 : 1}">{{ t('dashboard.filter.plus1') }}</button>
             </div>
           </div>
-          <div v-if="selectedDate !== todayStr" style="margin-top:12px;padding:10px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;display:flex;align-items:center;gap:10px;font-size:12px;color:#fcd34d;">
-            <span style="font-size:16px;">📝</span>
-            <span style="flex:1;">{{ t('dashboard.historical.notice', '', { day: dayNameOfSelectedDate, date: selectedDate }) }}</span>
+          <div v-if="selectedDate !== todayStr" :style="{
+            marginTop: '12px',
+            padding: '10px 14px',
+            background: isPastDateLocked ? 'rgba(239,68,68,.12)' : 'rgba(245,158,11,.1)',
+            border: isPastDateLocked ? '1px solid rgba(239,68,68,.35)' : '1px solid rgba(245,158,11,.3)',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontSize: '12px',
+            color: isPastDateLocked ? '#fca5a5' : '#fcd34d'
+          }">
+            <span style="font-size:16px;">{{ isPastDateLocked ? '🔒' : '📝' }}</span>
+            <div style="flex:1;">
+              <span>{{ t('dashboard.historical.notice', '', { day: dayNameOfSelectedDate, date: selectedDate }) }}</span>
+              <span v-if="isPastDateLocked" style="display:block;font-size:11px;color:#f87171;margin-top:2px;font-weight:bold;">
+                🔒 {{ currentLang === 'ar' ? 'هذا اليوم مغلق للقراءة فقط — يتطلب صلاحية تعديل الأيام السابقة.' : 'This day is locked (read-only) — requires edit past days permission.' }}
+              </span>
+            </div>
             <button @click="setDate('today')" style="background:none;border:1px solid currentColor;color:inherit;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">{{ t('dashboard.historical.backToday') }}</button>
           </div>
         </div>
@@ -1774,16 +1790,18 @@
               </div>
               <div class="form-group-pro" style="margin-bottom:0;">
                 <label class="form-label-pro">🛡️ {{ t('users.form.role') }}</label>
-                <select v-model="userForm.role" class="input" style="width:100%;font-size:14px;">
+                <select v-model="userForm.role" @change="onRoleChange" class="input" style="width:100%;font-size:14px;">
                   <option value="admin">{{ t('header.role.admin') }}</option>
                   <option value="manager">{{ t('header.role.manager') }}</option>
                   <option value="branch_manager">{{ t('header.role.branch_manager') }}</option>
+                  <option value="cashier">{{ t('header.role.cashier', 'بائع / كاشير') }}</option>
+                  <option value="viewer">{{ t('header.role.viewer', 'مشاهد / مدقق') }}</option>
                 </select>
               </div>
-              <div v-if="userForm.role === 'manager' || userForm.role === 'branch_manager'" class="form-group-pro" style="margin-bottom:0;">
+              <div v-if="userForm.role !== 'admin'" class="form-group-pro" style="margin-bottom:0;">
                 <label class="form-label-pro">🏬 {{ t('users.form.branch') }}</label>
                 <select v-model="userForm.branchId" class="input" style="width:100%;font-size:14px;">
-                  <option value="">{{ t('users.form.choose') }}</option>
+                  <option value="">{{ userForm.role === 'viewer' ? (currentLang === 'ar' ? 'كل الفروع (مدقق عام)' : 'All Branches (Auditor)') : t('users.form.choose') }}</option>
                   <option v-for="b in branches" :key="b.id" :value="b.id">{{ b.name }}</option>
                 </select>
               </div>
@@ -1821,7 +1839,7 @@
                   <tr v-for="u in users" :key="u.id" style="border-bottom:1px solid rgba(36,51,86,.5);">
                     <td style="padding:8px;font-weight:600;color:#fff;">{{ u.fullName }} <span v-if="u.id===currentUser.id" style="color:#e6c074;font-size:10px;">{{ t('users.list.you') }}</span></td>
                     <td style="padding:8px;color:#94a3b8;font-size:12px;">{{ u.username }}</td>
-                    <td style="padding:8px;"><span :style="{fontSize:'11px',padding:'4px 8px',borderRadius:'6px',fontWeight:'bold', background: u.role==='admin' ? 'rgba(212,168,75,.2)' : u.role==='manager' ? 'rgba(59,130,246,.2)' : 'rgba(139,92,246,.2)', color: u.role==='admin' ? '#e6c074' : u.role==='manager' ? '#93c5fd' : '#c4b5fd'}">{{ roleLabel(u.role) }}</span></td>
+                    <td style="padding:8px;"><span :style="Object.assign({fontSize:'11px',padding:'4px 8px',borderRadius:'6px',fontWeight:'bold'}, roleBadgeStyle(u.role))">{{ roleLabel(u.role) }}</span></td>
                     <td style="padding:8px;font-size:12px;">{{ u.branchId ? branchName(u.branchId) : '—' }}</td>
                     <td style="padding:8px;"><div style="display:flex;gap:4px;"><button @click="editUser(u)" class="btn-ghost" style="font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer;">{{ t('common.edit') }}</button><button v-if="u.id!==currentUser.id" @click="deleteUser(u.id)" class="btn-danger" style="font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer;">{{ t('common.delete') }}</button></div></td>
                   </tr>
@@ -3393,7 +3411,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.19.0"></script>
+<script src="app.js?v=23.20.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {
