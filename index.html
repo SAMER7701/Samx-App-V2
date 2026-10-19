@@ -126,7 +126,7 @@
         <p style="font-size:10px;color:#94a3b8;margin:2px 0 0;">{{ t('pwa.install.sub') }}</p>
       </div>
       <button @click="installPWA" class="btn-gold">{{ t('pwa.install.btn') }}</button>
-      <button @click="showInstallBanner=false" style="background:transparent;color:#94a3b8;padding:4px 8px;">✕</button>
+      <button @click="dismissInstallBanner" style="background:transparent;color:#94a3b8;padding:4px 8px;cursor:pointer;border:none;font-size:14px;" title="إغلاق نهائي">✕</button>
     </div>
   </transition>
   <!-- ============ Update Banner (Top-Center Floating) ============ -->
@@ -3337,6 +3337,31 @@
                   <button @click="settings.staffPerPage=20" :class="['settings-option', settings.staffPerPage===20 ? 'active' : '']">20</button>
                   <button @click="settings.staffPerPage=30" :class="['settings-option', settings.staffPerPage===30 ? 'active' : '']">30</button>
                   <button @click="settings.staffPerPage=50" :class="['settings-option', settings.staffPerPage===50 ? 'active' : '']">50</button>
+                </div>
+              </div>
+
+              <!-- ⭐ v23.24: تثبيت التطبيق على الهاتف (PWA App Installation) -->
+              <div class="settings-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                  <div>
+                    <h4 class="settings-label" style="margin:0 0 2px;">📱 {{ currentLang === 'ar' ? 'تثبيت التطبيق على هاتفك' : 'Install App on Device' }}</h4>
+                    <p class="settings-subtext" style="margin:0;">
+                      <span v-if="isAppInstalled || isStandalone" style="color:#10b981;font-weight:700;">
+                        {{ currentLang === 'ar' ? '✅ التطبيق مثبت ويعمل كتطبيق مستقل على هذا الجهاز' : '✅ App is installed and running as standalone app' }}
+                      </span>
+                      <span v-else>
+                        {{ currentLang === 'ar' ? 'تثبيت كأيقونة على الشاشة الرئيسية للوصول السريع بدون متصفح' : 'Install as a home screen icon for fast browser-free access' }}
+                      </span>
+                    </p>
+                  </div>
+                  <div>
+                    <button v-if="!(isAppInstalled || isStandalone)" @click="installPWA" class="btn-gold btn-sm">
+                      📥 {{ currentLang === 'ar' ? 'تثبيت التطبيق الآن' : 'Install App Now' }}
+                    </button>
+                    <span v-else style="font-size:12px;color:#10b981;background:rgba(16,185,129,0.1);padding:4px 10px;border-radius:6px;border:1px solid rgba(16,185,129,0.3);display:inline-block;">
+                      {{ currentLang === 'ar' ? 'مثبت بالفعل' : 'Already Installed' }}
+                    </span>
+                  </div>
                 </div>
               </div>
 

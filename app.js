@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.23.0 — app.js
+//  SAMX v23.24.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.23.0';
+const APP_VERSION = '23.24.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -289,6 +289,7 @@ createApp({
       kpiFlashClass: { branchSales: '', basePct: '', heroesPct: '' },
       onlineStatus: navigator.onLine,
       showInstallBanner: false,
+      isAppInstalled: false, // ⭐ v23.24: حالة تثبيت التطبيق المستقل
       showUpdateToast: false,
       deferredPrompt: null,
       newWorker: null,
@@ -427,6 +428,14 @@ createApp({
         return this.currentLang === 'ar' ? 'ر.س' : 'SAR';
       }
       return '\u20C1';
+    },
+
+    // ⭐ v23.24: كشف دقيق لوضع التشغيل المستقل (PWA Standalone Mode)
+    isStandalone() {
+      if (typeof window === 'undefined') return false;
+      return window.matchMedia('(display-mode: standalone)').matches ||
+             window.navigator.standalone === true ||
+             (typeof document !== 'undefined' && document.referrer && document.referrer.includes('android-app://'));
     },
 
     todayStr() { return localDateStr(); },
@@ -2217,26 +2226,83 @@ this.settings = {
       window.addEventListener('online', () => { this.onlineStatus = true; this.showToast(this.t('toast.connection.online'), 'success'); });
       window.addEventListener('offline', () => { this.onlineStatus = false; this.showToast(this.t('toast.connection.offline'), 'warning'); });
     },
+    // ⭐ v23.24: إدارة تثبيت PWA الذكية وغير المزعجة (UX Option 1)
     setupPWA() {
+      // 1. إذا كان التطبيق مفتوحاً بالفعل في وضع الـ Standalone (كتطبيق مثبت على الهاتف)
+      if (this.isStandalone) {
+        this.isAppInstalled = true;
+        this.showInstallBanner = false;
+        try { localStorage.setItem('samx_pwa_installed', 'true'); } catch (e) {}
+      } else {
+        // فحص هل سُجل كـ مثبت مسبقاً في الذاكرة
+        try {
+          if (localStorage.getItem('samx_pwa_installed') === 'true') {
+            this.isAppInstalled = true;
+          }
+        } catch (e) {}
+      }
+
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         this.deferredPrompt = e;
-        this.showInstallBanner = true;
+
+        // فحص حاسم:
+        // أ. إذا كان التطبيق مثبتاً أو يعمل كـ Standalone
+        // ب. أو إذا كان المستخدم قد أغلق المربع مسبقاً (Dismissed)
+        const alreadyInstalled = this.isStandalone || localStorage.getItem('samx_pwa_installed') === 'true';
+        const alreadyDismissed = localStorage.getItem('samx_pwa_dismissed') === 'true';
+
+        if (!alreadyInstalled && !alreadyDismissed) {
+          this.showInstallBanner = true;
+        } else {
+          this.showInstallBanner = false;
+        }
       });
+
       window.addEventListener('appinstalled', () => {
         this.showInstallBanner = false;
         this.deferredPrompt = null;
+        this.isAppInstalled = true;
+        try {
+          localStorage.setItem('samx_pwa_installed', 'true');
+        } catch (e) {}
         this.showToast(this.t('toast.pwa.appInstalled'), 'success');
       });
     },
+
+    // ⭐ v23.24: إغلاق دائم ومحترم لرغبة المستخدم دون إزعاج
+    dismissInstallBanner() {
+      this.showInstallBanner = false;
+      try {
+        localStorage.setItem('samx_pwa_dismissed', 'true');
+      } catch (e) {}
+    },
+
     async installPWA() {
       if (!this.deferredPrompt) {
-        this.showToast(this.t('toast.pwa.manualHint'), 'warning');
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+          alert(this.currentLang === 'ar'
+            ? 'لتثبيت التطبيق على الآيفون:\n1. اضغط على زر المشاركة ⎋ أسفل متصفح Safari\n2. مرر للأسفل واختر "إضافة إلى الشاشة الرئيسية ➕"'
+            : 'To install on iOS:\n1. Tap the Share button ⎋ in Safari\n2. Select "Add to Home Screen ➕"');
+        } else {
+          this.showToast(this.t('toast.pwa.manualHint'), 'warning');
+        }
         return;
       }
-      this.deferredPrompt.prompt();
-      const { outcome } = await this.deferredPrompt.userChoice;
-      if (outcome === 'accepted') this.showToast(this.t('toast.pwa.installed'), 'success');
+      try {
+        this.deferredPrompt.prompt();
+        const { outcome } = await this.deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          this.showToast(this.t('toast.pwa.installed'), 'success');
+          this.isAppInstalled = true;
+          try {
+            localStorage.setItem('samx_pwa_installed', 'true');
+          } catch (e) {}
+        }
+      } catch (err) {
+        console.warn('[PWA] Prompt error:', err);
+      }
       this.deferredPrompt = null;
       this.showInstallBanner = false;
     },

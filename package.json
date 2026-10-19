@@ -1,7 +1,7 @@
 {
   "name": "samx-app",
   "private": true,
-  "version": "23.23.0",
+  "version": "23.24.0",
   "type": "module",
   "scripts": {
     "dev": "node server.js",
