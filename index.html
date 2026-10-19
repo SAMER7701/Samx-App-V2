@@ -438,7 +438,7 @@
           </div>
 
           <!-- TERTIARY: إدارة المستخدمين -->
-          <div v-if="currentUser.role==='admin'" class="service-card service-card-compact" @click="openView('users')" :data-tooltip="t('service.users.tooltip')">
+          <div v-if="currentUser && currentUser.role==='admin'" class="service-card service-card-compact" @click="openView('users')" :data-tooltip="t('service.users.tooltip')">
             <div class="service-card-icon">🔐</div>
             <p class="service-card-title">{{ t('service.users.title').replace('🔐 ', '') }}</p>
             <span class="service-card-subtitle-inline">{{ t('service.users.sub', '', { count: users.length }) }}</span>
@@ -1105,7 +1105,7 @@
       <!-- ============================================================
            VIEW: ADMIN
            ============================================================ -->
-      <div v-show="currentView==='admin'" class="inner-page">
+      <div v-if="isManagement" v-show="currentView==='admin'" class="inner-page">
         <div class="page-header">
           <button @click="closeView" class="back-btn"><span>→</span><span>{{ t('common.back') }}</span></button>
           <div class="page-header-title">
@@ -1582,7 +1582,7 @@
       <!-- ============================================================
            VIEW: BRANCHES
            ============================================================ -->
-      <div v-show="currentView==='branches'" class="inner-page">
+      <div v-if="canManageBranches" v-show="currentView==='branches'" class="inner-page">
         <div class="page-header">
           <button @click="closeView" class="back-btn"><span>→</span><span>{{ t('common.back') }}</span></button>
           <div class="page-header-title">
@@ -1650,7 +1650,7 @@
       <!-- ============================================================
            VIEW: STAFF
            ============================================================ -->
-      <div v-show="currentView==='staff'" class="inner-page">
+      <div v-if="canManageStaff" v-show="currentView==='staff'" class="inner-page">
         <div class="page-header">
           <button @click="closeView" class="back-btn"><span>→</span><span>{{ t('common.back') }}</span></button>
           <div class="page-header-title">
@@ -1745,7 +1745,7 @@
       <!-- ============================================================
            VIEW: USERS
            ============================================================ -->
-      <div v-show="currentView==='users'" class="inner-page">
+      <div v-if="currentUser && currentUser.role==='admin'" v-show="currentView==='users'" class="inner-page">
         <div class="page-header">
           <button @click="closeView" class="back-btn"><span>→</span><span>{{ t('common.back') }}</span></button>
           <div class="page-header-title">
@@ -1939,7 +1939,7 @@
             </button>
 
             <!-- Users -->
-            <button v-if="currentUser.role === 'admin'" @click="openView('users')" class="mobile-more-item" :class="{ active: currentView === 'users' }">
+            <button v-if="currentUser && currentUser.role === 'admin'" @click="openView('users')" class="mobile-more-item" :class="{ active: currentView === 'users' }">
               <span class="mobile-more-icon">🔐</span>
               <span class="mobile-more-title">{{ t('service.users.title').replace('🔐 ', '') }}</span>
               <span class="mobile-more-sub">{{ t('service.users.sub', '', { count: users.length }) }}</span>
@@ -3393,7 +3393,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.18.0"></script>
+<script src="app.js?v=23.19.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

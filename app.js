@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.18.0 — app.js
+//  SAMX v23.19.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.18.0';
+const APP_VERSION = '23.19.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -1519,8 +1519,32 @@ createApp({
         setTimeout(() => this.renderStaffChart(), 50);
       });
     },   
+    // ⭐ v23.19: حارس الصلاحيات والتنقل بين الشاشات (Navigation Guard)
+    canAccessView(viewName) {
+      if (!viewName || viewName === 'welcome') return true;
+      if (!this.currentUser) return false;
+      if (viewName === 'users') {
+        return this.currentUser.role === 'admin';
+      }
+      if (viewName === 'branches') {
+        return !!this.canManageBranches;
+      }
+      if (viewName === 'staff') {
+        return !!this.canManageStaff;
+      }
+      if (viewName === 'admin') {
+        return !!this.isManagement;
+      }
+      return true;
+    },
+
     openView(viewName) {
       this.showMoreMenu = false;
+      if (!this.canAccessView(viewName)) {
+        this.showToast(this.t('toast.permissionDenied', 'غير مصرح لك بالوصول إلى هذه الشاشة ⛔'), 'warning');
+        this.logActivity(this.t('log.unauthorized', 'محاولة وصول غير مصرح'), viewName);
+        return;
+      }
       this.previousView = this.currentView;
       this.currentView = viewName;
       if (viewName !== 'dashboard' && viewName !== 'kpi') this.safeDestroyChart('staffChartInstance');
@@ -2928,6 +2952,10 @@ this.settings = {
       } catch (e) {}
     },
         async saveUser() {
+      if (!this.currentUser || this.currentUser.role !== 'admin') {
+        this.showToast(this.t('users.noPermission', 'غير مصرح لك بإدارة المستخدمين ⛔'), 'error');
+        return;
+      }
       this.userError = '';
       const { fullName, username, password, role, branchId, permissions } = this.userForm;
       if (!fullName || !username) { this.userError = this.t('users.errors.nameUser'); return; }
@@ -2959,6 +2987,10 @@ this.settings = {
       };
     },
     deleteUser(id) {
+      if (!this.currentUser || this.currentUser.role !== 'admin') {
+        this.showToast(this.t('users.noPermission', 'غير مصرح لك بإدارة المستخدمين ⛔'), 'error');
+        return;
+      }
       const u = this.users.find(x => x.id === id);
       if (!u) return;
 
@@ -2982,6 +3014,10 @@ this.settings = {
       this.logActivity(this.t('log.user.delete'), u.username);
     },
     editUser(u) {
+      if (!this.currentUser || this.currentUser.role !== 'admin') {
+        this.showToast(this.t('users.noPermission', 'غير مصرح لك بإدارة المستخدمين ⛔'), 'error');
+        return;
+      }
       this.editingUser = u.id;
       this.userForm = {
         fullName: u.fullName,
@@ -3388,6 +3424,10 @@ this.settings = {
     //  Branches
     // ================================================================
     saveBranch() {
+      if (!this.canManageBranches) {
+        this.showToast(this.t('branches.noPermission', 'غير مصرح لك بإدارة الفروع ⛔'), 'error');
+        return;
+      }
       this.branchError = '';
       const { name, code } = this.branchForm;
       if (!name || !code) { this.branchError = this.t('branches.errors.nameCode'); return; }
@@ -3414,6 +3454,10 @@ this.settings = {
       this.branchForm = { name: '', code: '' };
     },
     deleteBranch(id) {
+      if (!this.canManageBranches) {
+        this.showToast(this.t('branches.noPermission', 'غير مصرح لك بإدارة الفروع ⛔'), 'error');
+        return;
+      }
       if (!confirm(this.t('branches.confirm.delete'))) return;
       const b = this.branches.find(x => x.id === id);
       this.branches = this.branches.filter(b => b.id !== id);
@@ -3426,6 +3470,10 @@ this.settings = {
     //  Staff
     // ================================================================
     saveStaff() {
+      if (!this.canManageStaff) {
+        this.showToast(this.t('staffView.noPermission', 'غير مصرح لك بإدارة الموظفين ⛔'), 'error');
+        return;
+      }
       this.staffError = '';
       const { name, code, branchId, jobTitle } = this.staffForm;
       if (!name || !code || !branchId) { this.staffError = this.t('staffView.errors.incomplete'); return; }
@@ -3451,6 +3499,10 @@ this.settings = {
       this.staffForm = { name: '', code: '', branchId: '', jobTitle: '' };
     },
     deleteStaff(id) {
+      if (!this.canManageStaff) {
+        this.showToast(this.t('staffView.noPermission', 'غير مصرح لك بإدارة الموظفين ⛔'), 'error');
+        return;
+      }
       if (!confirm(this.t('staffView.confirm.delete'))) return;
       const s = this.staff.find(x => x.id === id);
       this.staff = this.staff.filter(s => s.id !== id);
@@ -3902,6 +3954,10 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       return this.jobTitles.includes(title);
     },
     confirmBulkImport() {
+      if (!this.canManageBranches || !this.canManageStaff) {
+        this.showToast(this.t('branches.noPermission', 'غير مصرح لك باستيراد الفروع والموظفين ⛔'), 'error');
+        return;
+      }
       if (!this.bulkPreview.loaded) return;
       const { newBranches, newStaff, existingBranches } = this.bulkPreview;
       if (newBranches.length === 0 && newStaff.length === 0) { alert(this.t('alert.bulk.nothingToImport')); return; }
@@ -5866,13 +5922,27 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
         this.monthlyBranchId = result.id;
         this.analyticsBranchId = result.id;
         this.yoyBranchId = result.id;
-        this.openView('branches');
+        if (this.canManageBranches) {
+          this.openView('branches');
+        } else {
+          this.openView('dashboard');
+        }
       } else if (result.action === 'staff') {
         this.selectedBranchId = result.branchId;
         this.monthlyBranchId = result.branchId;
-        this.openView('staff');
+        if (this.canManageStaff) {
+          this.openView('staff');
+        } else {
+          this.openView('dashboard');
+        }
       } else if (result.action === 'user') {
-        this.openView('users');
+        if (this.currentUser && this.currentUser.role === 'admin') {
+          this.openView('users');
+        } else {
+          this.closeSearch();
+          this.showToast(this.t('users.noPermission', 'غير مصرح لك بالوصول لإدارة المستخدمين ⛔'), 'warning');
+          return;
+        }
       }
       this.closeSearch();
       this.showToast(this.t('toast.search.navigated', '', { title: result.title }), 'success');
@@ -5996,10 +6066,27 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
         if (document.visibilityState === 'hidden') this.persistNow();
       });
 
+      // ⭐ v23.19: حارس أمني للتنقل عبر الهاش (Hash Navigation Guard)
       const hash = window.location.hash.slice(1);
       if (hash && ['dashboard', 'kpi', 'admin', 'monthly', 'yoy', 'analytics', 'leaderboard', 'branches', 'staff', 'users'].includes(hash)) {
-        this.currentView = hash;
+        if (this.canAccessView(hash)) {
+          this.currentView = hash;
+        } else {
+          try { history.replaceState(null, '', '#'); } catch (e) {}
+        }
       }
+
+      window.addEventListener('hashchange', () => {
+        const newHash = window.location.hash.slice(1);
+        if (newHash && newHash !== this.currentView) {
+          if (this.canAccessView(newHash)) {
+            this.openView(newHash);
+          } else {
+            this.showToast(this.t('toast.permissionDenied', 'غير مصرح لك بالوصول إلى هذه الشاشة ⛔'), 'warning');
+            try { history.replaceState(null, '', '#' + (this.currentView || 'welcome')); } catch (e) {}
+          }
+        }
+      });
 
       nextTick(() => this.refreshCharts());
 
