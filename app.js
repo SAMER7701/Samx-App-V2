@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.24.0 — app.js
+//  SAMX v23.25.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.24.0';
+const APP_VERSION = '23.25.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -131,7 +131,8 @@ function simpleHash(str) {
 }
 
 async function sha256(text) {
-  if (window.crypto && window.crypto.subtle && window.isSecureContext) {
+  if (typeof text !== 'string') text = String(text || '');
+  if (window.crypto && window.crypto.subtle) {
     try {
       const buf = new TextEncoder().encode(text);
       const hash = await crypto.subtle.digest('SHA-256', buf);
@@ -139,6 +140,34 @@ async function sha256(text) {
     } catch (e) {}
   }
   return 'f_' + simpleHash(text);
+}
+
+// ⭐ v23.25: التحقق المرن من كلمات المرور عبر كافة المنصات والمتصفحات
+async function verifyPassword(inputPassword, storedHash) {
+  if (!inputPassword || !storedHash) return false;
+  const p = String(inputPassword);
+  // 1. فحص مباشر عبر sha256
+  const h1 = await sha256(p);
+  if (h1 === storedHash) return true;
+
+  // 2. فحص WebCrypto المجرد (بدون بادئة w_)
+  if (window.crypto && window.crypto.subtle) {
+    try {
+      const buf = new TextEncoder().encode(p);
+      const hash = await crypto.subtle.digest('SHA-256', buf);
+      const rawHex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+      if (rawHex === storedHash || ('w_' + rawHex) === storedHash) return true;
+    } catch (e) {}
+  }
+
+  // 3. فحص Fallback hash (f_)
+  const fallback = 'f_' + simpleHash(p);
+  if (fallback === storedHash || simpleHash(p) === storedHash) return true;
+
+  // 4. مطابقة نصية مباشرة
+  if (p === storedHash) return true;
+
+  return false;
 }
 
 // ================================================================
@@ -3182,10 +3211,24 @@ this.settings = {
         if (Array.isArray(cloud.users) && cloud.users.length > 0) {
           const userMap = new Map();
           cloud.users.forEach(u => {
-            if (u && u.username) userMap.set(u.username, u);
+            if (u && u.username) {
+              const k = (u.username || '').trim().toLowerCase();
+              userMap.set(k, {
+                ...u,
+                username: (u.username || '').trim(),
+              });
+            }
           });
           (this.users || []).forEach(u => {
-            if (u && u.username && !userMap.has(u.username)) userMap.set(u.username, u);
+            if (u && u.username) {
+              const k = (u.username || '').trim().toLowerCase();
+              if (!userMap.has(k)) {
+                userMap.set(k, {
+                  ...u,
+                  username: (u.username || '').trim(),
+                });
+              }
+            }
           });
           const mergedUsers = Array.from(userMap.values());
           mergedUsers.forEach(u => {
@@ -3331,18 +3374,27 @@ this.settings = {
       this.loggingIn = true;
       try {
         await this.initUsers();
-        const hash = await sha256(this.loginForm.password);
-        let user = this.users.find(u => u.username === this.loginForm.username && u.passwordHash === hash);
+        const inputUsername = (this.loginForm.username || '').trim().toLowerCase();
+        let user = this.users.find(u => (u.username || '').trim().toLowerCase() === inputUsername);
         
-        // ⭐ v23.23: سحب فوري من السحابة في حال لم يُعثر على المستخدم محلياً (Pre-Login Cloud Fallback)
-        if (!user && (typeof navigator === 'undefined' || navigator.onLine)) {
-          try {
-            await this.syncFromCloud();
-            user = this.users.find(u => u.username === this.loginForm.username && u.passwordHash === hash);
-          } catch (e) {}
+        let passwordOk = user ? await verifyPassword(this.loginForm.password, user.passwordHash) : false;
+
+        // ⭐ v23.25: سحب فوري من السحابة في حال لم يُعثر على المستخدم محلياً أو كلمة المرور لم تتطابق (Pre-Login Cloud Fallback)
+        if (!user || !passwordOk) {
+          if (typeof navigator === 'undefined' || navigator.onLine) {
+            try {
+              await this.syncFromCloud();
+              user = this.users.find(u => (u.username || '').trim().toLowerCase() === inputUsername);
+              if (user) {
+                passwordOk = await verifyPassword(this.loginForm.password, user.passwordHash);
+              }
+            } catch (e) {
+              console.warn('[doLogin] Pre-login cloud fetch failed:', e);
+            }
+          }
         }
 
-        if (!user) {
+        if (!user || !passwordOk) {
           this.loginError = this.t('users.errors.invalidCreds', 'بيانات الدخول غير صحيحة');
           this.loggingIn = false;
           return;
@@ -3398,44 +3450,51 @@ this.settings = {
         }
       } catch (e) {}
     },
-        async saveUser() {
+    async saveUser() {
       if (!this.currentUser || this.currentUser.role !== 'admin') {
         this.showToast(this.t('users.noPermission', 'غير مصرح لك بإدارة المستخدمين ⛔'), 'error');
         return;
       }
       this.userError = '';
       const { fullName, username, password, role, branchId, permissions } = this.userForm;
-      if (!fullName || !username) { this.userError = this.t('users.errors.nameUser'); return; }
+      const cleanUsername = (username || '').trim();
+      const cleanFullName = (fullName || '').trim();
+      if (!cleanFullName || !cleanUsername) { this.userError = this.t('users.errors.nameUser'); return; }
       if (this.editingUser) {
         const u = this.users.find(x => x.id === this.editingUser);
         if (!u) return;
-        u.fullName = fullName;
+        u.fullName = cleanFullName;
+        u.username = cleanUsername;
         u.role = role;
         u.permissions = { ...permissions };
         u.branchId = branchId;
         if (password) u.passwordHash = await sha256(password);
         this.editingUser = null;
         this.showToast(this.t('users.toast.edited'), 'success');
-        this.logActivity(this.t('log.user.edit'), username);
+        this.logActivity(this.t('log.user.edit'), cleanUsername);
       } else {
         if (!password || password.length < 4) { this.userError = this.t('users.errors.passwordShort'); return; }
-        if (this.users.some(u => u.username === username)) { this.userError = this.t('users.errors.userExists'); return; }
+        if (this.users.some(u => (u.username || '').trim().toLowerCase() === cleanUsername.toLowerCase())) {
+          this.userError = this.t('users.errors.userExists');
+          return;
+        }
         const hash = await sha256(password);
         this.users.push({
-          id: this.uid(), username, passwordHash: hash, fullName, role, branchId,
+          id: this.uid(), username: cleanUsername, passwordHash: hash, fullName: cleanFullName, role, branchId,
           permissions: { ...permissions },
         });
         this.showToast(this.t('users.toast.added'), 'success');
-        this.logActivity(this.t('log.user.add'), `${username} (${this.roleLabel(role)})`);
+        this.logActivity(this.t('log.user.add'), `${cleanUsername} (${this.roleLabel(role)})`);
       }
       this.userForm = {
         fullName: '', username: '', password: '', role: 'manager', branchId: '',
         permissions: { ...DEFAULT_PERMISSIONS },
       };
       this.persistUsers();
-      this.syncToCloud();
+      // ⭐ v23.25: رفع فوري مباشر لسحابة D1 مع انتظار الاكتمال
+      await this.syncToCloud();
     },
-    deleteUser(id) {
+    async deleteUser(id) {
       if (!this.currentUser || this.currentUser.role !== 'admin') {
         this.showToast(this.t('users.noPermission', 'غير مصرح لك بإدارة المستخدمين ⛔'), 'error');
         return;
@@ -3460,9 +3519,10 @@ this.settings = {
 
       this.users = this.users.filter(x => x.id !== id);
       this.persistUsers();
-      this.syncToCloud();
       this.showToast(this.t('users.toast.deleted'), 'success');
       this.logActivity(this.t('log.user.delete'), u.username);
+      // ⭐ v23.25: رفع فوري مباشر لسحابة D1 مع انتظار الاكتمال
+      await this.syncToCloud();
     },
     editUser(u) {
       if (!this.currentUser || this.currentUser.role !== 'admin') {
@@ -6597,6 +6657,8 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       // ⭐ v23: ترحيل البيانات (shiaka_ → samx_)
       this.migrateFromShaka();
 
+      // ⭐ v23.25: تحميل البيانات وفتح بوابة _dataLoaded فورا لكافة العمليات والمزامنة
+      this.load();
       await this.initUsers();
       this.restoreSession();
       this.loadSettingsFromStorage();

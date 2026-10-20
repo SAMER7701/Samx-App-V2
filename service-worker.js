@@ -1,15 +1,17 @@
 // ================================================================
-//  SAMX — Service Worker v23.24.0
+//  SAMX — Service Worker v23.25.0
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
-//  يعمل: Cache-First للأصول، Offline-First، تحديث يدوي موجه للمستخدم
+//  يعمل: Network-First للتنقل مع Fallback للكاش، Offline-First للأصول
 // ================================================================
 
-const CACHE_VERSION = 'samx-v23.24.0';
+const CACHE_VERSION = 'samx-v23.25.0';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
 const STATIC_ASSETS = [
+  '/',
+  '/index.html',
   './',
   './index.html',
   './manifest.json',
@@ -50,7 +52,9 @@ const STATIC_ASSETS = [
 //  INSTALL
 // ================================================================
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing SAMX v23.18.0...');
+  console.log('[SW] Installing SAMX v23.25.0...');
+  // تفعيل فوري لمنع بقاء العامل معلقاً أثناء تحديث الكاش
+  self.skipWaiting();
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_STATIC);
@@ -58,7 +62,6 @@ self.addEventListener('install', (event) => {
         STATIC_ASSETS.map(url =>
           cache.add(url).catch(err => {
             console.warn('[SW] Failed to cache:', url, err);
-            throw err;
           })
         )
       );
@@ -68,8 +71,6 @@ self.addEventListener('install', (event) => {
       } else {
         console.log(`[SW] ✅ All ${STATIC_ASSETS.length} assets cached`);
       }
-      // ملاحظة: لا نستدعي skipWaiting هنا تلقائياً لكي يبقى العامل في حالة الانتظار (waiting)
-      // وتظهر رسالة "يوجد تحديث متاح للتطبيق" للمستخدم على الجوال والكمبيوتر
     })()
   );
 });
@@ -78,7 +79,7 @@ self.addEventListener('install', (event) => {
 //  ACTIVATE
 // ================================================================
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating SAMX v23.18.0...');
+  console.log('[SW] Activating SAMX v23.25.0...');
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
@@ -128,34 +129,35 @@ async function handleSameOrigin(request) {
                        (request.headers.get('accept') && request.headers.get('accept').includes('text/html'));
 
   // 1. طلبات فتح التطبيق والتنقل (PWA Launch / Navigation)
-  // يضمن فتح التطبيق فوراً من أيقونة شاشة الجوال بدون تعليق أو خطأ FAILED -2
+  // استراتيجية Network-First مع Cache Fallback إلى index.html محاطة بـ try/catch
+  // يضمن فتح التطبيق فوراً من أيقونة شاشة الجوال وتجنب خطأ ERR_FAILED
   if (isNavigation) {
-    const cachedPage = (await caches.match('./index.html', { ignoreSearch: true })) ||
+    try {
+      const networkResponse = await fetch(request);
+      if (networkResponse && networkResponse.status === 200) {
+        const clone = networkResponse.clone();
+        caches.open(CACHE_STATIC).then(cache => {
+          cache.put('/index.html', clone.clone()).catch(() => {});
+          cache.put('./index.html', clone.clone()).catch(() => {});
+          cache.put('/', clone).catch(() => {});
+        }).catch(() => {});
+        return networkResponse;
+      }
+    } catch (netErr) {
+      // انقطاع الشبكة أو تعثر مؤقت
+    }
+
+    const cachedPage = (await caches.match('/index.html', { ignoreSearch: true })) ||
+                       (await caches.match('./index.html', { ignoreSearch: true })) ||
+                       (await caches.match('/', { ignoreSearch: true })) ||
                        (await caches.match('./', { ignoreSearch: true })) ||
                        (await caches.match(request, { ignoreSearch: true }));
 
     if (cachedPage) {
-      // إعادة التحقق بهدوء في الخلفية لتحديث النسخة المخزنة عند توفر الاتصال
-      fetch(request)
-        .then(response => {
-          if (response && response.ok) {
-            caches.open(CACHE_STATIC).then(cache => cache.put('./index.html', response.clone()));
-          }
-        })
-        .catch(() => {});
       return cachedPage;
     }
 
-    try {
-      const response = await fetch(request);
-      if (response && response.ok) {
-        const clone = response.clone();
-        caches.open(CACHE_STATIC).then(cache => cache.put('./index.html', clone));
-        return response;
-      }
-    } catch (err) {
-      return offlineFallback(request);
-    }
+    return offlineFallback(request);
   }
 
   // 2. باقي الأصول والملفات المحلية (Cache-First + Stale-While-Revalidate)
@@ -227,22 +229,24 @@ async function offlineFallback(request) {
                        request.headers.get('accept')?.includes('text/html');
 
   if (isNavigation) {
-    const html = (await caches.match('./index.html', { ignoreSearch: true })) ||
-                 (await caches.match('./', { ignoreSearch: true })) ||
-                 (await caches.match('/index.html', { ignoreSearch: true }));
+    const html = (await caches.match('/index.html', { ignoreSearch: true })) ||
+                 (await caches.match('./index.html', { ignoreSearch: true })) ||
+                 (await caches.match('/', { ignoreSearch: true })) ||
+                 (await caches.match('./', { ignoreSearch: true }));
     if (html) return html;
     return new Response(
       '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">' +
       '<meta name="viewport" content="width=device-width,initial-scale=1">' +
-      '<title>غير متصل - SAMX</title></head>' +
+      '<title>SAMX</title></head>' +
       '<body style="background:#0b1220;color:#e6c074;font-family:system-ui,sans-serif;' +
       'display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;' +
       'text-align:center;padding:20px;">' +
-      '<div><h1 style="font-size:48px;margin:0 0 12px;">📡</h1>' +
-      '<h2 style="color:#fff;margin:0 0 8px;">غير متصل بالإنترنت</h2>' +
-      '<p style="color:#94a3b8;margin:0;">افتح التطبيق مرة أخرى عندما تكون متصلاً.</p>' +
+      '<div><h1 style="font-size:48px;margin:0 0 12px;">🏢</h1>' +
+      '<h2 style="color:#fff;margin:0 0 8px;">SAMX</h2>' +
+      '<p style="color:#94a3b8;margin:0 0 16px;">جاري تشغيل التطبيق...</p>' +
+      '<button onclick="location.reload()" style="background:#d4a84b;color:#0b1220;border:none;padding:10px 20px;border-radius:8px;font-weight:bold;cursor:pointer;">إعادة المحاولة</button>' +
       '</div></body></html>',
-      { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+      { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
     );
   }
 
