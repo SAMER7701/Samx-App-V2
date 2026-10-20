@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.25.0 — app.js
+//  SAMX v23.27.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.25.0';
+const APP_VERSION = '23.27.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -103,6 +103,65 @@ function localDateStr(d = new Date()) {
 
 function localMonthStr(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+// ⭐ v23.27: توحيد صيغ التواريخ القياسية (YYYY-MM-DD) لكافة العمليات واستيراد الإكسل
+function normalizeDateStr(val) {
+  if (val === null || val === undefined || val === '') return null;
+  
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    return `${val.getFullYear()}-${String(val.getMonth() + 1).padStart(2, '0')}-${String(val.getDate()).padStart(2, '0')}`;
+  }
+
+  // دعم الأرقام التسلسلية من ملفات Excel (مثل 46314)
+  if (typeof val === 'number' || (/^\d{4,5}(\.\d+)?$/.test(String(val).trim()))) {
+    const num = typeof val === 'number' ? val : parseFloat(val);
+    if (num > 20000 && num < 80000) {
+      const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+      const ms = Math.round(num) * 24 * 60 * 60 * 1000;
+      const d = new Date(excelEpoch.getTime() + ms);
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+    }
+  }
+
+  // تنظيف السلسلة وتحويل الأرقام الهندية/العربية
+  let str = String(val).replace(/[\u0660-\u0669]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).trim();
+  if (!str) return null;
+
+  // YYYY-MM-DD أو YYYY/MM/DD
+  const ymdMatch = str.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
+  if (ymdMatch) {
+    const y = ymdMatch[1];
+    const m = String(parseInt(ymdMatch[2], 10)).padStart(2, '0');
+    const d = String(parseInt(ymdMatch[3], 10)).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  // DD-MM-YYYY أو DD/MM/YYYY أو MM-DD-YYYY
+  const dmyMatch = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+  if (dmyMatch) {
+    let a = parseInt(dmyMatch[1], 10);
+    let b = parseInt(dmyMatch[2], 10);
+    let y = dmyMatch[3];
+    if (y.length === 2) y = '20' + y;
+    let day = a, month = b;
+    if (a > 12 && b <= 12) {
+      day = a; month = b;
+    } else if (b > 12 && a <= 12) {
+      day = b; month = a;
+    }
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return `${y}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+  }
+
+  const parsed = Date.parse(str);
+  if (!isNaN(parsed)) {
+    const d = new Date(parsed);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  return null;
 }
 
 // ================================================================
@@ -513,7 +572,8 @@ createApp({
       get() { return Number(this.dayData.baseTarget) || 0; },
       set(val) {
         if (!this.selectedBranchId) return;
-        const key = `${this.selectedDate}|${this.selectedBranchId}`;
+        const normDate = this.normalizeDateStr(this.selectedDate) || this.selectedDate;
+        const key = `${normDate}|${this.selectedBranchId}`;
         const rec = this.normalizeDayRecord(key);
         if (!rec) return;
         rec.baseTarget = Number(val) || 0;
@@ -525,7 +585,8 @@ createApp({
       get() { return Number(this.dayData.heroesTarget) || 0; },
       set(val) {
         if (!this.selectedBranchId) return;
-        const key = `${this.selectedDate}|${this.selectedBranchId}`;
+        const normDate = this.normalizeDateStr(this.selectedDate) || this.selectedDate;
+        const key = `${normDate}|${this.selectedBranchId}`;
         const rec = this.normalizeDayRecord(key);
         if (!rec) return;
         rec.heroesTarget = Number(val) || 0;
@@ -678,27 +739,46 @@ createApp({
 
     selectedBranch() { return this.branches.find(b => b.id === this.selectedBranchId) || null; },
     branchStaff() { return this.staff.filter(s => s.branchId === this.selectedBranchId); },
-    dayKey() { return this.selectedBranchId ? `${this.selectedDate}|${this.selectedBranchId}` : null; },
-    // ⭐ v23-FIX: نسخة آمنة موسَّعة — لا تُعدّل الحالة داخل الـ getter
-        dayData() {
+    dayKey() {
+      if (!this.selectedBranchId || !this.selectedDate) return null;
+      const normDate = this.normalizeDateStr(this.selectedDate) || this.selectedDate;
+      return `${normDate}|${this.selectedBranchId}`;
+    },
+    // ⭐ v23.27: جلب سجل اليوم للتاريخ والفرع المختارين مع فحص التارجت المستورد من الإكسل
+    dayData() {
       const empty = { baseTarget: 0, heroesTarget: 0, manualExtra: 0, staffData: {}, invoices: 0, pieces: 0 };
-      if (!this.dayKey) return empty;
-      return this.daily[this.dayKey] || empty;
+      if (!this.selectedBranchId || !this.selectedDate) return empty;
+      const normDate = normalizeDateStr(this.selectedDate) || this.selectedDate;
+      const rec = this.getDayRecord(normDate, this.selectedBranchId, false);
+      return rec || empty;
     },
     presentCount() { return this.branchStaff.filter(s => this.isPresent(s.id)).length; },
 
     staffRowsComputed() {
       if (!this.selectedBranch) return [];
       const d = this.dayData;
-            const staffData = d.staffData || {};
+      const staffData = d.staffData || {};
+      const presentStaff = this.branchStaff.filter(s => this.isPresent(s.id));
+      const pCount = presentStaff.length;
+
       const rows = this.branchStaff.map(s => {
         const sd = staffData[s.id] || { target: 0, heroesTarget: 0, sales: 0 };
-        const target = Number(sd.target) || 0;
-        const heroesTarget = Number(sd.heroesTarget) || 0;
+        let target = Number(sd.target) || 0;
+        let heroesTarget = Number(sd.heroesTarget) || 0;
+        const present = this.isPresent(s.id);
+
+        // ⭐ ربط فوري مع تارجت الإكسل: إذا كان تارجت اليوم موجوداً ولم يوزع بعد في staffData
+        if (target === 0 && Number(d.baseTarget) > 0 && present && pCount > 0) {
+          target = Math.round((Number(d.baseTarget) / pCount) * 100) / 100;
+        }
+        if (heroesTarget === 0 && Number(d.heroesTarget) > 0 && present && pCount > 0) {
+          heroesTarget = Math.round((Number(d.heroesTarget) / pCount) * 100) / 100;
+        }
+
         const sales = Number(sd.sales) || 0;
         const pct = target > 0 ? (sales / target) * 100 : 0;
         const heroesPct = heroesTarget > 0 ? (sales / heroesTarget) * 100 : 0;
-        return { id: s.id, name: s.name, code: s.code, jobTitle: s.jobTitle, target, heroesTarget, sales, pct, heroesPct, present: this.isPresent(s.id) };
+        return { id: s.id, name: s.name, code: s.code, jobTitle: s.jobTitle, target, heroesTarget, sales, pct, heroesPct, present };
       });
       const valid = rows.filter(r => r.present && r.sales > 0);
       let topId = null;
@@ -1400,7 +1480,12 @@ createApp({
     monthlyHeroesTargets: { handler() { this.schedulePersist(); }, deep: true },
     attendance: { handler() { this.schedulePersist(); }, deep: true },
     users: { handler() { this.persistUsers(); }, deep: true },
-    selectedDate() {
+    selectedDate(val) {
+      const norm = this.normalizeDateStr(val);
+      if (norm && norm !== val) {
+        this.selectedDate = norm;
+        return;
+      }
       this.refreshCharts();
       this.staffPage = 1;
       nextTick(() => this.autoDistributeCurrentDay());
@@ -2919,16 +3004,17 @@ this.settings = {
       this.schedulePersist();
     },
     // ================================================================
-    //  ⭐ v18: التوزيع التلقائي الذكي
+    //  ⭐ v23.27: التوزيع التلقائي الذكي المرتبط ببيانات الإكسل اليومية
     // ================================================================
     autoDistributeForDate(date, branchId) {
       if (!date || !branchId) return;
-      const key = `${date}|${branchId}`;
-      const rec = this.daily[key];
+      const normDate = normalizeDateStr(date) || date;
+      const key = `${normDate}|${branchId}`;
+      const rec = this.getDayRecord(normDate, branchId, true);
       if (!rec) return;
       const branchStaffList = this.staff.filter(s => s.branchId === branchId);
       if (!branchStaffList.length) return;
-      const present = branchStaffList.filter(s => this.attendance[`${date}|${s.id}`] !== false);
+      const present = branchStaffList.filter(s => this.attendance[`${normDate}|${s.id}`] !== false);
       if (present.length === 0) {
         branchStaffList.forEach(s => {
           const sd = this.ensureStaffRecord(key, s.id);
@@ -2943,7 +3029,7 @@ this.settings = {
       branchStaffList.forEach(s => {
         const sd = this.ensureStaffRecord(key, s.id);
         if (!sd) return;
-        const isPresentNow = this.attendance[`${date}|${s.id}`] !== false;
+        const isPresentNow = this.attendance[`${normDate}|${s.id}`] !== false;
         if (isPresentNow) {
           sd.target = basePer;
           sd.heroesTarget = heroesPer;
@@ -2956,26 +3042,31 @@ this.settings = {
     autoDistributeCurrentDay() {
       if (this.settings.autoDistribute === false) return;
       if (!this.selectedDate || !this.selectedBranchId) return;
-      this.ensureDailyRecordFromMonthly(this.selectedDate, this.selectedBranchId);
-      this.autoDistributeForDate(this.selectedDate, this.selectedBranchId);
+      const normDate = normalizeDateStr(this.selectedDate) || this.selectedDate;
+      this.ensureDailyRecordFromMonthly(normDate, this.selectedBranchId);
+      this.autoDistributeForDate(normDate, this.selectedBranchId);
     },
 
-    // ⭐ v23.9-FIX#2: أنشئ سجل اليوم من التارجت الشهري (÷ أيام الشهر) — مرة واحدة فقط
+    // ⭐ v23.27: استرداد أو إنشاء سجل اليوم من التارجت الشهري
     ensureDailyRecordFromMonthly(date, branchId) {
       if (!date || !branchId) return null;
-      const key = `${date}|${branchId}`;
-      if (this.daily[key]) return this.daily[key];
-      const monthKey = `${date.slice(0, 7)}|${branchId}`;
+      const normDate = normalizeDateStr(date) || date;
+      const key = `${normDate}|${branchId}`;
+      if (this.daily[key] && (Number(this.daily[key].baseTarget) > 0 || Number(this.daily[key].heroesTarget) > 0)) {
+        return this.daily[key];
+      }
+      const monthKey = `${normDate.slice(0, 7)}|${branchId}`;
       const mBase   = Number(this.monthlyTargets[monthKey]) || 0;
       const mHeroes = Number(this.monthlyHeroesTargets[monthKey]) || 0;
-      if (mBase === 0 && mHeroes === 0) return null;
-      const [y, m] = date.slice(0, 7).split('-').map(Number);
+      if (mBase === 0 && mHeroes === 0) return this.daily[key] || null;
+      const [y, m] = normDate.slice(0, 7).split('-').map(Number);
       const daysInMonth = new Date(y, m, 0).getDate();
       const rec = this.normalizeDayRecord(key);
       if (!rec) return null;
-      rec.baseTarget   = Math.round((mBase   / daysInMonth) * 100) / 100;
-      rec.heroesTarget = Math.round((mHeroes / daysInMonth) * 100) / 100;
-      console.log('[AutoDist] ✅ Created daily from monthly:', date, '→', rec.baseTarget, '/', rec.heroesTarget);
+      if (Number(rec.baseTarget) === 0 && Number(rec.heroesTarget) === 0) {
+        rec.baseTarget   = Math.round((mBase   / daysInMonth) * 100) / 100;
+        rec.heroesTarget = Math.round((mHeroes / daysInMonth) * 100) / 100;
+      }
       return rec;
     },
     // ================================================================
@@ -3245,14 +3336,32 @@ this.settings = {
           if (Array.isArray(cloud.branches) && cloud.branches.length > 0) this.branches = cloud.branches;
           if (Array.isArray(cloud.staff) && cloud.staff.length > 0) this.staff = cloud.staff;
           if (cloud.daily && typeof cloud.daily === 'object') {
-            this.daily = Object.assign({}, cloud.daily, this.daily || {});
+            const merged = Object.assign({}, this.daily || {});
+            Object.entries(cloud.daily).forEach(([k, cRec]) => {
+              if (!cRec) return;
+              if (!merged[k]) {
+                merged[k] = cRec;
+              } else {
+                const locRec = merged[k];
+                if ((Number(cRec.baseTarget) > 0 && Number(locRec.baseTarget) === 0) || cloudUpdatedAt > lastLocalSync) {
+                  locRec.baseTarget = Number(cRec.baseTarget) || locRec.baseTarget || 0;
+                }
+                if ((Number(cRec.heroesTarget) > 0 && Number(locRec.heroesTarget) === 0) || cloudUpdatedAt > lastLocalSync) {
+                  locRec.heroesTarget = Number(cRec.heroesTarget) || locRec.heroesTarget || 0;
+                }
+                if (cRec.staffData && typeof cRec.staffData === 'object') {
+                  locRec.staffData = Object.assign({}, cRec.staffData, locRec.staffData || {});
+                }
+              }
+            });
+            this.daily = merged;
             this.normalizeAllDailyRecords();
           }
           if (cloud.monthlyTargets && typeof cloud.monthlyTargets === 'object') {
-            this.monthlyTargets = Object.assign({}, cloud.monthlyTargets, this.monthlyTargets || {});
+            this.monthlyTargets = Object.assign({}, this.monthlyTargets || {}, cloud.monthlyTargets);
           }
           if (cloud.monthlyHeroesTargets && typeof cloud.monthlyHeroesTargets === 'object') {
-            this.monthlyHeroesTargets = Object.assign({}, cloud.monthlyHeroesTargets, this.monthlyHeroesTargets || {});
+            this.monthlyHeroesTargets = Object.assign({}, this.monthlyHeroesTargets || {}, cloud.monthlyHeroesTargets);
           }
           if (cloud.attendance && typeof cloud.attendance === 'object') {
             this.attendance = Object.assign({}, cloud.attendance, this.attendance || {});
@@ -3265,26 +3374,45 @@ this.settings = {
         } else {
           // دمج السجلات اليومية الذكي
           if (cloud.daily && typeof cloud.daily === 'object') {
+            const merged = Object.assign({}, this.daily || {});
             let changed = false;
-            Object.keys(cloud.daily).forEach(dayKey => {
-              if (!this.daily[dayKey]) {
-                this.daily[dayKey] = cloud.daily[dayKey];
+            Object.entries(cloud.daily).forEach(([k, cRec]) => {
+              if (!cRec) return;
+              if (!merged[k]) {
+                merged[k] = cRec;
                 changed = true;
               } else {
-                Object.keys(cloud.daily[dayKey]).forEach(bId => {
-                  if (!this.daily[dayKey][bId]) {
-                    this.daily[dayKey][bId] = cloud.daily[dayKey][bId];
-                    changed = true;
-                  }
-                });
+                const locRec = merged[k];
+                if (Number(cRec.baseTarget) > 0 && Number(locRec.baseTarget) === 0) {
+                  locRec.baseTarget = Number(cRec.baseTarget);
+                  changed = true;
+                }
+                if (Number(cRec.heroesTarget) > 0 && Number(locRec.heroesTarget) === 0) {
+                  locRec.heroesTarget = Number(cRec.heroesTarget);
+                  changed = true;
+                }
+                if (cRec.staffData && typeof cRec.staffData === 'object') {
+                  locRec.staffData = Object.assign({}, cRec.staffData, locRec.staffData || {});
+                  changed = true;
+                }
               }
             });
+            this.daily = merged;
             if (changed) this.normalizeAllDailyRecords();
+          }
+          if (cloud.monthlyTargets && typeof cloud.monthlyTargets === 'object') {
+            this.monthlyTargets = Object.assign({}, this.monthlyTargets || {}, cloud.monthlyTargets);
+          }
+          if (cloud.monthlyHeroesTargets && typeof cloud.monthlyHeroesTargets === 'object') {
+            this.monthlyHeroesTargets = Object.assign({}, this.monthlyHeroesTargets || {}, cloud.monthlyHeroesTargets);
           }
           if (cloud.attendance && typeof cloud.attendance === 'object') {
             this.attendance = Object.assign({}, cloud.attendance, this.attendance || {});
           }
           this.persist();
+        }
+        if (this.selectedDate && this.selectedBranchId) {
+          this.autoDistributeCurrentDay();
         }
 
         // تأكيد إتمام السحب بنجاح لحماية السحابة
@@ -3878,10 +4006,58 @@ this.settings = {
     },
 
     // ================================================================
-    //  ⭐ v23.3: دوال التطبيع (Normalization)
-    //  الهدف: منع تعديل الحالة داخل computed/getters
-    //  تُستدعى فقط من: methods, mounted, watchers — وليس من computed
+    //  ⭐ v23.27: دوال التطبيع والبحث في سجلات الأيام (Normalization & Day Records)
     // ================================================================
+    normalizeDateStr(val) {
+      return normalizeDateStr(val);
+    },
+
+    getDayRecord(date, branchId, autoCreate = false) {
+      if (!date || !branchId) return null;
+      const normDate = normalizeDateStr(date) || String(date).trim();
+      const primaryKey = `${normDate}|${branchId}`;
+
+      // 1. فحص السجل المباشر بالمفتاح القياسي المُوحّد
+      if (this.daily && this.daily[primaryKey]) {
+        return this.daily[primaryKey];
+      }
+
+      // 2. فحص السجلات القديمة أو بصيغ تاريخ غير موحدة
+      if (this.daily) {
+        const rawKey = `${date}|${branchId}`;
+        if (this.daily[rawKey]) {
+          if (rawKey !== primaryKey) {
+            this.daily[primaryKey] = this.daily[rawKey];
+          }
+          return this.daily[primaryKey];
+        }
+        for (const k of Object.keys(this.daily)) {
+          if (k.endsWith(`|${branchId}`)) {
+            const kDate = k.split('|')[0];
+            if (normalizeDateStr(kDate) === normDate) {
+              if (k !== primaryKey) {
+                this.daily[primaryKey] = this.daily[k];
+              }
+              return this.daily[primaryKey];
+            }
+          }
+        }
+      }
+
+      // 3. فحص التارجت الشهري إذا كان موجوداً
+      const monthlyRec = this.ensureDailyRecordFromMonthly(normDate, branchId);
+      if (monthlyRec && (Number(monthlyRec.baseTarget) > 0 || Number(monthlyRec.heroesTarget) > 0)) {
+        return monthlyRec;
+      }
+
+      // 4. إذا طُلب الإنشاء التلقائي
+      if (autoCreate) {
+        return this.normalizeDayRecord(primaryKey);
+      }
+
+      return null;
+    },
+
     normalizeDayRecord(key) {
       if (!key) return null;
       if (!this.daily[key]) {
@@ -3915,13 +4091,27 @@ this.settings = {
       return sd;
     },
 
-    // ⭐ v23.3: تطبيع كل سجلات الأيام دفعة واحدة (يُستدعى عند load)
-    // الهدف: إصلاح بيانات قديمة قد تحتوي على null أو strings
+    // ⭐ v23.27: تطبيع وتوحيد كل سجلات الأيام وصيغ التواريخ دفعة واحدة
     normalizeAllDailyRecords() {
       if (!this.daily || typeof this.daily !== 'object') {
         this.daily = {};
         return;
       }
+      const migrated = {};
+      Object.keys(this.daily).forEach(key => {
+        const rec = this.daily[key];
+        const parts = key.split('|');
+        if (parts.length >= 2) {
+          const rawDate = parts[0];
+          const branchId = parts.slice(1).join('|');
+          const normDate = normalizeDateStr(rawDate);
+          const targetKey = normDate ? `${normDate}|${branchId}` : key;
+          migrated[targetKey] = rec;
+        } else {
+          migrated[key] = rec;
+        }
+      });
+      this.daily = migrated;
       Object.keys(this.daily).forEach(key => {
         this.normalizeDayRecord(key);
       });
@@ -4357,62 +4547,7 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       return map;
     },
     parseExcelDate(cell) {
-      if (cell === null || cell === undefined || cell === '') return null;
-      if (typeof cell === 'number') {
-        if (cell > 20000 && cell < 80000) {
-          const excelEpoch = new Date(Date.UTC(1899, 11, 30));
-          const ms = Math.round(cell) * 24 * 60 * 60 * 1000;
-          const d = new Date(excelEpoch.getTime() + ms);
-          return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-        }
-        return null;
-      }
-      if (cell instanceof Date && !isNaN(cell.getTime())) {
-        return `${cell.getUTCFullYear()}-${String(cell.getUTCMonth() + 1).padStart(2, '0')}-${String(cell.getUTCDate()).padStart(2, '0')}`;
-      }
-      const str = String(cell).trim();
-      if (!str) return null;
-      const isoMatch = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-      if (isoMatch) return `${isoMatch[1]}-${String(isoMatch[2]).padStart(2, '0')}-${String(isoMatch[3]).padStart(2, '0')}`;
-      const jsDateMatch = str.match(/([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})/);
-      if (jsDateMatch) {
-        const monthMap = { Jan:'01', Feb:'02', Mar:'03', Apr:'04', May:'05', Jun:'06', Jul:'07', Aug:'08', Sep:'09', Oct:'10', Nov:'11', Dec:'12' };
-        const mm = monthMap[jsDateMatch[1]];
-        if (mm) return `${jsDateMatch[3]}-${mm}-${String(jsDateMatch[2]).padStart(2, '0')}`;
-      }
-      if (/^\d{4,5}(\.\d+)?$/.test(str)) {
-        const serial = parseFloat(str);
-        if (serial > 20000 && serial < 80000) {
-          const excelEpoch = new Date(Date.UTC(1899, 11, 30));
-          const ms = Math.round(serial) * 24 * 60 * 60 * 1000;
-          const d = new Date(excelEpoch.getTime() + ms);
-          return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-        }
-      }
-      const dmyMatch = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
-      if (dmyMatch) {
-        let a = parseInt(dmyMatch[1]);
-        let b = parseInt(dmyMatch[2]);
-        let y = dmyMatch[3];
-        if (y.length === 2) y = '20' + y;
-        let day = a, month = b;
-        if (a > 12) { day = a; month = b; }
-        else if (b > 12) { day = b; month = a; }
-        if (month >= 1 && month <= 12 && day >= 1 && day <= 31)
-          return `${y}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      }
-      const shortMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/);
-      if (shortMatch) {
-        const a = parseInt(shortMatch[1]);
-        const b = parseInt(shortMatch[2]);
-        const y = '20' + shortMatch[3];
-        let day = a, month = b;
-        if (a > 12) { day = a; month = b; }
-        else if (b > 12) { day = b; month = a; }
-        if (month >= 1 && month <= 12)
-          return `${y}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      }
-      return null;
+      return normalizeDateStr(cell);
     },
     branchHasMonthlyData(branchId, month) {
       if (!branchId || !month) return false;
@@ -4448,14 +4583,16 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       this.importPreview.forEach(row => {
         if (!row.matchedBranchId) return;
         Object.entries(row.basicDays).forEach(([date, value]) => {
-          const key = `${date}|${row.matchedBranchId}`;
+          const normDate = normalizeDateStr(date) || date;
+          const key = `${normDate}|${row.matchedBranchId}`;
           const rec = this.normalizeDayRecord(key);
           if (!rec) return;
           rec.baseTarget = Number(value) || 0;
           appliedDays++;
         });
         Object.entries(row.heroesDays).forEach(([date, value]) => {
-          const key = `${date}|${row.matchedBranchId}`;
+          const normDate = normalizeDateStr(date) || date;
+          const key = `${normDate}|${row.matchedBranchId}`;
           const rec = this.normalizeDayRecord(key);
           if (!rec) return;
           rec.heroesTarget = Number(value) || 0;
@@ -4471,9 +4608,17 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       this.importMeta = null;
       this.showImportModal = false;
       if (month) this.monthlyMonth = month;
-this.schedulePersist();
-nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
-},
+      
+      // ⭐ v23.27: تحديث تارجت اليوم وتوزيعه فورياً إذا كان الفرع والتاريخ معروضين
+      if (this.selectedDate && this.selectedBranchId) {
+        this.autoDistributeCurrentDay();
+      }
+      this.persist();
+      // ⭐ v23.27: رفع فوري لبيانات التارجت إلى سحابة D1 عبر (/api/sync)
+      this._cloudPulledOnce = true;
+      this.syncToCloud(true);
+      nextTick(() => this.renderMonthlyChart());
+    },
 
     // ================================================================
     //  استيراد الفروع والموظفين (Bulk)
