@@ -569,7 +569,7 @@ createApp({
     },
     // ⭐ v23-FIX: خصائص قابلة للكتابة مرتبطة بـ dayData
     branchBaseTarget: {
-      get() { return Number(this.dayData.baseTarget) || 0; },
+      get() { return Number(this.dayData?.baseTarget) || 0; },
       set(val) {
         if (!this.selectedBranchId) return;
         const normDate = this.normalizeDateStr(this.selectedDate) || this.selectedDate;
@@ -582,7 +582,7 @@ createApp({
       }
     },
     branchHeroesTarget: {
-      get() { return Number(this.dayData.heroesTarget) || 0; },
+      get() { return Number(this.dayData?.heroesTarget) || 0; },
       set(val) {
         if (!this.selectedBranchId) return;
         const normDate = this.normalizeDateStr(this.selectedDate) || this.selectedDate;
@@ -595,7 +595,7 @@ createApp({
       }
     },
     branchManualExtra: {
-      get() { return Number(this.dayData.manualExtra) || 0; },
+      get() { return Number(this.dayData?.manualExtra) || 0; },
       set(val) {
         if (!this.selectedBranchId) return;
         const key = `${this.selectedDate}|${this.selectedBranchId}`;
@@ -606,7 +606,7 @@ createApp({
       }
     },
     branchInvoicesInput: {
-      get() { return Number(this.dayData.invoices) || 0; },
+      get() { return Number(this.dayData?.invoices) || 0; },
       set(val) {
         if (!this.selectedBranchId) return;
         const key = `${this.selectedDate}|${this.selectedBranchId}`;
@@ -617,7 +617,7 @@ createApp({
       }
     },
     branchPiecesInput: {
-      get() { return Number(this.dayData.pieces) || 0; },
+      get() { return Number(this.dayData?.pieces) || 0; },
       set(val) {
         if (!this.selectedBranchId) return;
         const key = `${this.selectedDate}|${this.selectedBranchId}`;
@@ -747,17 +747,27 @@ createApp({
     // ⭐ v23.27: جلب سجل اليوم للتاريخ والفرع المختارين مع فحص التارجت المستورد من الإكسل
     dayData() {
       const empty = { baseTarget: 0, heroesTarget: 0, manualExtra: 0, staffData: {}, invoices: 0, pieces: 0 };
-      if (!this.selectedBranchId || !this.selectedDate) return empty;
-      const normDate = normalizeDateStr(this.selectedDate) || this.selectedDate;
-      const rec = this.getDayRecord(normDate, this.selectedBranchId, false);
-      return rec || empty;
+      try {
+        if (!this.selectedBranchId || !this.selectedDate) return empty;
+        const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : normalizeDateStr(this.selectedDate)) || this.selectedDate;
+        let rec = null;
+        if (typeof this.getDayRecord === 'function') {
+          rec = this.getDayRecord(normDate, this.selectedBranchId, false);
+        } else if (this.daily && typeof this.daily === 'object') {
+          rec = this.daily[`${normDate}|${this.selectedBranchId}`] || this.daily[`${this.selectedDate}|${this.selectedBranchId}`] || null;
+        }
+        return rec || empty;
+      } catch (e) {
+        console.warn('[dayData error]', e);
+        return empty;
+      }
     },
     presentCount() { return this.branchStaff.filter(s => this.isPresent(s.id)).length; },
 
     staffRowsComputed() {
       if (!this.selectedBranch) return [];
-      const d = this.dayData;
-      const staffData = d.staffData || {};
+      const d = this.dayData || { baseTarget: 0, heroesTarget: 0, manualExtra: 0, staffData: {}, invoices: 0, pieces: 0 };
+      const staffData = (d && d.staffData && typeof d.staffData === 'object') ? d.staffData : {};
       const presentStaff = this.branchStaff.filter(s => this.isPresent(s.id));
       const pCount = presentStaff.length;
 
@@ -806,13 +816,13 @@ createApp({
     staffSalesTotal() { return this.staffRowsComputed.filter(r => r.present).reduce((sum, r) => sum + r.sales, 0); },
     staffTargetTotal() { return this.staffRowsComputed.filter(r => r.present).reduce((sum, r) => sum + r.target, 0); },
     staffHeroesTargetTotal() { return this.staffRowsComputed.filter(r => r.present).reduce((sum, r) => sum + r.heroesTarget, 0); },
-    branchSales() { return this.staffSalesTotal + (Number(this.dayData.manualExtra) || 0); },
+    branchSales() { return this.staffSalesTotal + (Number(this.dayData?.manualExtra) || 0); },
     basePct() {
-      const t = Number(this.dayData.baseTarget) || 0;
+      const t = Number(this.dayData?.baseTarget) || 0;
       return t > 0 ? (this.branchSales / t) * 100 : 0;
     },
     heroesPct() {
-      const t = Number(this.dayData.heroesTarget) || 0;
+      const t = Number(this.dayData?.heroesTarget) || 0;
       return t > 0 ? (this.branchSales / t) * 100 : 0;
     },
     // ⭐ v23.10: Pull-to-Refresh style
@@ -848,8 +858,8 @@ createApp({
       return [...present].sort((a, b) => (b.sales - a.sales) || (b.pct - a.pct));
     },
 
-    branchInvoices() { return Number(this.dayData.invoices) || 0; },
-    branchPieces() { return Number(this.dayData.pieces) || 0; },
+    branchInvoices() { return Number(this.dayData?.invoices) || 0; },
+    branchPieces() { return Number(this.dayData?.pieces) || 0; },
     branchUPT() {
       const inv = this.branchInvoices;
       return inv > 0 ? this.branchPieces / inv : 0;
@@ -988,9 +998,9 @@ createApp({
     smartAlerts() {
       const alerts = [];
       if (this.selectedBranch && this.isTodaySelected) {
-        const d = this.dayData;
+        const d = this.dayData || { baseTarget: 0, heroesTarget: 0, manualExtra: 0, staffData: {}, invoices: 0, pieces: 0 };
         const totalSales = this.staffSalesTotal + (Number(d.manualExtra) || 0);
-        if (totalSales === 0 && (d.baseTarget > 0 || this.branchStaff.length > 0)) {
+        if (totalSales === 0 && ((Number(d.baseTarget) || 0) > 0 || this.branchStaff.length > 0)) {
           alerts.push({
             icon: '⏰',
             text: this.t('dashboard.alert.noSalesToday'),
