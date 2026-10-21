@@ -199,13 +199,13 @@
   <!-- ============ LOGIN SCREEN ============ -->
   <div v-if="!currentUser" class="auth-bg" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;">
     <div style="width:100%;max-width:440px;">
-      <div class="logo-animate" style="text-align:center;margin-bottom:28px;">
-        <div class="logo-badge" style="width:140px;height:140px;border-radius:28px;padding:18px;margin:0 auto 18px;">
+      <div class="logo-animate" style="text-align:center;margin-bottom:24px;padding-top:8px;">
+        <div class="logo-badge" style="width:88px;height:88px;border-radius:22px;padding:12px;margin:0 auto 16px;">
           <img :src="activeLogo" :alt="activeCompanyName" onerror="this.style.display='none'">
         </div>
-        <h1 style="font-size:26px;font-weight:900;color:#fff;margin:0;">{{ activeCompanyName }}</h1>
-        <p style="color:#e6c074;font-size:14px;font-weight:600;margin:4px 0 0;letter-spacing:1px;">{{ activeCompanyDesc }}</p>
-        <p style="color:#94a3b8;font-size:12px;margin:8px 0 0;">{{ t('auth.tagline') }}</p>
+        <h1 style="font-size:24px;font-weight:900;color:#fff;margin:0 0 6px;line-height:1.3;">{{ activeCompanyName }}</h1>
+        <p style="color:#e6c074;font-size:14px;font-weight:600;margin:0 0 6px;letter-spacing:1px;line-height:1.4;">{{ activeCompanyDesc }}</p>
+        <p style="color:#94a3b8;font-size:12px;margin:0 0 4px;">{{ t('auth.tagline') }}</p>
         <p style="color:#64748b;font-size:11px;margin:6px 0 0;">v{{ appVersion }} • {{ onlineStatus ? t('auth.connection.online') : t('auth.connection.offline') }}</p>
       </div>
       <div class="auth-card-pro">
@@ -219,8 +219,8 @@
             <span>{{ t('auth.username') }}</span>
           </label>
           <div class="input-icon-group">
-            <span class="input-leading-icon">@</span>
-            <input v-model.trim="loginForm.username" @keyup.enter="doLogin" class="input input-with-icon" style="width:100%;font-size:15px;min-height:50px;" :placeholder="t('auth.usernamePlaceholder')" autocomplete="username">
+            <span class="input-leading-icon" style="user-select:none;">@</span>
+            <input v-model.trim="loginForm.username" @keyup.enter="doLogin" class="input input-with-icon" :style="{ width: '100%', fontSize: '15px', minHeight: '50px', paddingRight: (langDir === 'rtl' ? '48px !important' : '16px !important'), paddingLeft: (langDir === 'rtl' ? '16px !important' : '48px !important') }" :placeholder="t('auth.usernamePlaceholder')" autocomplete="username">
           </div>
         </div>
         <div class="form-group-pro">
@@ -229,8 +229,8 @@
             <span>{{ t('auth.password') }}</span>
           </label>
           <div class="input-icon-group">
-            <span class="input-leading-icon">🔑</span>
-            <input v-model="loginForm.password" :type="showLoginPassword ? 'text' : 'password'" @keyup.enter="doLogin" class="input input-with-icon input-with-toggle" style="width:100%;font-size:15px;min-height:50px;" :placeholder="t('auth.passwordPlaceholder')" autocomplete="current-password">
+            <span class="input-leading-icon" style="user-select:none;">🔑</span>
+            <input v-model="loginForm.password" :type="showLoginPassword ? 'text' : 'password'" @keyup.enter="doLogin" class="input input-with-icon input-with-toggle" style="width:100%;font-size:15px;min-height:50px;padding-right:48px !important;padding-left:48px !important;" :placeholder="t('auth.passwordPlaceholder')" autocomplete="current-password">
             <button type="button" @click="showLoginPassword = !showLoginPassword" class="password-toggle-btn" :title="showLoginPassword ? 'إخفاء' : 'إظهار'">
               {{ showLoginPassword ? '🙈' : '👁️' }}
             </button>

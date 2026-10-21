@@ -48,14 +48,15 @@ app.get('/api/sync', (req, res) => {
       const content = JSON.parse(fs.readFileSync(LOCAL_SYNC_FILE, 'utf-8'));
       return res.json({
         success: true,
+        status: 'ok',
         bindingConfigured: true,
         data: content.payload,
-        version: content.version || '23.28.0',
+        version: content.version || '23.30.0',
         updated_at: content.updated_at || Date.now()
       });
     }
   } catch (e) {}
-  return res.json({ success: true, bindingConfigured: true, data: null, updated_at: null });
+  return res.json({ success: true, status: 'empty', bindingConfigured: true, data: null, updated_at: null });
 });
 
 app.post('/api/sync', (req, res) => {

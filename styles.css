@@ -926,15 +926,53 @@ html.light .form-label-pro {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+[dir="rtl"] .input-leading-icon,
+html[dir="rtl"] .input-leading-icon,
+html[lang="ar"] .input-leading-icon {
+  right: 14px !important;
+  left: auto !important;
+}
+[dir="ltr"] .input-leading-icon,
+html[dir="ltr"] .input-leading-icon,
+html[lang="en"] .input-leading-icon {
+  left: 14px !important;
+  right: auto !important;
 }
 .input-icon-group:focus-within .input-leading-icon {
   color: var(--theme-primary, #d4a84b);
 }
 .input-with-icon {
-  padding-inline-start: 42px !important;
+  padding-inline-start: 46px !important;
+}
+[dir="rtl"] .input-with-icon,
+html[dir="rtl"] .input-with-icon,
+html[lang="ar"] .input-with-icon {
+  padding-right: 48px !important;
+  padding-left: 14px !important;
+}
+[dir="ltr"] .input-with-icon,
+html[dir="ltr"] .input-with-icon,
+html[lang="en"] .input-with-icon {
+  padding-left: 48px !important;
+  padding-right: 14px !important;
 }
 .input-with-toggle {
   padding-inline-end: 46px !important;
+}
+[dir="rtl"] .input-with-icon.input-with-toggle,
+html[dir="rtl"] .input-with-icon.input-with-toggle,
+html[lang="ar"] .input-with-icon.input-with-toggle {
+  padding-right: 48px !important;
+  padding-left: 48px !important;
+}
+[dir="ltr"] .input-with-icon.input-with-toggle,
+html[dir="ltr"] .input-with-icon.input-with-toggle,
+html[lang="en"] .input-with-icon.input-with-toggle {
+  padding-left: 48px !important;
+  padding-right: 48px !important;
 }
 
 /* ============ UX Touch Enhancements ============ */

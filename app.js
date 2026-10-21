@@ -3325,16 +3325,24 @@ this.settings = {
         const resJson = await res.json();
         if (resJson.bindingConfigured === false) {
           this.cloudSyncStatus = 'unconfigured';
+          this.loginSyncMsg = 'قاعدة بيانات D1 غير مربوطة بعد في Cloudflare (Binding: DB)';
+          this.loginSyncMsgType = 'error';
           if (isManual) {
             this.showToast('قاعدة بيانات Cloudflare D1 غير مربوطة بعد في لوحة التحكم (Binding Name: DB)', 'info');
           }
           return;
         }
 
-        if (!resJson.data) {
+        if (resJson.success === false && resJson.error) {
+          throw new Error(resJson.error);
+        }
+
+        if (!resJson.data || resJson.status === 'empty') {
           // السحابة فارغة — هذا أول تشغيل للنظام
           this._cloudPulledOnce = true;
           this.cloudSyncStatus = 'synced';
+          this.loginSyncMsg = this.currentLang === 'ar' ? 'قاعدة بيانات السحابة فارغة ومهيأة ✅' : 'Cloud database is ready ✅';
+          this.loginSyncMsgType = 'success';
           if ((this.branches && this.branches.length > 0) || (this.staff && this.staff.length > 0)) {
             await this.syncToCloud();
           }
