@@ -312,4 +312,4 @@ self.addEventListener('message', (event) => {
   }
 });
 
-console.log('[SW] SAMX v23.29.0 loaded ✅');
+console.log('[SW] SAMX v23.30.0 loaded ✅');
