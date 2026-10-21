@@ -1,0 +1,434 @@
+{
+  "payload": {
+    "branches": [
+      {
+        "id": "id_jtjj8r0ol2qm",
+        "name": "Al Nakheel Mall",
+        "code": "61"
+      },
+      {
+        "id": "id_7bewqd2kl2qm",
+        "name": "Alreem",
+        "code": "42"
+      },
+      {
+        "id": "id_c8j1qjkjl2qm",
+        "name": "Alkhobar",
+        "code": "73"
+      },
+      {
+        "id": "id_sscauv7yl2qm",
+        "name": "Hafouf",
+        "code": "53"
+      },
+      {
+        "id": "id_g0admoq5l2qm",
+        "name": "Unaiza",
+        "code": "13"
+      },
+      {
+        "id": "id_o6pn6xgel2qm",
+        "name": "Buraida",
+        "code": "31"
+      }
+    ],
+    "staff": [
+      {
+        "id": "id_fh0m6zf2l2qm",
+        "name": "محمد بوهيا",
+        "code": "2048",
+        "branchId": "id_jtjj8r0ol2qm",
+        "jobTitle": "مدير معرض"
+      },
+      {
+        "id": "id_i5qryr7ml2qm",
+        "name": "سمير احمد",
+        "code": "651",
+        "branchId": "id_jtjj8r0ol2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_4u9xy7dxl2qm",
+        "name": "خالد كليبي",
+        "code": "2235",
+        "branchId": "id_jtjj8r0ol2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_sqlase59l2qm",
+        "name": "على المادح",
+        "code": "2014",
+        "branchId": "id_7bewqd2kl2qm",
+        "jobTitle": "مدير معرض"
+      },
+      {
+        "id": "id_p6xkd8pxl2qm",
+        "name": "نبيل العبيدي",
+        "code": "378",
+        "branchId": "id_7bewqd2kl2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_f1prc4wpl2qm",
+        "name": "نائف الجيعان",
+        "code": "2384",
+        "branchId": "id_7bewqd2kl2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_io2pmdwbl2qm",
+        "name": "نور صباح",
+        "code": "6",
+        "branchId": "id_c8j1qjkjl2qm",
+        "jobTitle": "مدير معرض"
+      },
+      {
+        "id": "id_lhkiijp3l2qm",
+        "name": "مهيب احمد",
+        "code": "7",
+        "branchId": "id_c8j1qjkjl2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_qx687sdtl2qm",
+        "name": "وليد قاسم",
+        "code": "8",
+        "branchId": "id_c8j1qjkjl2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_us0iuxgml2qm",
+        "name": "محمد حنين",
+        "code": "9",
+        "branchId": "id_c8j1qjkjl2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_bno19h9zl2qm",
+        "name": "عبدالله الموسي",
+        "code": "1723",
+        "branchId": "id_sscauv7yl2qm",
+        "jobTitle": "مدير معرض"
+      },
+      {
+        "id": "id_5h7z1ittl2qm",
+        "name": "فؤاد الحطامي",
+        "code": "425",
+        "branchId": "id_sscauv7yl2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_osax5pvql2qm",
+        "name": "جاسم  العيد",
+        "code": "1952",
+        "branchId": "id_sscauv7yl2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_8xg29141l2qm",
+        "name": "نايف العميري",
+        "code": "1585",
+        "branchId": "id_g0admoq5l2qm",
+        "jobTitle": "مدير معرض"
+      },
+      {
+        "id": "id_sc27rwnjl2qm",
+        "name": "زيد ناجي",
+        "code": "724",
+        "branchId": "id_g0admoq5l2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_hta2swn8l2qm",
+        "name": "بسام الحربي",
+        "code": "2533",
+        "branchId": "id_g0admoq5l2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_2ftoa3sal2qm",
+        "name": "عبدالعزيز الهويسين",
+        "code": "2498",
+        "branchId": "id_g0admoq5l2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_79czgqlul2qm",
+        "name": "رايد المطيري",
+        "code": "18",
+        "branchId": "id_o6pn6xgel2qm",
+        "jobTitle": "مدير معرض"
+      },
+      {
+        "id": "id_nrwtnhihl2qm",
+        "name": "ياسرالحربي",
+        "code": "2385",
+        "branchId": "id_o6pn6xgel2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_kqoosw4tl2qm",
+        "name": "ايمن الدايل",
+        "code": "20",
+        "branchId": "id_o6pn6xgel2qm",
+        "jobTitle": "بائع"
+      },
+      {
+        "id": "id_6gcfu32ul2qm",
+        "name": "عبدالله الحربي",
+        "code": "21",
+        "branchId": "id_o6pn6xgel2qm",
+        "jobTitle": "بائع"
+      }
+    ],
+    "daily": {
+      "2026-10-15|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984.34,
+        "heroesTarget": 4661.68,
+        "manualExtra": 0,
+        "staffData": {
+          "id_fh0m6zf2l2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          },
+          "id_i5qryr7ml2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          },
+          "id_4u9xy7dxl2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          }
+        },
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-16|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984.34,
+        "heroesTarget": 4661.68,
+        "manualExtra": 0,
+        "staffData": {
+          "id_fh0m6zf2l2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 1234
+          },
+          "id_i5qryr7ml2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 2232
+          },
+          "id_4u9xy7dxl2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 1232
+          }
+        },
+        "invoices": 30,
+        "pieces": 76,
+        "mtdSales": 60000,
+        "isClosed": false
+      },
+      "2026-10-18|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984.34,
+        "heroesTarget": 4661.68,
+        "manualExtra": 0,
+        "staffData": {
+          "id_fh0m6zf2l2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          },
+          "id_i5qryr7ml2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          },
+          "id_4u9xy7dxl2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          }
+        },
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-19|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984.34,
+        "heroesTarget": 4661.68,
+        "manualExtra": 0,
+        "staffData": {
+          "id_fh0m6zf2l2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          },
+          "id_i5qryr7ml2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          },
+          "id_4u9xy7dxl2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          }
+        },
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-20|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984.34,
+        "heroesTarget": 4661.68,
+        "manualExtra": 0,
+        "staffData": {
+          "id_fh0m6zf2l2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          },
+          "id_i5qryr7ml2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          },
+          "id_4u9xy7dxl2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          }
+        },
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-21|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984.34,
+        "heroesTarget": 4661.68,
+        "manualExtra": 0,
+        "staffData": {
+          "id_fh0m6zf2l2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          },
+          "id_i5qryr7ml2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          },
+          "id_4u9xy7dxl2qm": {
+            "target": 1328.11,
+            "heroesTarget": 1553.89,
+            "sales": 0
+          }
+        },
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      }
+    },
+    "monthlyTargets": {
+      "2026-10|id_g0admoq5l2qm": 103616.1,
+      "2026-10|id_o6pn6xgel2qm": 80125.65,
+      "2026-10|id_7bewqd2kl2qm": 123975.35,
+      "2026-10|id_sscauv7yl2qm": 106097.69,
+      "2026-10|id_jtjj8r0ol2qm": 123514.59,
+      "2026-10|id_c8j1qjkjl2qm": 162852.89
+    },
+    "monthlyHeroesTargets": {
+      "2026-10|id_g0admoq5l2qm": 121230.83,
+      "2026-10|id_o6pn6xgel2qm": 93747.01,
+      "2026-10|id_7bewqd2kl2qm": 145051.16,
+      "2026-10|id_sscauv7yl2qm": 124134.3,
+      "2026-10|id_jtjj8r0ol2qm": 144512.07,
+      "2026-10|id_c8j1qjkjl2qm": 190537.89
+    },
+    "attendance": {
+      "2026-10-15|id_i5qryr7ml2qm": true,
+      "2026-10-15|id_fh0m6zf2l2qm": true
+    },
+    "users": [
+      {
+        "id": "u_sam",
+        "username": "sam",
+        "passwordHash": "w_680adeb360cfb15db21aa91b96914103d8ccfd464ab16b415f4fbc358eafcb39",
+        "fullName": "المدير العام",
+        "role": "admin",
+        "branchId": "",
+        "permissions": {
+          "enterDailySales": true,
+          "editTarget": true,
+          "manageBranches": true,
+          "manageStaff": true,
+          "exportReports": true,
+          "viewFinancialReports": true,
+          "editPastDays": true
+        }
+      },
+      {
+        "id": "id_v3vdx8w3lphi",
+        "username": "sama",
+        "passwordHash": "w_680adeb360cfb15db21aa91b96914103d8ccfd464ab16b415f4fbc358eafcb39",
+        "fullName": "عبدالله الموسى",
+        "role": "branch_manager",
+        "branchId": "id_sscauv7yl2qm",
+        "permissions": {
+          "enterDailySales": true,
+          "editTarget": false,
+          "manageBranches": false,
+          "manageStaff": true,
+          "exportReports": true,
+          "viewFinancialReports": true,
+          "editPastDays": false
+        }
+      },
+      {
+        "id": "u_samg",
+        "username": "samg",
+        "passwordHash": "w_680adeb360cfb15db21aa91b96914103d8ccfd464ab16b415f4fbc358eafcb39",
+        "fullName": "المشرف samg",
+        "role": "manager",
+        "branchId": "",
+        "permissions": {
+          "enterDailySales": true,
+          "editTarget": true,
+          "manageBranches": false,
+          "manageStaff": true,
+          "exportReports": true,
+          "viewFinancialReports": true,
+          "editPastDays": true
+        }
+      }
+    ],
+    "branding": {
+      "companyName": "شركتي",
+      "companyDesc": "إدارة المبيعات",
+      "copyrightText": "© 2026 شركتي",
+      "logoDataURL": null,
+      "labels": {
+        "branch": "معرض",
+        "branchPlural": "معارض",
+        "staff": "بائع",
+        "staffPlural": "بائعين",
+        "sales": "مبيعات",
+        "invoice": "فاتورة",
+        "invoicePlural": "فواتير",
+        "piece": "قطعة",
+        "piecePlural": "قطع",
+        "target": "تارجت",
+        "manager": "مدير معرض"
+      },
+      "sectorTemplate": "retail"
+    },
+    "updated_at": 1792544962129
+  },
+  "version": "23.29.0",
+  "updated_at": 1792545786859
+}

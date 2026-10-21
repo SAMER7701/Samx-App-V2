@@ -1,11 +1,11 @@
 // ================================================================
-//  SAMX — Service Worker v23.28.0
+//  SAMX — Service Worker v23.29.0
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 //  يعمل: Network-First للتنقل مع Fallback للكاش، Offline-First للأصول
 // ================================================================
 
-const CACHE_VERSION = 'samx-v23.28.0';
+const CACHE_VERSION = 'samx-v23.29.0';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -52,8 +52,7 @@ const STATIC_ASSETS = [
 //  INSTALL
 // ================================================================
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing SAMX v23.25.0...');
-  // تفعيل فوري لمنع بقاء العامل معلقاً أثناء تحديث الكاش
+  console.log('[SW] Installing SAMX v23.29.0...');
   self.skipWaiting();
   event.waitUntil(
     (async () => {
@@ -79,7 +78,7 @@ self.addEventListener('install', (event) => {
 //  ACTIVATE
 // ================================================================
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating SAMX v23.25.0...');
+  console.log('[SW] Activating SAMX v23.29.0...');
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
@@ -131,8 +130,7 @@ async function handleSameOrigin(request) {
                        (request.headers.get('accept') && request.headers.get('accept').includes('text/html'));
 
   // 1. طلبات فتح التطبيق والتنقل (PWA Launch / Navigation)
-  // استراتيجية Network-First مع Cache Fallback إلى index.html محاطة بـ try/catch
-  // يضمن فتح التطبيق فوراً من أيقونة شاشة الجوال وتجنب خطأ ERR_FAILED
+  // استراتيجية Network-First مع Cache Fallback إلى index.html
   if (isNavigation) {
     try {
       const networkResponse = await fetch(request);
@@ -146,14 +144,14 @@ async function handleSameOrigin(request) {
         return networkResponse;
       }
     } catch (netErr) {
-      // انقطاع الشبكة أو تعثر مؤقت
+      // انقطاع الشبكة
     }
 
-    const cachedPage = (await caches.match('/index.html', { ignoreSearch: true })) ||
-                       (await caches.match('./index.html', { ignoreSearch: true })) ||
-                       (await caches.match('/', { ignoreSearch: true })) ||
-                       (await caches.match('./', { ignoreSearch: true })) ||
-                       (await caches.match(request, { ignoreSearch: true }));
+    const cachedPage = (await caches.match('/index.html')) ||
+                       (await caches.match('./index.html')) ||
+                       (await caches.match('/')) ||
+                       (await caches.match('./')) ||
+                       (await caches.match(request));
 
     if (cachedPage) {
       return cachedPage;
@@ -162,8 +160,31 @@ async function handleSameOrigin(request) {
     return offlineFallback(request);
   }
 
-  // 2. باقي الأصول والملفات المحلية (Cache-First + Stale-While-Revalidate)
-  const cached = await caches.match(request, { ignoreSearch: true });
+  // 2. كود التطبيق الأساسي (app.js و seed-data.js): استراتيجية Network-First صارمة
+  // يضمن حصول كافة الهواتف على أحدث كود فور نشره بدون أن يعلق في الكاش القديم
+  const isCoreScript = url.pathname.endsWith('app.js') || url.pathname.endsWith('seed-data.js');
+  if (isCoreScript) {
+    try {
+      const networkResponse = await fetch(request);
+      if (networkResponse && networkResponse.ok) {
+        const ct = networkResponse.headers.get('content-type') || '';
+        if (!ct.includes('text/html')) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_STATIC).then(cache => cache.put(request, clone)).catch(() => {});
+          return networkResponse;
+        }
+      }
+    } catch (netErr) {
+      // offline — استخدام الكاش المخزن
+    }
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    const fallback = await caches.match(url.pathname);
+    if (fallback) return fallback;
+  }
+
+  // 3. باقي الأصول والملفات المحلية (Cache-First + Stale-While-Revalidate)
+  const cached = await caches.match(request);
 
   if (cached) {
     fetch(request)
@@ -281,6 +302,14 @@ self.addEventListener('message', (event) => {
       event.ports[0]?.postMessage({ cleared: true });
     });
   }
+
+  if (event.data.type === 'CLEAR_ALL_CACHES') {
+    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
+      event.ports[0]?.postMessage({ cleared: true });
+    }).catch(() => {
+      event.ports[0]?.postMessage({ cleared: false });
+    });
+  }
 });
 
-console.log('[SW] SAMX v23.12.3 loaded ✅');
+console.log('[SW] SAMX v23.29.0 loaded ✅');

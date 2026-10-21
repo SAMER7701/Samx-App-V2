@@ -66,10 +66,38 @@ app.post('/api/sync', (req, res) => {
   });
   try {
     const body = req.body;
-    const payload = body.payload || body;
-    const version = body.version || '23.28.0';
+    let incomingPayload = body.payload || body;
+    let mergedPayload = { ...incomingPayload };
+
+    if (fs.existsSync(LOCAL_SYNC_FILE)) {
+      try {
+        const existing = JSON.parse(fs.readFileSync(LOCAL_SYNC_FILE, 'utf-8'));
+        const oldData = existing.payload || {};
+        if (Array.isArray(oldData.users) && oldData.users.length > 0) {
+          const userMap = new Map();
+          oldData.users.forEach(u => {
+            if (u && u.username) userMap.set(u.username.trim().toLowerCase(), u);
+          });
+          (incomingPayload.users || []).forEach(u => {
+            if (u && u.username) userMap.set(u.username.trim().toLowerCase(), u);
+          });
+          mergedPayload.users = Array.from(userMap.values());
+        }
+        if (oldData.daily && typeof oldData.daily === 'object') {
+          mergedPayload.daily = { ...oldData.daily, ...(incomingPayload.daily || {}) };
+        }
+        if (oldData.monthlyTargets && typeof oldData.monthlyTargets === 'object') {
+          mergedPayload.monthlyTargets = { ...oldData.monthlyTargets, ...(incomingPayload.monthlyTargets || {}) };
+        }
+        if (oldData.monthlyHeroesTargets && typeof oldData.monthlyHeroesTargets === 'object') {
+          mergedPayload.monthlyHeroesTargets = { ...oldData.monthlyHeroesTargets, ...(incomingPayload.monthlyHeroesTargets || {}) };
+        }
+      } catch (err) {}
+    }
+
+    const version = body.version || '23.29.0';
     const now = Date.now();
-    fs.writeFileSync(LOCAL_SYNC_FILE, JSON.stringify({ payload, version, updated_at: now }, null, 2), 'utf-8');
+    fs.writeFileSync(LOCAL_SYNC_FILE, JSON.stringify({ payload: mergedPayload, version, updated_at: now }, null, 2), 'utf-8');
     return res.json({ success: true, bindingConfigured: true, updated_at: now, version });
   } catch (e) {
     return res.status(500).json({ success: false, error: e.message });

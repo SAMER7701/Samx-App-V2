@@ -4,7 +4,7 @@
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.28.0';
+const APP_VERSION = '23.29.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -201,13 +201,27 @@ async function sha256(text) {
   return 'f_' + simpleHash(text);
 }
 
-// ⭐ v23.25: التحقق المرن من كلمات المرور عبر كافة المنصات والمتصفحات
+// ⭐ v23.29: تحويل الأرقام العربية/الفارسية إلى لاتينية لمنع فشل تسجيل الدخول على الهواتف
+function normalizeDigits(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/[\u0660-\u0669]/g, d => '0123456789'['٠١٢٣٤٥٦٧٨٩'.indexOf(d)])
+    .replace(/[\u06F0-\u06F9]/g, d => '0123456789'['۰۱۲۳۴۵۶۷۸۹'.indexOf(d)]);
+}
+
+// ⭐ v23.29: التحقق المرن والشامل من كلمات المرور عبر كافة المنصات والمتصفحات
 async function verifyPassword(inputPassword, storedHash) {
   if (!inputPassword || !storedHash) return false;
-  const p = String(inputPassword);
-  // 1. فحص مباشر عبر sha256
+  const p = String(inputPassword).trim();
+  const pNorm = normalizeDigits(p);
+
+  // 1. فحص عبر sha256 (النص الأصلي والمطبّع)
   const h1 = await sha256(p);
   if (h1 === storedHash) return true;
+  if (pNorm !== p) {
+    const h1Norm = await sha256(pNorm);
+    if (h1Norm === storedHash) return true;
+  }
 
   // 2. فحص WebCrypto المجرد (بدون بادئة w_)
   if (window.crypto && window.crypto.subtle) {
@@ -216,15 +230,22 @@ async function verifyPassword(inputPassword, storedHash) {
       const hash = await crypto.subtle.digest('SHA-256', buf);
       const rawHex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
       if (rawHex === storedHash || ('w_' + rawHex) === storedHash) return true;
+
+      if (pNorm !== p) {
+        const bufNorm = new TextEncoder().encode(pNorm);
+        const hashNorm = await crypto.subtle.digest('SHA-256', bufNorm);
+        const rawHexNorm = Array.from(new Uint8Array(hashNorm)).map(b => b.toString(16).padStart(2, '0')).join('');
+        if (rawHexNorm === storedHash || ('w_' + rawHexNorm) === storedHash) return true;
+      }
     } catch (e) {}
   }
 
   // 3. فحص Fallback hash (f_)
-  const fallback = 'f_' + simpleHash(p);
-  if (fallback === storedHash || simpleHash(p) === storedHash) return true;
+  if (('f_' + simpleHash(p)) === storedHash || simpleHash(p) === storedHash) return true;
+  if (('f_' + simpleHash(pNorm)) === storedHash || simpleHash(pNorm) === storedHash) return true;
 
   // 4. مطابقة نصية مباشرة
-  if (p === storedHash) return true;
+  if (p === storedHash || pNorm === storedHash) return true;
 
   return false;
 }
@@ -506,6 +527,9 @@ createApp({
       cloudSyncError: '',
       _cloudSyncDebounce: null,
       _cloudPulledOnce: false, // ⭐ v23.23: حماية السحابة من الـ push قبل الـ pull
+      loginSyncMsg: '',
+      loginSyncMsgType: 'info',
+      isUpdatingApp: false,
     };
   },
 
@@ -2453,13 +2477,15 @@ this.settings = {
           });
         });
 
-        // 3. إعادة تحميل الصفحة فوراً وبشكل آمن عند اكتمال تفعيل الإصدار الجديد
+        // 3. إعادة تحميل الصفحة عند اكتمال تفعيل العامل وتأكيد طلب التحديث
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!this._isReloading) {
+          if (!this._isReloading && this.isUpdatingApp) {
             this._isReloading = true;
             setTimeout(() => {
-              window.location.replace(window.location.href);
-            }, 150);
+              const url = new URL(window.location.href);
+              url.searchParams.set('reload', Date.now().toString());
+              window.location.replace(url.toString());
+            }, 100);
           }
         });
 
@@ -2473,30 +2499,43 @@ this.settings = {
         });
       } catch (err) { console.warn('[PWA] SW registration failed:', err); }
     },
-    applyUpdate() {
-      if (this._isReloading) return;
+    async applyUpdate() {
+      this.isUpdatingApp = true;
       this.showUpdateToast = false;
 
       try {
         if (this.newWorker) {
           this.newWorker.postMessage({ type: 'SKIP_WAITING' });
-        } else if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistration().then(reg => {
-            if (reg && reg.waiting) {
+          this.newWorker.postMessage({ type: 'CLEAR_ALL_CACHES' });
+        }
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          for (const reg of regs) {
+            if (reg.waiting) {
               reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+              reg.waiting.postMessage({ type: 'CLEAR_ALL_CACHES' });
             }
-          }).catch(() => {});
+          }
         }
       } catch (e) {
         console.warn('[PWA] applyUpdate error:', e);
       }
-      // مهلة احتياطية فقط في حال لم يستجب controllerchange (2.5 ثانية)
+
+      // مسح كافة الكاشات من CacheStorage محلياً
+      if ('caches' in window) {
+        try {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        } catch (e) {}
+      }
+
+      // إعادة تحميل إجبارية وفورية لتجاوز كاش المتصفح
       setTimeout(() => {
-        if (!this._isReloading) {
-          this._isReloading = true;
-          window.location.replace(window.location.href);
-        }
-      }, 2500);
+        this._isReloading = true;
+        const url = new URL(window.location.href);
+        url.searchParams.set('reload', Date.now().toString());
+        window.location.replace(url.toString());
+      }, 500);
     },
 
     // ================================================================
@@ -3446,13 +3485,23 @@ this.settings = {
         this.cloudSyncError = '';
         const locale = this.t ? this.t('locale.time') : 'ar-SA';
         this.lastCloudSyncTime = new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+        try { localStorage.setItem('samx_last_cloud_sync', Date.now().toString()); } catch (e) {}
+
+        const usersCount = (this.users || []).length;
+        const dailyCount = Object.keys(this.daily || {}).length;
+        this.loginSyncMsg = this.currentLang === 'ar'
+          ? `تم تحديث البيانات من السحابة بنجاح: (${usersCount}) مستخدمين و (${dailyCount}) يومية جاهزة ✅`
+          : `Cloud sync complete: (${usersCount}) users and (${dailyCount}) daily records ready ✅`;
+        this.loginSyncMsgType = 'success';
 
         if (isManual) {
-          this.showToast(this.currentLang === 'ar' ? 'تمت مزامنة وتحديث البيانات من السحابة بنجاح ☁️' : 'Data synchronized from cloud ☁️', 'success');
+          this.showToast(this.currentLang === 'ar' ? `تمت مزامنة السحابة بنجاح: (${usersCount}) مستخدمين و (${dailyCount}) يومية ☁️` : 'Data synchronized from cloud ☁️', 'success');
         }
       } catch (err) {
         console.warn('[CloudSync] Sync from cloud error:', err);
         this.cloudSyncStatus = (typeof navigator !== 'undefined' && !navigator.onLine) ? 'offline' : 'error';
+        this.loginSyncMsg = (this.currentLang === 'ar' ? 'تعذر الاتصال بالسحابة: ' : 'Failed to connect: ') + (err.message || 'خطأ غير معروف');
+        this.loginSyncMsgType = 'error';
         if (isManual) {
           this.showToast('تعذر الاتصال بالسحابة: ' + (err.message || 'خطأ غير معروف'), 'error');
         }
@@ -3492,8 +3541,17 @@ this.settings = {
               console.warn('[Users] ⚠️ لم يوجد أي مدير عام — تمت إضافة حساب "sam" افتراضياً');
             }
 
+            // دمج مستخدمي Seed (مثل samg) إذا لم يكونوا مضافين بعد
+            if (window.SAMX_SEED?.data?.users && Array.isArray(window.SAMX_SEED.data.users)) {
+              window.SAMX_SEED.data.users.forEach(su => {
+                if (su && su.username && !parsed.some(x => (x.username || '').toLowerCase() === su.username.toLowerCase())) {
+                  parsed.push({ ...su });
+                }
+              });
+            }
+
             this.users = parsed;
-            this.persistUsers();
+            try { localStorage.setItem('samx_users', JSON.stringify(this.users)); } catch (e) {}
             return;
           }
         }
@@ -3501,16 +3559,22 @@ this.settings = {
         console.warn('[Users] فشل تحميل المستخدمين المخزّنين:', e);
       }
 
-      // ⭐ v23.3: أول تشغيل — إنشاء حساب "sam" الافتراضي فقط
-      const samHash = await sha256('7701');
-      this.users = [
-        {
-          id: 'u_sam', username: 'sam', passwordHash: samHash,
-          fullName: 'المدير العام', role: 'admin', branchId: '',
-          permissions: { ...ROLE_PERMISSIONS.admin },
-        },
-      ];
-      this.persistUsers();
+      // أول تشغيل: استخدام Seed Data إن وُجد
+      let initialUsers = [];
+      if (window.SAMX_SEED?.data?.users && Array.isArray(window.SAMX_SEED.data.users)) {
+        initialUsers = JSON.parse(JSON.stringify(window.SAMX_SEED.data.users));
+      } else {
+        const samHash = await sha256('7701');
+        initialUsers = [
+          {
+            id: 'u_sam', username: 'sam', passwordHash: samHash,
+            fullName: 'المدير العام', role: 'admin', branchId: '',
+            permissions: { ...ROLE_PERMISSIONS.admin },
+          },
+        ];
+      }
+      this.users = initialUsers;
+      try { localStorage.setItem('samx_users', JSON.stringify(this.users)); } catch (e) {}
     },
     persistUsers() {
       try { localStorage.setItem('samx_users', JSON.stringify(this.users)); } catch (e) {}
@@ -3518,29 +3582,45 @@ this.settings = {
     },
     async doLogin() {
       this.loginError = '';
-      if (!this.loginForm.username || !this.loginForm.password) {
+      const inputUsername = (this.loginForm.username || '').trim().toLowerCase();
+      const inputPassword = (this.loginForm.password || '').trim();
+      if (!inputUsername || !inputPassword) {
         this.loginError = 'أدخل اسم المستخدم وكلمة المرور';
         return;
       }
       this.loggingIn = true;
       try {
         await this.initUsers();
-        const inputUsername = (this.loginForm.username || '').trim().toLowerCase();
         let user = this.users.find(u => (u.username || '').trim().toLowerCase() === inputUsername);
-        
-        let passwordOk = user ? await verifyPassword(this.loginForm.password, user.passwordHash) : false;
+        let passwordOk = user ? await verifyPassword(inputPassword, user.passwordHash) : false;
 
-        // ⭐ v23.25: سحب فوري من السحابة في حال لم يُعثر على المستخدم محلياً أو كلمة المرور لم تتطابق (Pre-Login Cloud Fallback)
+        // ⭐ v23.29: سحب فوري مباشر من السحابة إذا لم يتم العثور على المستخدم محلياً أو كلمة المرور لم تتطابق
         if (!user || !passwordOk) {
           if (typeof navigator === 'undefined' || navigator.onLine) {
             try {
-              await this.syncFromCloud();
+              await this.syncFromCloud(false);
               user = this.users.find(u => (u.username || '').trim().toLowerCase() === inputUsername);
               if (user) {
-                passwordOk = await verifyPassword(this.loginForm.password, user.passwordHash);
+                passwordOk = await verifyPassword(inputPassword, user.passwordHash);
               }
             } catch (e) {
               console.warn('[doLogin] Pre-login cloud fetch failed:', e);
+            }
+          }
+        }
+
+        // فحص إضافي في مستخدمي Seed كخيار طوارئ أخير
+        if ((!user || !passwordOk) && window.SAMX_SEED?.data?.users) {
+          const seedUser = window.SAMX_SEED.data.users.find(u => (u.username || '').trim().toLowerCase() === inputUsername);
+          if (seedUser) {
+            const seedPassOk = await verifyPassword(inputPassword, seedUser.passwordHash);
+            if (seedPassOk) {
+              user = seedUser;
+              passwordOk = true;
+              if (!this.users.some(u => (u.username || '').toLowerCase() === user.username.toLowerCase())) {
+                this.users.push(user);
+                try { localStorage.setItem('samx_users', JSON.stringify(this.users)); } catch (e) {}
+              }
             }
           }
         }

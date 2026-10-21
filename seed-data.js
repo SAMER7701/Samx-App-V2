@@ -257,6 +257,23 @@ window.SAMX_SEED = {
           "exportReports": true,
           "viewFinancialReports": true
         }
+      },
+      {
+        "id": "u_samg",
+        "username": "samg",
+        "passwordHash": "w_680adeb360cfb15db21aa91b96914103d8ccfd464ab16b415f4fbc358eafcb39",
+        "fullName": "المشرف samg",
+        "role": "manager",
+        "branchId": "",
+        "permissions": {
+          "enterDailySales": true,
+          "editTarget": true,
+          "manageBranches": false,
+          "manageStaff": true,
+          "exportReports": true,
+          "viewFinancialReports": true,
+          "editPastDays": true
+        }
       }
     ]
   }

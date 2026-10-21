@@ -150,6 +150,24 @@
     </div>
   </transition>
 
+  <!-- ============ Updating Fullscreen Overlay ============ -->
+  <transition name="fade">
+    <div v-if="isUpdatingApp" style="position:fixed;inset:0;background:rgba(11,18,32,0.96);z-index:99999;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;backdrop-filter:blur(12px);">
+      <div style="background:#131d31;border:1px solid rgba(212,168,75,0.45);border-radius:24px;padding:36px 28px;max-width:400px;width:92%;box-shadow:0 24px 60px rgba(0,0,0,0.7);">
+        <div style="font-size:48px;margin-bottom:16px;animation:spin 1.2s linear infinite;display:inline-block;">⚡</div>
+        <h3 style="color:#fff;font-size:19px;font-weight:800;margin:0 0 10px;">{{ currentLang === 'ar' ? 'جاري تحديث التطبيق وتطهير الكاش' : 'Updating App & Purging Cache' }}</h3>
+        <p style="color:#94a3b8;font-size:13px;line-height:1.7;margin:0;">{{ currentLang === 'ar' ? 'يرجى الانتظار لحظات، يتم الآن تفعيل أحدث إصدار وتحديث قواعد البيانات...' : 'Please wait a moment, activating the latest version and updating databases...' }}</p>
+      </div>
+    </div>
+  </transition>
+
+  <!-- ============================================================
+       GLOBAL TOAST (Available on Login, Lock screen & Main App)
+       ============================================================ -->
+  <transition name="scale">
+    <div v-if="toast" :class="['toast', toastType]">{{ toast }}</div>
+  </transition>
+
   <!-- ============ Lock Screen ============ -->
   <transition name="fade">
     <div v-if="isLocked && currentUser" class="lock-overlay">
@@ -230,6 +248,9 @@
             <span :style="{ display:'inline-block', animation: cloudSyncStatus==='syncing' ? 'spin 1s linear infinite' : 'none' }">🔄</span>
             <span>{{ currentLang === 'ar' ? 'تحديث البيانات من السحابة' : 'Refresh Data from Cloud' }}</span>
           </button>
+          <p v-if="loginSyncMsg" :style="{ color: loginSyncMsgType === 'success' ? '#4ade80' : '#fda4af', fontSize: '11px', marginTop: '10px', textAlign: 'center', lineHeight: '1.5', background: loginSyncMsgType === 'success' ? 'rgba(74,222,128,0.1)' : 'rgba(244,63,94,0.1)', border: '1px solid ' + (loginSyncMsgType === 'success' ? 'rgba(74,222,128,0.25)' : 'rgba(244,63,94,0.25)'), borderRadius: '8px', padding: '8px 12px' }">
+            {{ loginSyncMsg }}
+          </p>
         </div>
       </div>
       <p style="text-align:center;font-size:11px;color:#64748b;margin-top:20px;">{{ activeCopyright }} — {{ t('meta.copyright') }}</p>
@@ -1994,12 +2015,7 @@
         </div>
       </div>
     </div>
-    <!-- ============================================================
-         TOAST
-         ============================================================ -->
-    <transition name="scale">
-      <div v-if="toast" :class="['toast', toastType]">{{ toast }}</div>
-    </transition>
+
 
     <!-- Version Badge -->
     <div class="version-badge">v{{ appVersion }}</div>
@@ -3612,7 +3628,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.28.0"></script>
+<script src="app.js?v=23.29.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {
