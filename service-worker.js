@@ -1,11 +1,11 @@
 // ================================================================
-//  SAMX — Service Worker v23.27.0
+//  SAMX — Service Worker v23.28.0
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 //  يعمل: Network-First للتنقل مع Fallback للكاش، Offline-First للأصول
 // ================================================================
 
-const CACHE_VERSION = 'samx-v23.27.0';
+const CACHE_VERSION = 'samx-v23.28.0';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -104,8 +104,10 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // 1. تجاوز طلبات الـ API والمزامنة (تمر مباشرة إلى الخادم D1 بدون اعتراض كاش)
-  if (url.pathname.startsWith('/api/')) return;
+  // 1. تجاوز قطعي لكافة طلبات الـ API والمزامنة لتمر مباشرة للشبكة بدون اعتراض أو كاش (Cache-Bypass)
+  if (url.pathname.includes('/api/') || request.url.includes('/api/')) {
+    return;
+  }
 
   if (request.method !== 'GET') return;
   if (!url.protocol.startsWith('http')) return;

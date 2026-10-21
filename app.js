@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.27.0 — app.js
+//  SAMX v23.28.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.27.0';
+const APP_VERSION = '23.28.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -3268,9 +3268,15 @@ this.settings = {
 
       try {
         this.cloudSyncStatus = 'syncing';
-        const res = await fetch('/api/sync', {
+        // ⭐ v23.28: منع الكاش نهائياً بإضافة معامل الوقت و Cache-Control no-store
+        const res = await fetch(`/api/sync?t=${Date.now()}`, {
           method: 'GET',
-          headers: { 'Cache-Control': 'no-cache' },
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          },
         });
 
         if (!res.ok) {
@@ -3301,14 +3307,8 @@ this.settings = {
 
         const cloud = resJson.data;
         const cloudUpdatedAt = resJson.updated_at || cloud.updated_at || 0;
-        let lastLocalSync = 0;
-        try {
-          lastLocalSync = parseInt(localStorage.getItem('samx_last_cloud_sync') || '0', 10);
-        } catch (e) {}
 
-        const localEmpty = (!this.branches || this.branches.length === 0) && (!this.staff || this.staff.length === 0);
-
-        // 1. مزامنة ودمج المستخدمين دائماً وتحديث الذاكرة فوراً (Pre-Login / Full State Users Sync)
+        // 1. ⭐ v23.28: تحديث وفرض قائمة المستخدمين والحسابات فوراً في الذاكرة و localStorage
         if (Array.isArray(cloud.users) && cloud.users.length > 0) {
           const userMap = new Map();
           cloud.users.forEach(u => {
@@ -3338,104 +3338,117 @@ this.settings = {
             }
           });
           this.users = mergedUsers;
-          try { localStorage.setItem('samx_users', JSON.stringify(this.users)); } catch (e) {}
+          try {
+            localStorage.setItem('samx_users', JSON.stringify(this.users));
+          } catch (e) {}
         }
 
-        // 2. مزامنة الفروع والموظفين وحالات الحضور واليوميات
-        if (localEmpty || cloudUpdatedAt > lastLocalSync) {
-          if (Array.isArray(cloud.branches) && cloud.branches.length > 0) this.branches = cloud.branches;
-          if (Array.isArray(cloud.staff) && cloud.staff.length > 0) this.staff = cloud.staff;
-          if (cloud.daily && typeof cloud.daily === 'object') {
-            const merged = Object.assign({}, this.daily || {});
-            Object.entries(cloud.daily).forEach(([k, cRec]) => {
-              if (!cRec) return;
-              if (!merged[k]) {
-                merged[k] = cRec;
-              } else {
-                const locRec = merged[k];
-                if ((Number(cRec.baseTarget) > 0 && Number(locRec.baseTarget) === 0) || cloudUpdatedAt > lastLocalSync) {
-                  locRec.baseTarget = Number(cRec.baseTarget) || locRec.baseTarget || 0;
-                }
-                if ((Number(cRec.heroesTarget) > 0 && Number(locRec.heroesTarget) === 0) || cloudUpdatedAt > lastLocalSync) {
-                  locRec.heroesTarget = Number(cRec.heroesTarget) || locRec.heroesTarget || 0;
-                }
-                if (cRec.staffData && typeof cRec.staffData === 'object') {
-                  locRec.staffData = Object.assign({}, cRec.staffData, locRec.staffData || {});
-                }
-              }
-            });
-            this.daily = merged;
-            this.normalizeAllDailyRecords();
-          }
-          if (cloud.monthlyTargets && typeof cloud.monthlyTargets === 'object') {
-            this.monthlyTargets = Object.assign({}, this.monthlyTargets || {}, cloud.monthlyTargets);
-          }
-          if (cloud.monthlyHeroesTargets && typeof cloud.monthlyHeroesTargets === 'object') {
-            this.monthlyHeroesTargets = Object.assign({}, this.monthlyHeroesTargets || {}, cloud.monthlyHeroesTargets);
-          }
-          if (cloud.attendance && typeof cloud.attendance === 'object') {
-            this.attendance = Object.assign({}, cloud.attendance, this.attendance || {});
-          }
-          if (cloud.branding && typeof cloud.branding === 'object') {
-            this.branding = { ...this.branding, ...cloud.branding };
-            try { localStorage.setItem('samx_branding', JSON.stringify(this.branding)); } catch (e) {}
-          }
-          this.persist();
-        } else {
-          // دمج السجلات اليومية الذكي
-          if (cloud.daily && typeof cloud.daily === 'object') {
-            const merged = Object.assign({}, this.daily || {});
-            let changed = false;
-            Object.entries(cloud.daily).forEach(([k, cRec]) => {
-              if (!cRec) return;
-              if (!merged[k]) {
-                merged[k] = cRec;
-                changed = true;
-              } else {
-                const locRec = merged[k];
-                if (Number(cRec.baseTarget) > 0 && Number(locRec.baseTarget) === 0) {
-                  locRec.baseTarget = Number(cRec.baseTarget);
-                  changed = true;
-                }
-                if (Number(cRec.heroesTarget) > 0 && Number(locRec.heroesTarget) === 0) {
-                  locRec.heroesTarget = Number(cRec.heroesTarget);
-                  changed = true;
-                }
-                if (cRec.staffData && typeof cRec.staffData === 'object') {
-                  locRec.staffData = Object.assign({}, cRec.staffData, locRec.staffData || {});
-                  changed = true;
-                }
-              }
-            });
-            this.daily = merged;
-            if (changed) this.normalizeAllDailyRecords();
-          }
-          if (cloud.monthlyTargets && typeof cloud.monthlyTargets === 'object') {
-            this.monthlyTargets = Object.assign({}, this.monthlyTargets || {}, cloud.monthlyTargets);
-          }
-          if (cloud.monthlyHeroesTargets && typeof cloud.monthlyHeroesTargets === 'object') {
-            this.monthlyHeroesTargets = Object.assign({}, this.monthlyHeroesTargets || {}, cloud.monthlyHeroesTargets);
-          }
-          if (cloud.attendance && typeof cloud.attendance === 'object') {
-            this.attendance = Object.assign({}, cloud.attendance, this.attendance || {});
-          }
-          this.persist();
+        // 2. مزامنة الفروع والموظفين
+        if (Array.isArray(cloud.branches) && cloud.branches.length > 0) {
+          this.branches = cloud.branches;
         }
+        if (Array.isArray(cloud.staff) && cloud.staff.length > 0) {
+          this.staff = cloud.staff;
+        }
+
+        // 3. ⭐ v23.28: دمج جدول التارجت اليومي المستورد من الإكسل باعتماد قيم السحابة لكافة التواريخ
+        if (cloud.daily && typeof cloud.daily === 'object') {
+          const mergedDaily = Object.assign({}, this.daily || {});
+          Object.entries(cloud.daily).forEach(([k, cRec]) => {
+            if (!cRec) return;
+            const parts = k.split('|');
+            const rawDate = parts[0];
+            const branchId = parts.slice(1).join('|');
+            const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(rawDate) : normalizeDateStr(rawDate)) || rawDate;
+            const targetKey = `${normDate}|${branchId}`;
+
+            if (!mergedDaily[targetKey]) {
+              mergedDaily[targetKey] = JSON.parse(JSON.stringify(cRec));
+              mergedDaily[targetKey].baseTarget = Number(cRec.baseTarget) || 0;
+              mergedDaily[targetKey].heroesTarget = Number(cRec.heroesTarget) || 0;
+            } else {
+              const locRec = mergedDaily[targetKey];
+              // التارجت المعتمد من السحابة (الإكسل) يحدّث تارجت التاريخ فوراً
+              if (cRec.baseTarget !== undefined && cRec.baseTarget !== null) {
+                locRec.baseTarget = Number(cRec.baseTarget) || 0;
+              }
+              if (cRec.heroesTarget !== undefined && cRec.heroesTarget !== null) {
+                locRec.heroesTarget = Number(cRec.heroesTarget) || 0;
+              }
+              if (cRec.monthlyTarget !== undefined && Number(cRec.monthlyTarget) > 0) {
+                locRec.monthlyTarget = Number(cRec.monthlyTarget);
+              }
+              if (cRec.mtdSales !== undefined && Number(cRec.mtdSales) > 0) {
+                locRec.mtdSales = Number(cRec.mtdSales);
+              }
+              if (!locRec.staffData || typeof locRec.staffData !== 'object') {
+                locRec.staffData = {};
+              }
+              if (cRec.staffData && typeof cRec.staffData === 'object') {
+                Object.entries(cRec.staffData).forEach(([sId, sData]) => {
+                  if (!locRec.staffData[sId]) {
+                    locRec.staffData[sId] = { ...sData };
+                  } else {
+                    if (sData.target !== undefined) locRec.staffData[sId].target = Number(sData.target) || 0;
+                    if (sData.heroesTarget !== undefined) locRec.staffData[sId].heroesTarget = Number(sData.heroesTarget) || 0;
+                    if (Number(sData.sales) > 0 && Number(locRec.staffData[sId].sales) === 0) {
+                      locRec.staffData[sId].sales = Number(sData.sales);
+                    }
+                  }
+                });
+              }
+            }
+          });
+          this.daily = mergedDaily;
+          this.normalizeAllDailyRecords();
+        }
+
+        // 4. ⭐ v23.28: مزامنة التارجت الشهري وتارجت الأبطال الشهري
+        if (cloud.monthlyTargets && typeof cloud.monthlyTargets === 'object') {
+          this.monthlyTargets = Object.assign({}, this.monthlyTargets || {}, cloud.monthlyTargets);
+        }
+        if (cloud.monthlyHeroesTargets && typeof cloud.monthlyHeroesTargets === 'object') {
+          this.monthlyHeroesTargets = Object.assign({}, this.monthlyHeroesTargets || {}, cloud.monthlyHeroesTargets);
+        }
+
+        // 5. مزامنة الحضور والهوية
+        if (cloud.attendance && typeof cloud.attendance === 'object') {
+          this.attendance = Object.assign({}, this.attendance || {}, cloud.attendance);
+        }
+        if (cloud.branding && typeof cloud.branding === 'object') {
+          this.branding = { ...this.branding, ...cloud.branding };
+        }
+
+        // 6. ⭐ v23.28: حفظ فوري لكافة الجداول في localStorage بالهاتف
+        try {
+          localStorage.setItem('samx_branches', JSON.stringify(this.branches || []));
+          localStorage.setItem('samx_staff', JSON.stringify(this.staff || []));
+          localStorage.setItem('samx_daily', JSON.stringify(this.daily || {}));
+          localStorage.setItem('samx_monthlyTargets', JSON.stringify(this.monthlyTargets || {}));
+          localStorage.setItem('samx_monthlyHeroesTargets', JSON.stringify(this.monthlyHeroesTargets || {}));
+          localStorage.setItem('samx_attendance', JSON.stringify(this.attendance || {}));
+          localStorage.setItem('samx_users', JSON.stringify(this.users || []));
+          if (this.branding) localStorage.setItem('samx_branding', JSON.stringify(this.branding));
+          localStorage.setItem('samx_last_cloud_sync', String(cloudUpdatedAt || Date.now()));
+        } catch (e) {
+          console.warn('[Sync] LocalStorage write error:', e);
+        }
+
+        // 7. ⭐ v23.28: إعادة حساب التارجت وتوزيعه وتحديث الواجهة فوراً على الهاتف
         if (this.selectedDate && this.selectedBranchId) {
           this.autoDistributeCurrentDay();
         }
+        this.refreshCharts();
 
-        // تأكيد إتمام السحب بنجاح لحماية السحابة
+        // 8. تأكيد إتمام السحب بنجاح لحماية السحابة وتفعيل إمكانية الرفع
         this._cloudPulledOnce = true;
         this.cloudSyncStatus = 'synced';
         this.cloudSyncError = '';
         const locale = this.t ? this.t('locale.time') : 'ar-SA';
         this.lastCloudSyncTime = new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
-        try { localStorage.setItem('samx_last_cloud_sync', Date.now().toString()); } catch (e) {}
 
         if (isManual) {
           this.showToast(this.currentLang === 'ar' ? 'تمت مزامنة وتحديث البيانات من السحابة بنجاح ☁️' : 'Data synchronized from cloud ☁️', 'success');
-          this.refreshCharts();
         }
       } catch (err) {
         console.warn('[CloudSync] Sync from cloud error:', err);

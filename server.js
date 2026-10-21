@@ -38,6 +38,11 @@ app.use(express.json({ limit: '15mb' }));
 const LOCAL_SYNC_FILE = path.join(__dirname, '.samx-local-sync.json');
 
 app.get('/api/sync', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+  });
   try {
     if (fs.existsSync(LOCAL_SYNC_FILE)) {
       const content = JSON.parse(fs.readFileSync(LOCAL_SYNC_FILE, 'utf-8'));
@@ -45,7 +50,7 @@ app.get('/api/sync', (req, res) => {
         success: true,
         bindingConfigured: true,
         data: content.payload,
-        version: content.version || '23.18.0',
+        version: content.version || '23.28.0',
         updated_at: content.updated_at || Date.now()
       });
     }
@@ -54,10 +59,15 @@ app.get('/api/sync', (req, res) => {
 });
 
 app.post('/api/sync', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+  });
   try {
     const body = req.body;
     const payload = body.payload || body;
-    const version = body.version || '23.18.0';
+    const version = body.version || '23.28.0';
     const now = Date.now();
     fs.writeFileSync(LOCAL_SYNC_FILE, JSON.stringify({ payload, version, updated_at: now }, null, 2), 'utf-8');
     return res.json({ success: true, bindingConfigured: true, updated_at: now, version });
