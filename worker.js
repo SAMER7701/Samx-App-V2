@@ -64,13 +64,11 @@ async function handleSync(request, env) {
 
   try {
     // 2. إنشاء الجدول الموحد النظيف samx_cloud_state بأعمدة واضحة ومطابقة لمنع أخطاء SQL
-    await db.exec(`
-      CREATE TABLE IF NOT EXISTS samx_cloud_state (
-        id TEXT PRIMARY KEY,
-        payload TEXT,
-        updated_at INTEGER
-      );
-    `);
+    try {
+      await db.prepare('CREATE TABLE IF NOT EXISTS samx_cloud_state (id TEXT PRIMARY KEY, payload TEXT, updated_at INTEGER)').run();
+    } catch (tableErr) {
+      console.warn('[D1 Table Init Warning]:', tableErr);
+    }
 
     // 3. معالجة طلب الحفظ (POST)
     if (request.method === 'POST') {
@@ -135,13 +133,9 @@ async function handleSync(request, env) {
       const payloadStr = JSON.stringify(mergedPayload);
       const now = Date.now();
 
-      await db.prepare(`
-        INSERT INTO samx_cloud_state (id, payload, updated_at)
-        VALUES ('latest', ?, ?)
-        ON CONFLICT(id) DO UPDATE SET
-          payload = excluded.payload,
-          updated_at = excluded.updated_at
-      `).bind(payloadStr, now).run();
+      await db.prepare('INSERT INTO samx_cloud_state (id, payload, updated_at) VALUES (\'latest\', ?, ?) ON CONFLICT(id) DO UPDATE SET payload = excluded.payload, updated_at = excluded.updated_at')
+        .bind(payloadStr, now)
+        .run();
 
       return new Response(
         JSON.stringify({
