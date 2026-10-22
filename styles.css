@@ -70,6 +70,7 @@ html, body {
   margin: 0;
   padding: 0;
   overscroll-behavior: none;
+  overflow-x: hidden;
   font-size: var(--app-font-size, 15px);
 }
 
@@ -78,6 +79,8 @@ body {
   color: #e5e7eb;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 
 html.light body {
@@ -720,6 +723,10 @@ html.light .quick-btn {
   border-left: 1px solid #243356;
   z-index: 55;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-top: max(env(safe-area-inset-top), 0px);
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
 }
 html.light .drawer { background: #ffffff; }
 
@@ -742,8 +749,8 @@ html.light .drawer { background: #ffffff; }
   background: #0e1628;
   width: 100%;
   max-width: 640px;
-  max-height: 88dvh;
   max-height: 88vh;
+  max-height: 88dvh;
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -754,7 +761,7 @@ html.light .drawer { background: #ffffff; }
   box-shadow: 0 -16px 48px rgba(0,0,0,.7);
   animation: sheetSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   touch-action: pan-y;
-  padding-bottom: 0 !important;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 .bottom-sheet::-webkit-scrollbar {
   width: 6px;
@@ -792,6 +799,7 @@ html.light .bottom-sheet-handle { background: #cbd5e1; }
     border-radius: 18px;
     border: 1px solid rgba(var(--theme-primary-rgb, 212,168,75), 0.25);
     max-height: 88vh;
+    max-height: 88dvh;
     box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
     animation: modalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -848,7 +856,7 @@ html.light .modal-title-pro {
   flex-shrink: 0;
   background: rgba(14, 22, 40, 0.98);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 12px 18px;
+  padding: 12px 18px calc(14px + env(safe-area-inset-bottom, 0px)) 18px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -2388,6 +2396,7 @@ html.light .theme-preset-name { color: #0f172a; }
   overflow: hidden;
   box-shadow: 0 30px 80px rgba(0,0,0,.6);
   max-height: calc(100vh - 100px);
+  max-height: calc(100dvh - 100px);
   display: flex;
   flex-direction: column;
 }
@@ -2502,6 +2511,7 @@ html.light .search-result-title { color: #0f172a; }
   .search-modal {
     border-radius: 16px;
     max-height: calc(100vh - 90px);
+    max-height: calc(100dvh - 90px);
   }
   .search-input { font-size: 16px; }
   .compare-grid { grid-template-columns: 1fr; }
@@ -3979,11 +3989,11 @@ html.light .lang-fab:hover {
 
   /* 15. Bottom Sheet في الجوال */
   .bottom-sheet {
-    max-height: 85dvh !important;
     max-height: 85vh !important;
+    max-height: 85dvh !important;
     display: flex !important;
     flex-direction: column !important;
-    padding-bottom: 0 !important;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   /* 16. Toast أنحف */
@@ -4861,6 +4871,7 @@ html.light .share-direct-btn {
   width: 100%;
   max-width: 720px;
   max-height: 95vh;
+  max-height: 95dvh;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -4917,6 +4928,7 @@ html.light .image-preview-header h3 {
   padding: 12px;
   min-height: 200px;
   max-height: 60vh;
+  max-height: 60dvh;
 }
 html.light .image-preview-body {
   background: #f1f5f9;
@@ -5165,11 +5177,18 @@ html.light .table-scroll-hint {
   }
 
   /* منع تكبير الشاشة المزعج على هواتف آيفون عند التركيز في الحقول */
+  input,
   input[type="number"],
   input[type="text"],
+  input[type="password"],
+  input[type="search"],
+  input[type="email"],
+  input[type="tel"],
   input[type="date"],
   input[type="month"],
-  select {
+  textarea,
+  select,
+  .input {
     font-size: 16px !important;
   }
 }
@@ -5206,7 +5225,7 @@ header {
   padding-bottom: max(env(safe-area-inset-bottom), 6px);
 }
 .bottom-sheet {
-  padding-bottom: 0 !important;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 /* ─── 6. خيار حجم العرض والخطوط (UI Scale & Zoom) ─── */
