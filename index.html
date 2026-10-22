@@ -44,7 +44,7 @@
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
 <!-- ⭐ v23.31: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.33.0" rel="stylesheet">
+<link href="styles.css?v=23.34.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -523,7 +523,6 @@
             <button type="button" @click="shiftDate(-7)" class="quick-date-btn" dir="ltr" style="height:38px;padding:0;display:flex;align-items:center;justify-content:center;">{{ t('dashboard.filter.minus7') }}</button>
             <button type="button" @click="shiftDate(1)" :disabled="isTodaySelected" class="quick-date-btn" dir="ltr" :style="{opacity: isTodaySelected ? .4 : 1, height:'38px', padding:'0', display:'flex', alignItems:'center', justifyContent:'center'}">{{ t('dashboard.filter.plus1') }}</button>
           </div>
-        </div>
           <div v-if="selectedDate !== todayStr" :style="{
             marginTop: '12px',
             padding: '10px 14px',
@@ -1101,7 +1100,7 @@
                     </div>
                   </div>
                   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;font-size:11px;margin-top:6px;">
-                    <div><p style="color:#94a3b8;margin:0;">{{ t('kpi.rank.sales') }}</p><p style="color:#fff;font-weight:700;margin:2px 0 0;">{{ formatSAR(emp.sales) }}</p>/div>
+                    <div><p style="color:#94a3b8;margin:0;">{{ t('kpi.rank.sales') }}</p><p style="color:#fff;font-weight:700;margin:2px 0 0;">{{ formatSAR(emp.sales) }}</p></div>
                     <div><p style="color:#94a3b8;margin:0;">{{ t('kpi.rank.target') }}</p><p style="color:#60a5fa;font-weight:700;margin:2px 0 0;">{{ formatSAR(emp.target) }}</p></div>
                   </div>
                   <div class="progress-bar" style="margin-top:8px;"><div class="progress-bar-fill" :style="{width: Math.min(emp.pct,100)+'%', background: emp.pct>=100 ? '#10b981' : emp.pct>=70 ? '#f59e0b' : '#ef4444'}"></div></div>
@@ -3644,7 +3643,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.33.0"></script>
+<script src="app.js?v=23.34.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {
