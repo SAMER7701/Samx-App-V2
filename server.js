@@ -51,7 +51,7 @@ app.get('/api/sync', (req, res) => {
         status: 'ok',
         bindingConfigured: true,
         data: content.payload,
-        version: content.version || '23.32.0',
+        version: content.version || '23.33.0',
         updated_at: content.updated_at || Date.now()
       });
     }
@@ -96,7 +96,7 @@ app.post('/api/sync', (req, res) => {
       } catch (err) {}
     }
 
-    const version = body.version || '23.32.0';
+    const version = body.version || '23.33.0';
     const now = Date.now();
     fs.writeFileSync(LOCAL_SYNC_FILE, JSON.stringify({ payload: mergedPayload, version, updated_at: now }, null, 2), 'utf-8');
     return res.json({ success: true, bindingConfigured: true, updated_at: now, version });

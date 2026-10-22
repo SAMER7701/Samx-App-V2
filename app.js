@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.32.0 — app.js
+//  SAMX v23.33.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.32.0';
+const APP_VERSION = '23.33.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -593,27 +593,27 @@ createApp({
     },
     // ⭐ v23-FIX: خصائص قابلة للكتابة مرتبطة بـ dayData
     branchBaseTarget: {
-      get() { return Number(this.dayData?.baseTarget) || 0; },
+      get() { return Math.round(Number(this.dayData?.baseTarget) || 0); },
       set(val) {
         if (!this.selectedBranchId) return;
         const normDate = this.normalizeDateStr(this.selectedDate) || this.selectedDate;
         const key = `${normDate}|${this.selectedBranchId}`;
         const rec = this.normalizeDayRecord(key);
         if (!rec) return;
-        rec.baseTarget = Number(val) || 0;
+        rec.baseTarget = Math.round(Number(val) || 0);
         this.autoDistributeCurrentDay();
         this.schedulePersist();
       }
     },
     branchHeroesTarget: {
-      get() { return Number(this.dayData?.heroesTarget) || 0; },
+      get() { return Math.round(Number(this.dayData?.heroesTarget) || 0); },
       set(val) {
         if (!this.selectedBranchId) return;
         const normDate = this.normalizeDateStr(this.selectedDate) || this.selectedDate;
         const key = `${normDate}|${this.selectedBranchId}`;
         const rec = this.normalizeDayRecord(key);
         if (!rec) return;
-        rec.heroesTarget = Number(val) || 0;
+        rec.heroesTarget = Math.round(Number(val) || 0);
         this.autoDistributeCurrentDay();
         this.schedulePersist();
       }
@@ -797,16 +797,16 @@ createApp({
 
       const rows = this.branchStaff.map(s => {
         const sd = staffData[s.id] || { target: 0, heroesTarget: 0, sales: 0 };
-        let target = Number(sd.target) || 0;
-        let heroesTarget = Number(sd.heroesTarget) || 0;
+        let target = Math.round(Number(sd.target) || 0);
+        let heroesTarget = Math.round(Number(sd.heroesTarget) || 0);
         const present = this.isPresent(s.id);
 
         // ⭐ ربط فوري مع تارجت الإكسل: إذا كان تارجت اليوم موجوداً ولم يوزع بعد في staffData
         if (target === 0 && Number(d.baseTarget) > 0 && present && pCount > 0) {
-          target = Math.round((Number(d.baseTarget) / pCount) * 100) / 100;
+          target = Math.round(Number(d.baseTarget) / pCount);
         }
         if (heroesTarget === 0 && Number(d.heroesTarget) > 0 && present && pCount > 0) {
-          heroesTarget = Math.round((Number(d.heroesTarget) / pCount) * 100) / 100;
+          heroesTarget = Math.round(Number(d.heroesTarget) / pCount);
         }
 
         const sales = Number(sd.sales) || 0;
@@ -2976,7 +2976,9 @@ this.settings = {
       const sd = this.ensureStaffRecord(key, staffId);
       if (!sd) return;
       const oldVal = sd[field] || 0;
-      const newVal = Number(value) || 0;
+      const newVal = (field === 'target' || field === 'heroesTarget')
+        ? Math.round(Number(value) || 0)
+        : (Number(value) || 0);
       if (oldVal !== newVal) {
         sd[field] = newVal;
         this.updateLiveTime();
@@ -3073,8 +3075,8 @@ this.settings = {
       }
       const baseTotal = Number(rec.baseTarget) || 0;
       const heroesTotal = Number(rec.heroesTarget) || 0;
-      const basePer = Math.round((baseTotal / present.length) * 100) / 100;
-      const heroesPer = Math.round((heroesTotal / present.length) * 100) / 100;
+      const basePer = Math.round(baseTotal / present.length);
+      const heroesPer = Math.round(heroesTotal / present.length);
       branchStaffList.forEach(s => {
         const sd = this.ensureStaffRecord(key, s.id);
         if (!sd) return;
@@ -4292,8 +4294,8 @@ this.settings = {
     },
 
     formatNum(n) {
-      n = Number(n) || 0;
-      return n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+      n = Math.round(Number(n) || 0);
+      return n.toLocaleString('en-US', { maximumFractionDigits: 0, minimumFractionDigits: 0 });
     },
     // ⭐ v23.13: تنسيق العملة — الرمز الرسمي الجديد U+20C1 بخط مدعوم بالكامل أو النص الصريح ر.س
     formatSAR(amount) {
@@ -4710,7 +4712,7 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
           const key = `${normDate}|${row.matchedBranchId}`;
           const rec = this.normalizeDayRecord(key);
           if (!rec) return;
-          rec.baseTarget = Number(value) || 0;
+          rec.baseTarget = Math.round(Number(value) || 0);
           appliedDays++;
         });
         Object.entries(row.heroesDays).forEach(([date, value]) => {
@@ -4718,11 +4720,11 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
           const key = `${normDate}|${row.matchedBranchId}`;
           const rec = this.normalizeDayRecord(key);
           if (!rec) return;
-          rec.heroesTarget = Number(value) || 0;
+          rec.heroesTarget = Math.round(Number(value) || 0);
         });
         const monthlyKey = `${month}|${row.matchedBranchId}`;
-        this.monthlyTargets[monthlyKey] = Math.round(row.basicSumFromDays * 100) / 100;
-        this.monthlyHeroesTargets[monthlyKey] = Math.round(row.heroesSumFromDays * 100) / 100;
+        this.monthlyTargets[monthlyKey] = Math.round(row.basicSumFromDays || 0);
+        this.monthlyHeroesTargets[monthlyKey] = Math.round(row.heroesSumFromDays || 0);
         appliedBranches++;
       });
       this.logActivity(this.t('log.import.monthly'), `${appliedBranches} فرع • ${appliedDays} يوم • ${month}`);

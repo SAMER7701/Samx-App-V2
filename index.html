@@ -44,7 +44,7 @@
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
 <!-- ⭐ v23.31: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.32.0" rel="stylesheet">
+<link href="styles.css?v=23.33.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -501,26 +501,29 @@
           </div>
         </div>
 
-        <div class="card" style="border-radius:16px;padding:16px;">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;align-items:end;">
+        <div class="card" style="border-radius:14px;padding:12px 14px;">
+          <!-- شبكة مدمجة لحقلي التاريخ والفرع جنباً إلى جنب -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end;margin-bottom:10px;">
             <div>
-              <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600;">{{ t('dashboard.filter.date') }}</label>
-              <input type="date" v-model="selectedDate" :max="maxDate" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;">
+              <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:700;">{{ t('dashboard.filter.date') }}</label>
+              <input type="date" v-model="selectedDate" :max="maxDate" class="input" style="width:100%;height:40px;min-height:40px;padding:6px 10px;font-size:14px;border-radius:8px;">
             </div>
             <div>
-              <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600;">{{ t('dashboard.filter.branch') }}</label>
-              <select v-model="selectedBranchId" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;">
+              <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:700;">{{ t('dashboard.filter.branch') }}</label>
+              <select v-model="selectedBranchId" class="input" style="width:100%;height:40px;min-height:40px;padding:6px 10px;font-size:14px;border-radius:8px;">
                 <option value="">{{ t('common.chooseBranch') }}</option>
                 <option v-for="b in allowedBranches" :key="b.id" :value="b.id">{{ b.name }} ({{ b.code }})</option>
               </select>
             </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <button @click="setDate('today')" :class="['quick-date-btn', isTodaySelected ? 'active' : '']">{{ t('dashboard.filter.today') }}</button>
-              <button @click="setDate('yesterday')" :class="['quick-date-btn', isYesterdaySelected ? 'active' : '']">{{ t('dashboard.filter.yesterday') }}</button>
-              <button @click="shiftDate(-7)" class="quick-date-btn">{{ t('dashboard.filter.minus7') }}</button>
-              <button @click="shiftDate(1)" :disabled="isTodaySelected" class="quick-date-btn" :style="{opacity: isTodaySelected ? .4 : 1}">{{ t('dashboard.filter.plus1') }}</button>
-            </div>
           </div>
+          <!-- أزرار التاريخ السريعة في صف واحد متساوي العرض وباتجاه سليم -->
+          <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:6px;width:100%;">
+            <button type="button" @click="setDate('today')" :class="['quick-date-btn', isTodaySelected ? 'active' : '']" style="height:38px;padding:0;display:flex;align-items:center;justify-content:center;">{{ t('dashboard.filter.today') }}</button>
+            <button type="button" @click="setDate('yesterday')" :class="['quick-date-btn', isYesterdaySelected ? 'active' : '']" style="height:38px;padding:0;display:flex;align-items:center;justify-content:center;">{{ t('dashboard.filter.yesterday') }}</button>
+            <button type="button" @click="shiftDate(-7)" class="quick-date-btn" dir="ltr" style="height:38px;padding:0;display:flex;align-items:center;justify-content:center;">{{ t('dashboard.filter.minus7') }}</button>
+            <button type="button" @click="shiftDate(1)" :disabled="isTodaySelected" class="quick-date-btn" dir="ltr" :style="{opacity: isTodaySelected ? .4 : 1, height:'38px', padding:'0', display:'flex', alignItems:'center', justifyContent:'center'}">{{ t('dashboard.filter.plus1') }}</button>
+          </div>
+        </div>
           <div v-if="selectedDate !== todayStr" :style="{
             marginTop: '12px',
             padding: '10px 14px',
@@ -699,21 +702,25 @@
               <button @click="showShareModal = true" class="btn-gold">{{ t('summary.shareBtn') }}</button>
             </div>
           </div>
-          <div class="card" style="border-radius:16px;padding:16px;">
-            <h3 style="font-size:13px;font-weight:bold;color:#e6c074;margin:0 0 12px;">{{ t('dashboard.target.title') }}</h3>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;">
+          <div class="card" style="border-radius:14px;padding:12px 14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <h3 style="font-size:12px;font-weight:bold;color:#e6c074;margin:0;">{{ t('dashboard.target.title') }}</h3>
+            </div>
+            <!-- شبكة من عمودين جنباً إلى جنب للتارجت الأساسي وتارجت الأبطال -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
               <div class="form-group-pro" style="margin-bottom:0;">
-                <label class="form-label-pro" style="color:#60a5fa;">🎯 {{ t('dashboard.target.baseLabel') }}</label>
-                <input type="number" min="0" inputmode="numeric" :value="branchBaseTarget === 0 ? '' : branchBaseTarget" @focus="$event.target.select()" @input="branchBaseTarget = Number($event.target.value) || 0" :disabled="!canEditTarget" class="target-input-base" placeholder="0">
+                <label class="form-label-pro" style="color:#60a5fa;font-size:11px;margin-bottom:3px;">{{ t('dashboard.target.baseLabel') }}</label>
+                <input type="number" min="0" inputmode="numeric" :value="branchBaseTarget === 0 ? '' : Math.round(branchBaseTarget)" @focus="$event.target.select()" @input="branchBaseTarget = Math.round(Number($event.target.value) || 0)" :disabled="!canEditTarget" class="target-input-base compact-target-input" placeholder="0">
               </div>
               <div class="form-group-pro" style="margin-bottom:0;">
-                <label class="form-label-pro" style="color:#e6c074;">⭐ {{ t('dashboard.target.heroesLabel') }}</label>
-                <input type="number" min="0" inputmode="numeric" :value="branchHeroesTarget === 0 ? '' : branchHeroesTarget" @focus="$event.target.select()" @input="branchHeroesTarget = Number($event.target.value) || 0" :disabled="!canEditTarget" class="target-input-heroes" placeholder="0">
+                <label class="form-label-pro" style="color:#e6c074;font-size:11px;margin-bottom:3px;">{{ t('dashboard.target.heroesLabel') }}</label>
+                <input type="number" min="0" inputmode="numeric" :value="branchHeroesTarget === 0 ? '' : Math.round(branchHeroesTarget)" @focus="$event.target.select()" @input="branchHeroesTarget = Math.round(Number($event.target.value) || 0)" :disabled="!canEditTarget" class="target-input-heroes compact-target-input" placeholder="0">
               </div>
-              <div class="form-group-pro" style="margin-bottom:0;">
-                <label class="form-label-pro" style="color:#94a3b8;">➕ {{ t('dashboard.target.manualExtraLabel') }}</label>
-                <input type="number" min="0" inputmode="numeric" :value="branchManualExtra === 0 ? '' : branchManualExtra" @focus="$event.target.select()" @input="branchManualExtra = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="target-input" placeholder="0">
-              </div>
+            </div>
+            <!-- حقل المبيعات العامة بدون موظف بشكل مدمج ومتناسق -->
+            <div v-if="canEnterDailySales" style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;">
+              <label style="font-size:11px;color:#94a3b8;white-space:nowrap;margin:0;">{{ t('dashboard.target.manualExtraLabel') }}:</label>
+              <input type="number" min="0" inputmode="numeric" :value="branchManualExtra === 0 ? '' : Math.round(branchManualExtra)" @focus="$event.target.select()" @input="branchManualExtra = Math.round(Number($event.target.value) || 0)" class="target-input compact-target-input" placeholder="0" style="flex:1;max-width:180px;">
             </div>
           </div>
 
@@ -731,12 +738,12 @@
             <!-- 4 Inputs: Invoices, Pieces, Monthly Target, MTD Sales -->
             <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;margin-bottom:12px;margin-top:10px;">
               <div>
-                <label style="display:block;font-size:11px;color:#93c5fd;margin-bottom:4px;font-weight:bold;">🧾 {{ t('dashboard.invPcs.invoicesLabel') }}</label>
+                <label style="display:block;font-size:11px;color:#93c5fd;margin-bottom:4px;font-weight:bold;">{{ t('dashboard.invPcs.invoicesLabel') }}</label>
                 <input type="number" min="0" inputmode="numeric" :value="branchInvoicesInput === 0 ? '' : branchInvoicesInput" @focus="$event.target.select()" @input="branchInvoicesInput = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="invoice-input" placeholder="0">
                 <p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ t('dashboard.invPcs.invoicesHint') }}</p>
               </div>
               <div>
-                <label style="display:block;font-size:11px;color:#c4b5fd;margin-bottom:4px;font-weight:bold;">📦 {{ t('dashboard.invPcs.piecesLabel') }}</label>
+                <label style="display:block;font-size:11px;color:#c4b5fd;margin-bottom:4px;font-weight:bold;">{{ t('dashboard.invPcs.piecesLabel') }}</label>
                 <input type="number" min="0" inputmode="numeric" :value="branchPiecesInput === 0 ? '' : branchPiecesInput" @focus="$event.target.select()" @input="branchPiecesInput = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="pieces-input" placeholder="0">
                 <p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ t('dashboard.invPcs.piecesHint') }}</p>
               </div>
@@ -801,10 +808,14 @@
                 </thead>
                 <tbody>
                   <tr v-for="s in paginatedStaff" :key="s.id" :class="s.present ? 'att-present' : 'att-absent'" style="border-bottom:1px solid rgba(36,51,86,.5);">
-                    <td style="padding:10px 6px;text-align:center;">
-                      <input type="checkbox" class="att-cb" :checked="s.present" @change="toggleAttendance(s.id)" :disabled="!canManageAttendance">
+                    <td style="padding:8px 6px;text-align:center;">
+                      <button type="button" @click="toggleAttendance(s.id)" :disabled="!canManageAttendance"
+                        :class="['attendance-pill-btn', s.present ? 'is-present' : 'is-absent']"
+                        :title="s.present ? (currentLang === 'ar' ? 'حاضر (انقر للتحويل لغائب)' : 'Present (click to mark absent)') : (currentLang === 'ar' ? 'غائب (انقر للتحويل لحاضر)' : 'Absent (click to mark present)')">
+                        {{ s.present ? (currentLang === 'ar' ? '✅ حاضر' : '✅ Present') : (currentLang === 'ar' ? '⭕ غائب' : '⭕ Absent') }}
+                      </button>
                     </td>
-                    <td style="padding:10px 6px;">
+                    <td style="padding:8px 6px;">
                       <div style="display:flex;align-items:center;gap:10px;">
                         <div class="avatar-wrapper">
                           <div class="staff-avatar small">
@@ -822,9 +833,9 @@
                         </div>
                       </div>
                     </td>
-                    <td style="padding:10px 6px;"><input type="number" min="0" inputmode="numeric" :value="s.target === 0 ? '' : s.target" @focus="$event.target.select()" @input="updateStaffField(s.id, 'target', $event.target.value)" :disabled="!canEditTarget" class="target-input" placeholder="0"></td>
-                    <td style="padding:10px 6px;"><input type="number" min="0" inputmode="numeric" :value="s.heroesTarget === 0 ? '' : s.heroesTarget" @focus="$event.target.select()" @input="updateStaffField(s.id, 'heroesTarget', $event.target.value)" :disabled="!canEditTarget" class="target-input" placeholder="0"></td>
-                    <td style="padding:10px 6px;"><input type="number" min="0" inputmode="numeric" :value="s.sales === 0 ? '' : s.sales" @focus="$event.target.select()" @input="updateStaffField(s.id, 'sales', $event.target.value)" @keydown.enter.prevent="onSalesEnter(s.id)" :data-staff-sales="s.id" :disabled="!canEnterDailySales || !s.present" class="sales-input" placeholder="0" :style="{opacity: !s.present ? 0.4 : 1}"></td>
+                    <td style="padding:8px 6px;"><input type="number" min="0" inputmode="numeric" :value="s.target === 0 ? '' : Math.round(s.target)" @focus="$event.target.select()" @input="updateStaffField(s.id, 'target', $event.target.value)" :disabled="!canEditTarget" class="target-input compact-target-input" placeholder="0"></td>
+                    <td style="padding:8px 6px;"><input type="number" min="0" inputmode="numeric" :value="s.heroesTarget === 0 ? '' : Math.round(s.heroesTarget)" @focus="$event.target.select()" @input="updateStaffField(s.id, 'heroesTarget', $event.target.value)" :disabled="!canEditTarget" class="target-input compact-target-input" placeholder="0"></td>
+                    <td style="padding:8px 6px;"><input type="number" min="0" step="any" inputmode="decimal" :value="s.sales === 0 ? '' : s.sales" @focus="$event.target.select()" @input="updateStaffField(s.id, 'sales', $event.target.value)" @keydown.enter.prevent="onSalesEnter(s.id)" :data-staff-sales="s.id" :disabled="!canEnterDailySales || !s.present" class="sales-input compact-sales-input" :placeholder="currentLang === 'ar' ? 'أدخل المبيعات...' : 'Enter sales...'" :style="{opacity: !s.present ? 0.4 : 1}"></td>
                     <td style="padding:10px 6px;">
                       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
                         <span style="font-size:15px;font-weight:900;" :style="{color: s.pct>=100 ? '#34d399' : s.pct>=70 ? '#fbbf24' : s.pct>0 ? '#fb7185' : '#64748b'}">{{ s.pct.toFixed(0) }}%</span>
@@ -867,7 +878,11 @@
             <div v-else style="display:flex;flex-direction:column;gap:12px;">
               <div v-for="s in branchStaffSorted" :key="s.id" :class="['staff-card', s.present ? 'present' : 'absent']">
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <input type="checkbox" class="att-cb" :checked="s.present" @change="toggleAttendance(s.id)" :disabled="!canManageAttendance" style="width:26px;height:26px;">
+                  <button type="button" @click="toggleAttendance(s.id)" :disabled="!canManageAttendance"
+                    :class="['attendance-pill-btn', s.present ? 'is-present' : 'is-absent']"
+                    :title="s.present ? (currentLang === 'ar' ? 'حاضر (انقر للتحويل لغائب)' : 'Present (click to mark absent)') : (currentLang === 'ar' ? 'غائب (انقر للتحويل لحاضر)' : 'Absent (click to mark present)')">
+                    {{ s.present ? (currentLang === 'ar' ? '✅ حاضر' : '✅ Present') : (currentLang === 'ar' ? '⭕ غائب' : '⭕ Absent') }}
+                  </button>
                   <div class="avatar-wrapper">
                     <div class="staff-avatar">
                       <img v-if="getStaffPhoto(s.id)" :src="getStaffPhoto(s.id)" :alt="s.name">
@@ -879,35 +894,33 @@
                     </label>
                   </div>
                   <div style="flex:1;min-width:0;">
-                    <p style="font-weight:700;color:#fff;margin:0;font-size:15px;">{{ s.name }} <span v-if="s.isTop" style="color:#e6c074;">🏆</span></p>
+                    <p style="font-weight:700;color:#fff;margin:0;font-size:14px;">{{ s.name }} <span v-if="s.isTop" style="color:#e6c074;">🏆</span></p>
                     <p style="font-size:11px;color:#93c5fd;margin:2px 0 0;">{{ jobTitleLabel(s.jobTitle) }}</p>
                   </div>
                   <div style="text-align:left;">
-                    <p style="font-size:20px;font-weight:900;margin:0;" :style="{color: s.pct>=100 ? '#34d399' : s.pct>=70 ? '#fbbf24' : s.pct>0 ? '#fb7185' : '#64748b'}">{{ s.pct.toFixed(0) }}%</p>
+                    <p style="font-size:18px;font-weight:900;margin:0;" :style="{color: s.pct>=100 ? '#34d399' : s.pct>=70 ? '#fbbf24' : s.pct>0 ? '#fb7185' : '#64748b'}">{{ s.pct.toFixed(0) }}%</p>
                   </div>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                  <div style="background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.2);border-radius:12px;padding:8px 10px;">
-                    <label style="display:block;font-size:11px;color:#93c5fd;margin-bottom:4px;font-weight:700;">{{ t('dashboard.staff.mobile.targetLabel') }}</label>
-                    <input type="number" min="0" inputmode="numeric" :value="s.target === 0 ? '' : s.target" @focus="$event.target.select()" @input="updateStaffField(s.id, 'target', $event.target.value)" :disabled="!canEditTarget" class="target-input" placeholder="0" style="background:transparent;border:none;font-weight:800;font-size:16px;color:#fff;width:100%;">
+                  <div style="background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.2);border-radius:10px;padding:6px 10px;">
+                    <label style="display:block;font-size:11px;color:#93c5fd;margin-bottom:2px;font-weight:700;">{{ t('dashboard.staff.mobile.targetLabel') }}</label>
+                    <input type="number" min="0" inputmode="numeric" :value="s.target === 0 ? '' : Math.round(s.target)" @focus="$event.target.select()" @input="updateStaffField(s.id, 'target', $event.target.value)" :disabled="!canEditTarget" class="target-input compact-target-input" placeholder="0" style="background:transparent;border:none;font-weight:800;font-size:15px;color:#fff;width:100%;height:32px;min-height:32px;padding:0;text-align:start;">
                   </div>
-                  <div style="background:rgba(230,192,116,.08);border:1px solid rgba(230,192,116,.25);border-radius:12px;padding:8px 10px;">
-                    <label style="display:block;font-size:11px;color:#fcd34d;margin-bottom:4px;font-weight:700;">{{ t('dashboard.staff.mobile.heroesLabel') }}</label>
-                    <input type="number" min="0" inputmode="numeric" :value="s.heroesTarget === 0 ? '' : s.heroesTarget" @focus="$event.target.select()" @input="updateStaffField(s.id, 'heroesTarget', $event.target.value)" :disabled="!canEditTarget" class="target-input" placeholder="0" style="background:transparent;border:none;font-weight:800;font-size:16px;color:#fff;width:100%;">
+                  <div style="background:rgba(230,192,116,.08);border:1px solid rgba(230,192,116,.25);border-radius:10px;padding:6px 10px;">
+                    <label style="display:block;font-size:11px;color:#fcd34d;margin-bottom:2px;font-weight:700;">{{ t('dashboard.staff.mobile.heroesLabel') }}</label>
+                    <input type="number" min="0" inputmode="numeric" :value="s.heroesTarget === 0 ? '' : Math.round(s.heroesTarget)" @focus="$event.target.select()" @input="updateStaffField(s.id, 'heroesTarget', $event.target.value)" :disabled="!canEditTarget" class="target-input compact-target-input" placeholder="0" style="background:transparent;border:none;font-weight:800;font-size:15px;color:#fff;width:100%;height:32px;min-height:32px;padding:0;text-align:start;">
                   </div>
                 </div>
                 <div>
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                    <label style="display:block;font-size:12px;color:#34d399;font-weight:800;">{{ t('dashboard.staff.mobile.salesLabel') }}</label>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    <label style="display:block;font-size:11px;color:#34d399;font-weight:800;">{{ t('dashboard.staff.mobile.salesLabel') }}</label>
                     <span v-if="s.sales > 0" style="font-size:11px;color:#94a3b8;font-weight:600;">{{ formatSAR(s.sales) }}</span>
                   </div>
-                  <div style="display:flex;gap:8px;align-items:center;">
-                    <button class="quick-btn" @click="adjustSales(s.id, -1000)" :disabled="!canEnterDailySales || !s.present" title="-1000" aria-label="Decrease sales">−</button>
-                    <input type="number" min="0" inputmode="numeric" :value="s.sales === 0 ? '' : s.sales" @focus="$event.target.select()" @input="updateStaffField(s.id, 'sales', $event.target.value)" @keydown.enter.prevent="onSalesEnter(s.id)" :data-staff-sales="s.id" :disabled="!canEnterDailySales || !s.present" class="sales-input" placeholder="0" :style="{flex:1, opacity: !s.present ? 0.4 : 1}">
-                    <button class="quick-btn" @click="adjustSales(s.id, 1000)" :disabled="!canEnterDailySales || !s.present" title="+1000" aria-label="Increase sales">+</button>
+                  <div style="width:100%;">
+                    <input type="number" min="0" step="any" inputmode="decimal" :value="s.sales === 0 ? '' : s.sales" @focus="$event.target.select()" @input="updateStaffField(s.id, 'sales', $event.target.value)" @keydown.enter.prevent="onSalesEnter(s.id)" :data-staff-sales="s.id" :disabled="!canEnterDailySales || !s.present" class="sales-input compact-sales-input" :placeholder="currentLang === 'ar' ? 'أدخل المبيعات...' : 'Enter sales...'" :style="{width:'100%', opacity: !s.present ? 0.4 : 1}">
                   </div>
                 </div>
-                <div class="progress-bar" style="height:6px;"><div class="progress-bar-fill" :style="{width: Math.min(s.pct,100)+'%', background: s.pct>=100 ? '#10b981' : s.pct>=70 ? '#f59e0b' : '#ef4444'}"></div></div>
+                <div class="progress-bar" style="height:5px;"><div class="progress-bar-fill" :style="{width: Math.min(s.pct,100)+'%', background: s.pct>=100 ? '#10b981' : s.pct>=70 ? '#f59e0b' : '#ef4444'}"></div></div>
               </div>
             </div>
           </div>
@@ -3631,7 +3644,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.32.0"></script>
+<script src="app.js?v=23.33.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

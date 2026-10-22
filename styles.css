@@ -153,9 +153,10 @@ html.light .card-elevated {
   border: 1px solid #243356;
   color: #e5e7eb;
   border-radius: 10px;
-  font-size: 13px;
-  min-height: 38px;
-  padding: 8px 12px;
+  font-size: 15px;
+  min-height: 40px;
+  height: 40px;
+  padding: 6px 12px;
   font-family: inherit;
   transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
@@ -419,21 +420,76 @@ html.light .btn-ghost:hover { background: #e2e8f0; color: #0f172a; }
 .att-present { background: rgba(16,185,129,.06); }
 .att-absent { background: rgba(244,63,94,.06); opacity: .7; }
 
+/* شارة الحضور التفاعلية المدمجة */
+.attendance-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all .15s ease;
+  white-space: nowrap;
+  font-family: inherit;
+  user-select: none;
+}
+.attendance-pill-btn.is-present {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+.attendance-pill-btn.is-present:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+.attendance-pill-btn.is-absent {
+  background: rgba(239, 68, 68, 0.14);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+.attendance-pill-btn.is-absent:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.24);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+.attendance-pill-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .sales-input {
   background: #0a1f17;
   border: 1.5px solid #10b981;
   color: #ffffff;
-  font-weight: 900;
-  font-size: 14px;
-  min-height: 36px;
-  padding: 6px 8px;
-  border-radius: 8px;
+  font-weight: 800;
+  font-size: 15px;
+  height: 40px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 10px;
   width: 100%;
   text-align: center;
   transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.35);
   letter-spacing: 0.5px;
   box-sizing: border-box;
+}
+.compact-sales-input {
+  height: 40px !important;
+  min-height: 40px !important;
+  font-size: 15px !important;
+  padding: 6px 12px !important;
+  border-radius: 10px !important;
+}
+.compact-target-input {
+  height: 40px !important;
+  min-height: 40px !important;
+  font-size: 15px !important;
+  padding: 6px 12px !important;
+  border-radius: 10px !important;
 }
 .sales-input:focus {
   outline: none;
@@ -2307,20 +2363,20 @@ html.light .compare-bar { background: #e2e8f0; border-color: #cbd5e1; }
 }
 .avatar-upload-btn {
   position: absolute;
-  bottom: -2px;
-  left: -2px;
-  width: 22px;
-  height: 22px;
+  bottom: -3px;
+  left: -3px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--theme-primary, #d4a84b);
   color: #0b1220;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 8px;
   line-height: 1;
   cursor: pointer;
-  border: 2px solid #0b1220;
+  border: 2px solid #0e1628;
   transition: all .2s;
   opacity: 0;
   pointer-events: none;
@@ -3811,43 +3867,45 @@ html.light .lang-fab:hover {
     font-size: 11px !important;
   }
 
-  /* 7. حقول الإدخال مريحة للأصبع ومطابقة لمعايير الجوال (16px لمنع zoom الآيفون) */
+  /* 7. حقول الإدخال بمعايير مدمجة وأنيقة (Compact Financial UI 40px) */
   .input,
-  .target-input {
-    padding: 10px 12px !important;
-    font-size: 16px !important;
-    min-height: 44px !important;
-    height: 44px !important;
+  .target-input,
+  .target-input-base,
+  .target-input-heroes {
+    padding: 6px 12px !important;
+    font-size: 15px !important;
+    min-height: 40px !important;
+    height: 40px !important;
     border-radius: 10px !important;
   }
 
   .sales-input,
   .invoice-input,
   .pieces-input {
-    font-size: 18px !important;
-    font-weight: 900 !important;
-    height: 46px !important;
-    min-height: 46px !important;
-    padding: 8px 10px !important;
-    border-radius: 12px !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 6px 12px !important;
+    border-radius: 10px !important;
   }
 
-  /* 8. أزرار اللمس السريعة (+ / -) بمقاس 44px المعتمد للمس المريح */
+  /* 8. أزرار اللمس السريعة (+ / -) */
   .quick-btn {
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    min-height: 44px !important;
-    font-size: 18px !important;
-    border-radius: 12px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    font-size: 16px !important;
+    border-radius: 10px !important;
     touch-action: manipulation !important;
   }
 
   /* 9. Staff Cards أنيقة وواضحة */
   .staff-card {
-    padding: 14px 12px !important;
+    padding: 12px 10px !important;
     gap: 10px !important;
-    border-radius: 16px !important;
+    border-radius: 14px !important;
   }
 
   .staff-card .staff-avatar {
@@ -3857,9 +3915,12 @@ html.light .lang-fab:hover {
   }
 
   .staff-card .avatar-upload-btn {
-    width: 20px !important;
-    height: 20px !important;
-    font-size: 9px !important;
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 8px !important;
+    bottom: -3px !important;
+    left: -3px !important;
+    border: 2px solid #0e1628 !important;
   }
 
   /* 10. خدمة Welcome Cards أصغر */
