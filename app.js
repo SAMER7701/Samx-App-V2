@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.37.0 — app.js
+//  SAMX v23.38.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.37.0';
+const APP_VERSION = '23.38.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -973,13 +973,35 @@ createApp({
     },
 
     branchLeaderboard() {
+      const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : normalizeDateStr(this.selectedDate)) || this.selectedDate;
       return this.branches.map(b => {
-        const key = `${this.selectedDate}|${b.id}`;
-        const d = this.daily[key] || { baseTarget: 0, heroesTarget: 0, staffData: {}, manualExtra: 0 };
+        let d = null;
+        if (typeof this.getDayRecord === 'function') {
+          d = this.getDayRecord(normDate, b.id, false);
+        } else if (this.daily) {
+          d = this.daily[`${normDate}|${b.id}`] || this.daily[`${this.selectedDate}|${b.id}`];
+        }
+        if (!d) d = { baseTarget: 0, heroesTarget: 0, staffData: {}, manualExtra: 0 };
+
         const staffIds = this.staff.filter(s => s.branchId === b.id).map(s => s.id);
-        const sales = staffIds.reduce((sum, id) => sum + (Number(d.staffData?.[id]?.sales) || 0), 0) + (Number(d.manualExtra) || 0);
-        const baseTarget = Number(d.baseTarget) || 0;
-        const heroesTarget = Number(d.heroesTarget) || 0;
+        let staffSales = 0;
+        if (d.staffData && typeof d.staffData === 'object') {
+          Object.values(d.staffData).forEach(item => {
+            staffSales += (Number(item?.sales) || 0);
+          });
+        }
+        let sales = staffSales + (Number(d.manualExtra) || 0);
+        if (this.selectedBranchId === b.id && typeof this.branchSales === 'number' && this.branchSales > 0) {
+          sales = Math.max(sales, this.branchSales);
+        }
+
+        let baseTarget = Number(d.baseTarget) || 0;
+        let heroesTarget = Number(d.heroesTarget) || 0;
+        if (this.selectedBranchId === b.id && this.dayData) {
+          if (Number(this.dayData.baseTarget) > 0) baseTarget = Number(this.dayData.baseTarget);
+          if (Number(this.dayData.heroesTarget) > 0) heroesTarget = Number(this.dayData.heroesTarget);
+        }
+
         return {
           id: b.id, name: b.name, sales, baseTarget, heroesTarget,
           basePct: baseTarget > 0 ? (sales / baseTarget) * 100 : 0,
@@ -989,38 +1011,91 @@ createApp({
     },
 
     adminBranchStatus() {
+      const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : normalizeDateStr(this.selectedDate)) || this.selectedDate;
       return this.branches.map(b => {
-        const key = `${this.selectedDate}|${b.id}`;
-        const d = this.daily[key] || { baseTarget: 0, heroesTarget: 0, staffData: {}, manualExtra: 0 };
+        let d = null;
+        if (typeof this.getDayRecord === 'function') {
+          d = this.getDayRecord(normDate, b.id, false);
+        } else if (this.daily) {
+          d = this.daily[`${normDate}|${b.id}`] || this.daily[`${this.selectedDate}|${b.id}`];
+        }
+        if (!d) d = { baseTarget: 0, heroesTarget: 0, staffData: {}, manualExtra: 0 };
+
         const staffIds = this.staff.filter(s => s.branchId === b.id).map(s => s.id);
-        const sales = staffIds.reduce((sum, id) => sum + (Number(d.staffData?.[id]?.sales) || 0), 0) + (Number(d.manualExtra) || 0);
-        const baseTarget = Number(d.baseTarget) || 0;
-        const heroesTarget = Number(d.heroesTarget) || 0;
+        
+        let staffSales = 0;
+        if (d.staffData && typeof d.staffData === 'object') {
+          Object.values(d.staffData).forEach(item => {
+            staffSales += (Number(item?.sales) || 0);
+          });
+        }
+        let sales = staffSales + (Number(d.manualExtra) || 0);
+        if (this.selectedBranchId === b.id && typeof this.branchSales === 'number' && this.branchSales > 0) {
+          sales = Math.max(sales, this.branchSales);
+        }
+
+        let baseTarget = Number(d.baseTarget) || 0;
+        let heroesTarget = Number(d.heroesTarget) || 0;
+        if (this.selectedBranchId === b.id && this.dayData) {
+          if (Number(this.dayData.baseTarget) > 0) baseTarget = Number(this.dayData.baseTarget);
+          if (Number(this.dayData.heroesTarget) > 0) heroesTarget = Number(this.dayData.heroesTarget);
+        }
+
         const basePct = baseTarget > 0 ? (sales / baseTarget) * 100 : 0;
         const heroesPct = heroesTarget > 0 ? (sales / heroesTarget) * 100 : 0;
-        const presentCount = staffIds.filter(id => this.attendance[`${this.selectedDate}|${id}`] !== false).length;
+        const presentCount = staffIds.filter(id => this.attendance[`${normDate}|${id}`] !== false && this.attendance[`${this.selectedDate}|${id}`] !== false).length;
+
+        // التصنيف الدقيق وفق بروتوكول حالة الفروع:
+        // 1. متأخر (sales === 0): لم يُسجل أي مبيعات في ذلك اليوم
+        // 2. محقق (sales > 0 && basePct >= 100): تجاوز أو حقق التارجت الأساسي بالكامل
+        // 3. تم الرصد (sales > 0 && basePct < 100): تم إدخال مبيعات للفرع وهو قيد التحقيق
+        const isRecorded = sales > 0;
+        const isLate = sales === 0;
+
         let statusLabel, statusColor, statusBg, borderColor;
-        if (sales === 0 && baseTarget === 0) {
-          statusLabel = this.t('admin.status.unrecorded'); statusColor = '#94a3b8'; statusBg = 'rgba(148,163,184,.15)'; borderColor = '#243356';
-        } else if (basePct >= 100) {
-          statusLabel = this.t('admin.status.excellent'); statusColor = '#6ee7b7'; statusBg = 'rgba(16,185,129,.2)'; borderColor = 'rgba(16,185,129,.5)';
-        } else if (basePct >= 70) {
-          statusLabel = this.t('admin.status.good'); statusColor = '#fcd34d'; statusBg = 'rgba(245,158,11,.2)'; borderColor = 'rgba(245,158,11,.5)';
+        if (isLate) {
+          statusLabel = this.currentLang === 'ar' ? '🚨 متأخر' : '🚨 Late';
+          statusColor = '#fb7185';
+          statusBg = 'rgba(244,63,94,.18)';
+          borderColor = 'rgba(244,63,94,.5)';
+        } else if (baseTarget > 0 && basePct >= 100) {
+          statusLabel = this.currentLang === 'ar' ? '✅ محقق' : '✅ Achieved';
+          statusColor = '#34d399';
+          statusBg = 'rgba(16,185,129,.18)';
+          borderColor = 'rgba(16,185,129,.5)';
         } else {
-          statusLabel = this.t('admin.status.late'); statusColor = '#fda4af'; statusBg = 'rgba(244,63,94,.2)'; borderColor = 'rgba(244,63,94,.5)';
+          statusLabel = this.currentLang === 'ar' ? '✅ تم الرصد' : '✅ Recorded';
+          statusColor = '#fcd34d';
+          statusBg = 'rgba(245,158,11,.18)';
+          borderColor = 'rgba(245,158,11,.5)';
         }
+
         return {
-          id: b.id, name: b.name, code: b.code,
-          sales, baseTarget, heroesTarget, basePct, heroesPct,
-          staffCount: staffIds.length, presentCount,
-          statusLabel, statusColor, statusBg, borderColor,
+          id: b.id,
+          name: b.name,
+          code: b.code,
+          sales,
+          baseTarget,
+          heroesTarget,
+          basePct,
+          heroesPct,
+          staffCount: staffIds.length,
+          presentCount,
+          isRecorded,
+          isLate,
+          statusLabel,
+          statusColor,
+          statusBg,
+          borderColor,
         };
       });
     },
     adminTotalSales() { return this.adminBranchStatus.reduce((s, b) => s + b.sales, 0); },
+    branchesRecorded() { return this.adminBranchStatus.filter(b => b.isRecorded).length; },
+    branchesLate() { return this.adminBranchStatus.filter(b => b.isLate).length; },
     branchesWithTarget() { return this.adminBranchStatus.filter(b => b.baseTarget > 0).length; },
     branchesAchieved() { return this.adminBranchStatus.filter(b => b.baseTarget > 0 && b.basePct >= 100).length; },
-    branchesLagging() { return this.adminBranchStatus.filter(b => b.baseTarget > 0 && b.basePct < 70 && b.sales > 0).length; },
+    branchesLagging() { return this.branchesLate; },
 
     smartAlerts() {
       const alerts = [];

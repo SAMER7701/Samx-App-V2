@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v23.37: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.37.0" rel="stylesheet">
+<!-- ⭐ v23.38: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=23.38.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -1201,12 +1201,12 @@
             <p style="font-size:26px;font-weight:900;color:#fff;margin:0;">{{ formatNum(adminTotalSales) }}<span class="sar-symbol-large">{{ currencySymbol }}</span></p>
           </div>
           <div class="card" style="border-radius:16px;padding:16px;border-color:rgba(16,185,129,.4);">
-            <p style="font-size:11px;color:#34d399;margin:0 0 6px;">{{ t('admin.kpi.achieved') }}</p>
-            <p style="font-size:26px;font-weight:900;color:#fff;margin:0;">{{ branchesAchieved }}/{{ branchesWithTarget }}</p>
+            <p style="font-size:11px;color:#34d399;margin:0 0 6px;">{{ t('admin.kpi.registered') }}</p>
+            <p style="font-size:26px;font-weight:900;color:#34d399;margin:0;">{{ branchesRecorded }}/{{ branches.length }}</p>
           </div>
           <div class="card" style="border-radius:16px;padding:16px;border-color:rgba(244,63,94,.4);">
             <p style="font-size:11px;color:#fb7185;margin:0 0 6px;">{{ t('admin.kpi.lagging') }}</p>
-            <p style="font-size:26px;font-weight:900;color:#fff;margin:0;">{{ branchesLagging }}</p>
+            <p style="font-size:26px;font-weight:900;color:#fb7185;margin:0;">{{ branchesLate }}</p>
           </div>
         </div>
 
@@ -1222,10 +1222,10 @@
                 <span :style="{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',fontWeight:'bold', background:b.statusBg, color:b.statusColor, flexShrink:0}">{{ b.statusLabel }}</span>
               </div>
               <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <div><p style="font-size:10px;color:#60a5fa;margin:0;">{{ t('admin.branch.base') }}</p><p style="font-size:15px;font-weight:900;margin:2px 0 0;" :style="{color: b.basePct>=100 ? '#34d399' : b.basePct>=70 ? '#fbbf24' : b.basePct>0 ? '#fb7185' : '#64748b'}">{{ b.basePct.toFixed(0) }}%</p></div>
-                <div><p style="font-size:10px;color:#e6c074;margin:0;">{{ t('admin.branch.heroes') }}</p><p style="font-size:15px;font-weight:900;margin:2px 0 0;" :style="{color: b.heroesPct>=100 ? '#34d399' : b.heroesPct>=70 ? '#fbbf24' : b.heroesPct>0 ? '#fb7185' : '#64748b'}">{{ b.heroesPct.toFixed(0) }}%</p></div>
+                <div><p style="font-size:10px;color:#60a5fa;margin:0;">{{ t('admin.branch.base') }}</p><p style="font-size:15px;font-weight:900;margin:2px 0 0;" :style="{color: b.basePct>=100 ? '#34d399' : b.sales>0 ? '#fbbf24' : '#64748b'}">{{ b.basePct.toFixed(0) }}%</p></div>
+                <div><p style="font-size:10px;color:#e6c074;margin:0;">{{ t('admin.branch.heroes') }}</p><p style="font-size:15px;font-weight:900;margin:2px 0 0;" :style="{color: b.heroesPct>=100 ? '#34d399' : b.sales>0 ? '#fbbf24' : '#64748b'}">{{ b.heroesPct.toFixed(0) }}%</p></div>
               </div>
-              <p style="font-size:11px;color:#94a3b8;margin:8px 0 0;">💰 {{ formatSAR(b.sales) }} / {{ formatSAR(b.baseTarget) }}</p>
+              <p style="font-size:11px;color:#94a3b8;margin:8px 0 0;">💰 <strong :style="{color: b.sales > 0 ? '#34d399' : '#94a3b8'}">{{ formatSAR(b.sales) }}</strong> / {{ formatSAR(b.baseTarget) }}</p>
             </div>
           </div>
         </div>
@@ -3655,7 +3655,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.37.0"></script>
+<script src="app.js?v=23.38.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {
