@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.35.0 — app.js
+//  SAMX v23.36.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.35.0';
+const APP_VERSION = '23.36.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -306,6 +306,9 @@ createApp({
       // ⭐ v23.3: نظام الترجمة i18n — Phase 5
       currentLang: (window.SAMX_i18n && window.SAMX_i18n.getLang()) || 'ar',
       supportedLangs: (window.SAMX_i18n && window.SAMX_i18n.SUPPORTED_LANGS) || ['ar', 'en'],
+
+      // ⭐ v23.36: وضع ملء الشاشة (Fullscreen)
+      isFullscreen: false,
 
       // ============ المستخدمين ============
       currentUser: null,
@@ -6917,12 +6920,47 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       this.saveSettingsToStorage();
       this.showToast(this.t('toast.theme.applied', '', { name: this.t('theme.' + preset.id + '.name', preset.name) }), 'success');
     },
+
+    // ================================================================
+    //  ⭐ v23.36: وضع ملء الشاشة (Fullscreen Mode)
+    // ================================================================
+    toggleFullscreen() {
+      try {
+        const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        if (!isFull) {
+          const docEl = document.documentElement;
+          const req = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+          if (req) {
+            const res = req.call(docEl);
+            if (res && res.catch) res.catch(() => {});
+          }
+        } else {
+          const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+          if (exit) {
+            const res = exit.call(document);
+            if (res && res.catch) res.catch(() => {});
+          }
+        }
+      } catch (err) {
+        console.warn('[Fullscreen] toggle error:', err);
+      }
+    },
+
+    updateFullscreenState() {
+      this.isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+    },
   },
 
   async mounted() {
     try {
       const loading = document.getElementById('loading-screen');
       if (loading) loading.style.display = 'none';
+
+      // ⭐ v23.36: مراقبة حالة ملء الشاشة
+      ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
+        document.addEventListener(evt, () => this.updateFullscreenState());
+      });
+      this.updateFullscreenState();
 
       // ⭐ v23: ترحيل البيانات (shiaka_ → samx_)
       this.migrateFromShaka();

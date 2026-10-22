@@ -44,7 +44,7 @@
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
 <!-- ⭐ v23.31: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.35.0" rel="stylesheet">
+<link href="styles.css?v=23.36.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -260,11 +260,11 @@
     </div>
   </div>
   <!-- ============ MAIN APP ============ -->
-  <div v-else style="min-height:100vh;display:flex;flex-direction:column;">
+  <div v-else class="app-shell" style="min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;width:100%;max-width:100%;">
 
     <!-- ============ HEADER ============ -->
     <header style="background:#111a2e;border-bottom:1px solid #243356;position:sticky;top:0;z-index:40;padding-top:env(safe-area-inset-top);">
-      <div style="max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <div style="width:100%;max-width:100%;margin:0;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
                 <!-- ⭐ v23.11.2: كتلة المستخدم القابلة للنقر + قائمة منسدلة -->
         <div style="position:relative;min-width:0;flex:1;">
           <button @click="showUserMenu = !showUserMenu"
@@ -332,6 +332,14 @@
             <span style="font-size:11px;color:#fcd34d;background:none;border:none;padding:4px;">🔴</span>
           </div>
 
+          <!-- Fullscreen Toggle -->
+          <div class="tooltip-container" :data-tooltip="isFullscreen ? (currentLang === 'ar' ? 'الخروج من ملء الشاشة' : 'Exit Fullscreen') : (currentLang === 'ar' ? 'ملء الشاشة' : 'Fullscreen')">
+            <button @click="toggleFullscreen" class="btn-ghost header-icon-btn" :class="{ 'is-fullscreen-active': isFullscreen }" style="font-size:16px;" :aria-label="isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'">
+              <span v-if="isFullscreen" style="line-height:1;">🗗</span>
+              <span v-else style="line-height:1;">⛶</span>
+            </button>
+          </div>
+
           <!-- Language Toggle -->
           <div class="tooltip-container" :data-tooltip="currentLang === 'ar' ? t('header.tooltips.language.toEn') : t('header.tooltips.language.toAr')">
             <button @click="setLanguage(currentLang === 'ar' ? 'en' : 'ar')" class="btn-ghost header-icon-btn" style="font-weight:800;font-size:14px;" aria-label="Language">🌍</button>
@@ -376,14 +384,14 @@
       </transition>
     </header>
     <!-- ============ MAIN ============ -->
-    <main style="flex:1;max-width:1280px;width:100%;margin:0 auto;padding:20px 16px 100px;">
+    <main class="main-container" style="flex:1;max-width:100%;width:100%;margin:0;padding:16px 20px 100px;min-height:100dvh;">
 
       <!-- ============================================================
            WELCOME SCREEN
            ============================================================ -->
       <div v-show="currentView==='welcome'" class="welcome-screen">
 
-        <div v-if="morningAlert" class="morning-alert-banner" style="max-width:900px;width:100%;">
+        <div v-if="morningAlert" class="morning-alert-banner" style="max-width:100%;width:100%;">
           <span class="icon">🌅</span>
           <div class="content">
             <p class="title">{{ t('notif.morning.title') }}</p>
@@ -3643,7 +3651,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.35.0"></script>
+<script src="app.js?v=23.36.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {
