@@ -44,7 +44,7 @@
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
 <!-- ⭐ v23.31: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.34.0" rel="stylesheet">
+<link href="styles.css?v=23.35.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -552,6 +552,28 @@
         </div>
 
         <template v-else>
+          <div class="card" style="border-radius:14px;padding:12px 14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <h3 style="font-size:12px;font-weight:bold;color:#e6c074;margin:0;">{{ t('dashboard.target.title') }}</h3>
+            </div>
+            <!-- شبكة من عمودين جنباً إلى جنب للتارجت الأساسي وتارجت الأبطال -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro" style="color:#60a5fa;font-size:11px;margin-bottom:3px;">{{ t('dashboard.target.baseLabel') }}</label>
+                <input type="number" min="0" inputmode="numeric" :value="branchBaseTarget === 0 ? '' : Math.round(branchBaseTarget)" @focus="$event.target.select()" @input="branchBaseTarget = Math.round(Number($event.target.value) || 0)" :disabled="!canEditTarget" class="target-input-base compact-target-input" placeholder="0">
+              </div>
+              <div class="form-group-pro" style="margin-bottom:0;">
+                <label class="form-label-pro" style="color:#e6c074;font-size:11px;margin-bottom:3px;">{{ t('dashboard.target.heroesLabel') }}</label>
+                <input type="number" min="0" inputmode="numeric" :value="branchHeroesTarget === 0 ? '' : Math.round(branchHeroesTarget)" @focus="$event.target.select()" @input="branchHeroesTarget = Math.round(Number($event.target.value) || 0)" :disabled="!canEditTarget" class="target-input-heroes compact-target-input" placeholder="0">
+              </div>
+            </div>
+            <!-- حقل المبيعات العامة بدون موظف بشكل مدمج ومتناسق -->
+            <div v-if="canEnterDailySales" style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;">
+              <label style="font-size:11px;color:#94a3b8;white-space:nowrap;margin:0;">{{ t('dashboard.target.manualExtraLabel') }}:</label>
+              <input type="number" min="0" inputmode="numeric" :value="branchManualExtra === 0 ? '' : Math.round(branchManualExtra)" @focus="$event.target.select()" @input="branchManualExtra = Math.round(Number($event.target.value) || 0)" class="target-input compact-target-input" placeholder="0" style="flex:1;max-width:180px;">
+            </div>
+          </div>
+
           <div class="card-elevated" style="border-radius:16px;padding:16px;border-color:rgba(16,185,129,.3);">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
               <h3 style="font-size:13px;font-weight:bold;color:#34d399;margin:0;">{{ t('dashboard.live.title') }}</h3>
@@ -582,144 +604,6 @@
                 <p style="font-size:14px;font-weight:800;color:#fff;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ topSeller ? topSeller.name : t('dashboard.live.noTopSeller') }}</p>
                 <p v-if="topSeller" style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ t('dashboard.live.topSellerHint', '', { sales: formatSAR(topSeller.sales), pct: topSeller.pct.toFixed(0) }) }}</p>
               </div>
-            </div>
-          </div>
-
-          <!-- ============================================================
-               ⭐ v23.2: بطاقة ملخص اليوم (Daily Summary Card)
-               ============================================================ -->
-          <div class="daily-summary-wrapper">
-            <div class="daily-summary-card" ref="dailySummaryCard">
-
-              <!-- Header: Logo + Branch + Company -->
-              <div class="summary-header">
-                <div class="summary-logo">
-                  <img :src="activeLogo" :alt="activeCompanyName" onerror="this.style.display='none'">
-                </div>
-                <div class="summary-title-block">
-                  <h3>{{ selectedBranch.name }}</h3>
-                  <p>{{ dayNameOfSelectedDate }} • {{ selectedDate }}</p>
-                </div>
-                <div class="summary-company">{{ activeCompanyName }}</div>
-              </div>
-
-              <!-- Main Sale Number -->
-              <div class="summary-main">
-                <p class="summary-label">{{ t('summary.label.totalSales') }}</p>
-                <p class="summary-big-number">{{ formatNum(branchSales) }}<span class="sar-symbol-large">{{ currencySymbol }}</span></p>
-              </div>
-
-              <!-- Targets Row -->
-              <div class="summary-targets">
-                <div class="summary-target">
-                  <p class="target-label">{{ t('summary.label.baseTarget') }}</p>
-                  <p class="target-value">{{ formatSAR(dayData.baseTarget) }}</p>
-                  <p class="target-status" :style="{color: summaryStatusColor(basePct)}">
-                    {{ summaryStatusIcon(basePct) }} {{ basePct.toFixed(1) }}%
-                  </p>
-                </div>
-                <div class="summary-target">
-                  <p class="target-label">{{ t('summary.label.heroesTarget') }}</p>
-                  <p class="target-value">{{ formatSAR(dayData.heroesTarget) }}</p>
-                  <p class="target-status" :style="{color: summaryStatusColor(heroesPct)}">
-                    {{ summaryStatusIcon(heroesPct) }} {{ heroesPct.toFixed(1) }}%
-                  </p>
-                </div>
-              </div>
-
-              <!-- Stats Row -->
-              <!-- Stats Row -->
-              <div class="summary-stats">
-                <div v-if="shareOptions.showInvoices" class="summary-stat">
-                  <span>{{ t('summary.stat.invoices') }}</span>
-                  <span>{{ formatNum(branchInvoices) }}</span>
-                </div>
-                <div v-if="shareOptions.showPieces" class="summary-stat">
-                  <span>{{ t('summary.stat.pieces') }}</span>
-                  <span>{{ formatNum(branchPieces) }}</span>
-                </div>
-                <div v-if="shareOptions.showUPT" class="summary-stat">
-                  <span>{{ t('summary.stat.upt') }}</span>
-                  <span>{{ branchUPT.toFixed(2) }}</span>
-                </div>
-                <div v-if="shareOptions.showATV" class="summary-stat">
-                  <span>{{ t('summary.stat.atv') }}</span>
-                  <span>{{ formatSAR(branchATV) }}</span>
-                </div>
-              </div>
-
-              <!-- Monthly Progress Block: نسبة وصول الفرع مع التارجت الشهري -->
-              <div v-if="shareOptions.showMonthlyProgress && branchMonthlyTargetTotal > 0" class="summary-monthly-progress">
-                <div class="summary-monthly-header">
-                  <span class="summary-monthly-title">🎯 {{ currentLang === 'ar' ? 'نسبة وصول الفرع مع تارجت الشهر' : 'Branch Monthly Target Achievement' }}</span>
-                  <span class="summary-monthly-pct" :style="{color: summaryStatusColor(branchMonthlyAchievementPct)}">
-                    {{ summaryStatusIcon(branchMonthlyAchievementPct) }} {{ branchMonthlyAchievementPct.toFixed(1) }}%
-                  </span>
-                </div>
-                <div class="summary-monthly-bar">
-                  <div class="summary-monthly-bar-fill" :style="{width: Math.min(branchMonthlyAchievementPct, 100) + '%', background: branchMonthlyAchievementPct >= 100 ? '#10b981' : branchMonthlyAchievementPct >= 70 ? '#f59e0b' : '#ef4444'}"></div>
-                </div>
-                <div class="summary-monthly-details">
-                  <span>{{ currentLang === 'ar' ? 'المبيعات حتى اليوم:' : 'MTD Sales:' }} <strong>{{ formatSAR(branchMtdSalesTotal) }}</strong></span>
-                  <span>{{ currentLang === 'ar' ? 'تارجت الشهر:' : 'Monthly Target:' }} <strong>{{ formatSAR(branchMonthlyTargetTotal) }}</strong></span>
-                </div>
-              </div>
-
-              <!-- Staff List -->
-              <div v-if="summaryStaffSorted.length > 0" class="summary-staff">
-                <p class="staff-list-title">{{ t('summary.staff.title', '', { count: presentCount }) }}</p>
-                <div class="staff-list">
-                  <div v-for="(s, idx) in summaryStaffSorted"
-                       :key="s.id"
-                       class="staff-row"
-                       :class="{ champion: s.isTop && s.sales > 0 }">
-                    <span class="rank">{{ idx + 1 }}</span>
-                    <span class="name">{{ shareOptions.showNames ? s.name : t('summary.staff.anonymous', '', { n: idx + 1 }) }}</span>
-                    <span class="sales" v-if="shareOptions.showAbsolute">{{ formatSAR(s.sales) }}</span>
-                    <span class="sales" v-else>{{ s.sales > 0 ? '✓' : '—' }}</span>
-                    <span class="pct" :style="{background: 'rgba(' + (s.pct >= 100 ? '16,185,129' : s.pct >= 70 ? '245,158,11' : '244,63,94') + ',.18)', color: summaryStatusColor(s.pct)}">{{ s.pct.toFixed(0) }}%</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Smart Message -->
-              <div class="summary-message"
-                   :style="{background: summaryMessageColor().bg, borderColor: summaryMessageColor().border, color: summaryMessageColor().color}">
-                <p>{{ summarySmartMessage() }}</p>
-              </div>
-
-              <!-- Footer -->
-              <div class="summary-footer">
-                <span>{{ activeCopyright }}</span>
-                <span>{{ t('summary.footer.poweredBy') }}</span>
-              </div>
-
-            </div>
-
-            <!-- Share Button (خارج البطاقة حتى لا يظهر في الصورة) -->
-            <div class="summary-actions">
-              <button @click="showShareModal = true" class="btn-gold">{{ t('summary.shareBtn') }}</button>
-            </div>
-          </div>
-          <div class="card" style="border-radius:14px;padding:12px 14px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-              <h3 style="font-size:12px;font-weight:bold;color:#e6c074;margin:0;">{{ t('dashboard.target.title') }}</h3>
-            </div>
-            <!-- شبكة من عمودين جنباً إلى جنب للتارجت الأساسي وتارجت الأبطال -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <div class="form-group-pro" style="margin-bottom:0;">
-                <label class="form-label-pro" style="color:#60a5fa;font-size:11px;margin-bottom:3px;">{{ t('dashboard.target.baseLabel') }}</label>
-                <input type="number" min="0" inputmode="numeric" :value="branchBaseTarget === 0 ? '' : Math.round(branchBaseTarget)" @focus="$event.target.select()" @input="branchBaseTarget = Math.round(Number($event.target.value) || 0)" :disabled="!canEditTarget" class="target-input-base compact-target-input" placeholder="0">
-              </div>
-              <div class="form-group-pro" style="margin-bottom:0;">
-                <label class="form-label-pro" style="color:#e6c074;font-size:11px;margin-bottom:3px;">{{ t('dashboard.target.heroesLabel') }}</label>
-                <input type="number" min="0" inputmode="numeric" :value="branchHeroesTarget === 0 ? '' : Math.round(branchHeroesTarget)" @focus="$event.target.select()" @input="branchHeroesTarget = Math.round(Number($event.target.value) || 0)" :disabled="!canEditTarget" class="target-input-heroes compact-target-input" placeholder="0">
-              </div>
-            </div>
-            <!-- حقل المبيعات العامة بدون موظف بشكل مدمج ومتناسق -->
-            <div v-if="canEnterDailySales" style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;">
-              <label style="font-size:11px;color:#94a3b8;white-space:nowrap;margin:0;">{{ t('dashboard.target.manualExtraLabel') }}:</label>
-              <input type="number" min="0" inputmode="numeric" :value="branchManualExtra === 0 ? '' : Math.round(branchManualExtra)" @focus="$event.target.select()" @input="branchManualExtra = Math.round(Number($event.target.value) || 0)" class="target-input compact-target-input" placeholder="0" style="flex:1;max-width:180px;">
             </div>
           </div>
 
@@ -951,6 +835,122 @@
                 <span style="font-size:32px;opacity:.4;margin-bottom:8px;">📊</span>
                 <span>لا يوجد موظفون في هذا الفرع</span>
               </div>
+            </div>
+          </div>
+          <!-- ============================================================
+               ⭐ v23.2: بطاقة ملخص اليوم (Daily Summary Card)
+               ============================================================ -->
+          <div class="daily-summary-wrapper">
+            <div class="daily-summary-card" ref="dailySummaryCard">
+
+              <!-- Header: Logo + Branch + Company -->
+              <div class="summary-header">
+                <div class="summary-logo">
+                  <img :src="activeLogo" :alt="activeCompanyName" onerror="this.style.display='none'">
+                </div>
+                <div class="summary-title-block">
+                  <h3>{{ selectedBranch.name }}</h3>
+                  <p>{{ dayNameOfSelectedDate }} • {{ selectedDate }}</p>
+                </div>
+                <div class="summary-company">{{ activeCompanyName }}</div>
+              </div>
+
+              <!-- Main Sale Number -->
+              <div class="summary-main">
+                <p class="summary-label">{{ t('summary.label.totalSales') }}</p>
+                <p class="summary-big-number">{{ formatNum(branchSales) }}<span class="sar-symbol-large">{{ currencySymbol }}</span></p>
+              </div>
+
+              <!-- Targets Row -->
+              <div class="summary-targets">
+                <div class="summary-target">
+                  <p class="target-label">{{ t('summary.label.baseTarget') }}</p>
+                  <p class="target-value">{{ formatSAR(dayData.baseTarget) }}</p>
+                  <p class="target-status" :style="{color: summaryStatusColor(basePct)}">
+                    {{ summaryStatusIcon(basePct) }} {{ basePct.toFixed(1) }}%
+                  </p>
+                </div>
+                <div class="summary-target">
+                  <p class="target-label">{{ t('summary.label.heroesTarget') }}</p>
+                  <p class="target-value">{{ formatSAR(dayData.heroesTarget) }}</p>
+                  <p class="target-status" :style="{color: summaryStatusColor(heroesPct)}">
+                    {{ summaryStatusIcon(heroesPct) }} {{ heroesPct.toFixed(1) }}%
+                  </p>
+                </div>
+              </div>
+
+              <!-- Stats Row -->
+              <!-- Stats Row -->
+              <div class="summary-stats">
+                <div v-if="shareOptions.showInvoices" class="summary-stat">
+                  <span>{{ t('summary.stat.invoices') }}</span>
+                  <span>{{ formatNum(branchInvoices) }}</span>
+                </div>
+                <div v-if="shareOptions.showPieces" class="summary-stat">
+                  <span>{{ t('summary.stat.pieces') }}</span>
+                  <span>{{ formatNum(branchPieces) }}</span>
+                </div>
+                <div v-if="shareOptions.showUPT" class="summary-stat">
+                  <span>{{ t('summary.stat.upt') }}</span>
+                  <span>{{ branchUPT.toFixed(2) }}</span>
+                </div>
+                <div v-if="shareOptions.showATV" class="summary-stat">
+                  <span>{{ t('summary.stat.atv') }}</span>
+                  <span>{{ formatSAR(branchATV) }}</span>
+                </div>
+              </div>
+
+              <!-- Monthly Progress Block: نسبة وصول الفرع مع التارجت الشهري -->
+              <div v-if="shareOptions.showMonthlyProgress && branchMonthlyTargetTotal > 0" class="summary-monthly-progress">
+                <div class="summary-monthly-header">
+                  <span class="summary-monthly-title">🎯 {{ currentLang === 'ar' ? 'نسبة وصول الفرع مع تارجت الشهر' : 'Branch Monthly Target Achievement' }}</span>
+                  <span class="summary-monthly-pct" :style="{color: summaryStatusColor(branchMonthlyAchievementPct)}">
+                    {{ summaryStatusIcon(branchMonthlyAchievementPct) }} {{ branchMonthlyAchievementPct.toFixed(1) }}%
+                  </span>
+                </div>
+                <div class="summary-monthly-bar">
+                  <div class="summary-monthly-bar-fill" :style="{width: Math.min(branchMonthlyAchievementPct, 100) + '%', background: branchMonthlyAchievementPct >= 100 ? '#10b981' : branchMonthlyAchievementPct >= 70 ? '#f59e0b' : '#ef4444'}"></div>
+                </div>
+                <div class="summary-monthly-details">
+                  <span>{{ currentLang === 'ar' ? 'المبيعات حتى اليوم:' : 'MTD Sales:' }} <strong>{{ formatSAR(branchMtdSalesTotal) }}</strong></span>
+                  <span>{{ currentLang === 'ar' ? 'تارجت الشهر:' : 'Monthly Target:' }} <strong>{{ formatSAR(branchMonthlyTargetTotal) }}</strong></span>
+                </div>
+              </div>
+
+              <!-- Staff List -->
+              <div v-if="summaryStaffSorted.length > 0" class="summary-staff">
+                <p class="staff-list-title">{{ t('summary.staff.title', '', { count: presentCount }) }}</p>
+                <div class="staff-list">
+                  <div v-for="(s, idx) in summaryStaffSorted"
+                       :key="s.id"
+                       class="staff-row"
+                       :class="{ champion: s.isTop && s.sales > 0 }">
+                    <span class="rank">{{ idx + 1 }}</span>
+                    <span class="name">{{ shareOptions.showNames ? s.name : t('summary.staff.anonymous', '', { n: idx + 1 }) }}</span>
+                    <span class="sales" v-if="shareOptions.showAbsolute">{{ formatSAR(s.sales) }}</span>
+                    <span class="sales" v-else>{{ s.sales > 0 ? '✓' : '—' }}</span>
+                    <span class="pct" :style="{background: 'rgba(' + (s.pct >= 100 ? '16,185,129' : s.pct >= 70 ? '245,158,11' : '244,63,94') + ',.18)', color: summaryStatusColor(s.pct)}">{{ s.pct.toFixed(0) }}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Smart Message -->
+              <div class="summary-message"
+                   :style="{background: summaryMessageColor().bg, borderColor: summaryMessageColor().border, color: summaryMessageColor().color}">
+                <p>{{ summarySmartMessage() }}</p>
+              </div>
+
+              <!-- Footer -->
+              <div class="summary-footer">
+                <span>{{ activeCopyright }}</span>
+                <span>{{ t('summary.footer.poweredBy') }}</span>
+              </div>
+
+            </div>
+
+            <!-- Share Button (خارج البطاقة حتى لا يظهر في الصورة) -->
+            <div class="summary-actions">
+              <button @click="showShareModal = true" class="btn-gold">{{ t('summary.shareBtn') }}</button>
             </div>
           </div>
         </template>
@@ -3643,7 +3643,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.34.0"></script>
+<script src="app.js?v=23.35.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

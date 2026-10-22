@@ -3568,8 +3568,12 @@ html.light .staff-row.champion { background: linear-gradient(135deg, rgba(var(--
   position: relative;
   z-index: 1;
 }
-html.light .summary-footer { border-color: rgba(0,0,0,.06); color: #94a3b8; }
-.summary-actions { display: flex; justify-content: center; }
+.summary-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+  margin-bottom: 24px;
+}
 .summary-actions button {
   border: none;
   border-radius: 12px;
