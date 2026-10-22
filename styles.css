@@ -5351,3 +5351,44 @@ header {
   --app-ui-scale: 1.15;
   font-size: 17px;
 }
+
+/* ─── 7. سجل التدقيق والعمليات (Audit Log Modal) ─── */
+.activity-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+@media (max-width: 540px) {
+  .activity-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.activity-filter-scroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.activity-filter-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+.audit-log-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+.audit-log-list::-webkit-scrollbar {
+  width: 5px;
+}
+.audit-log-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.audit-log-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}

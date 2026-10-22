@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v23.31: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.36.0" rel="stylesheet">
+<!-- ⭐ v23.37: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=23.37.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -2682,51 +2682,52 @@
           <div class="bottom-sheet-handle"></div>
 
           <!-- Header -->
-          <div class="modal-header-pro">
-            <div style="display:flex;flex-direction:column;gap:2px;">
-              <h3 class="modal-title-pro">
-                <span>📜</span>
-                <span>{{ t('modal.activity.title') }}</span>
-                <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(212,168,75,0.15);color:#d4a84b;border:1px solid rgba(212,168,75,0.3);margin-inline-start:6px;font-weight:600;">
-                  {{ filteredActivityLog.length }} / {{ activityLog.length }}
-                </span>
+          <div class="modal-header-pro" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid rgba(255,255,255,0.08);">
+            <div style="min-width:0;flex:1;">
+              <h3 class="modal-title-pro" style="margin:0;font-size:15px;font-weight:800;color:#e6c074;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                {{ currentLang === 'ar' ? '📜 سجل التدقيق والعمليات' : '📜 Audit Trail & Activity Log' }}
               </h3>
-              <span style="font-size:11px;color:#94a3b8;">{{ t('modal.activity.subtitle') }}</span>
+              <span style="font-size:11px;color:#94a3b8;display:block;margin-top:2px;">{{ t('modal.activity.subtitle') }}</span>
             </div>
-            <button @click="showActivityLog=false" class="modal-close-btn" aria-label="Close">✕</button>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+              <span style="white-space:nowrap;font-size:12px;padding:4px 10px;border-radius:8px;background:rgba(212,168,75,0.15);color:#d4a84b;border:1px solid rgba(212,168,75,0.35);font-weight:700;direction:ltr;">
+                {{ filteredActivityLog.length }} / {{ activityLog.length }}
+              </span>
+              <button @click="showActivityLog=false" class="modal-close-btn" aria-label="Close">✕</button>
+            </div>
           </div>
 
           <!-- Body -->
-          <div class="modal-body-pro" style="padding:14px 18px;display:flex;flex-direction:column;gap:12px;">
+          <div class="modal-body-pro" style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">
 
-            <!-- Stats Bar -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:8px;">
-              <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:10px;">
-                <span style="font-size:20px;">📋</span>
-                <div>
-                  <div style="font-size:10px;color:#94a3b8;">{{ t('modal.activity.stat.total') }}</div>
-                  <div style="font-size:15px;font-weight:700;color:#fff;">{{ activityLogStats.total }}</div>
+            <!-- Stats Bar (4 Compact Cards) -->
+            <div class="activity-stats-grid" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:6px;">
+              <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:8px;min-height:46px;">
+                <span style="font-size:16px;">📋</span>
+                <div style="min-width:0;line-height:1.2;">
+                  <div style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t('modal.activity.stat.total') }}</div>
+                  <div style="font-size:14px;font-weight:800;color:#fff;">{{ activityLogStats.total }}</div>
                 </div>
               </div>
-              <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:10px;">
-                <span style="font-size:20px;">📅</span>
-                <div>
-                  <div style="font-size:10px;color:#94a3b8;">{{ t('modal.activity.stat.today') }}</div>
-                  <div style="font-size:15px;font-weight:700;color:#10b981;">{{ activityLogStats.todayCount }}</div>
+              <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:8px;min-height:46px;">
+                <span style="font-size:16px;">📅</span>
+                <div style="min-width:0;line-height:1.2;">
+                  <div style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t('modal.activity.stat.today') }}</div>
+                  <div style="font-size:14px;font-weight:800;color:#10b981;">{{ activityLogStats.todayCount }}</div>
                 </div>
               </div>
-              <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:10px;">
-                <span style="font-size:20px;">💰</span>
-                <div>
-                  <div style="font-size:10px;color:#94a3b8;">{{ t('modal.activity.stat.sales') }}</div>
-                  <div style="font-size:15px;font-weight:700;color:#3b82f6;">{{ activityLogStats.salesCount }}</div>
+              <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:8px;min-height:46px;">
+                <span style="font-size:16px;">💰</span>
+                <div style="min-width:0;line-height:1.2;">
+                  <div style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t('modal.activity.stat.sales') }}</div>
+                  <div style="font-size:14px;font-weight:800;color:#3b82f6;">{{ activityLogStats.salesCount }}</div>
                 </div>
               </div>
-              <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:10px;">
-                <span style="font-size:20px;">🛡️</span>
-                <div>
-                  <div style="font-size:10px;color:#94a3b8;">{{ t('modal.activity.stat.security') }}</div>
-                  <div style="font-size:15px;font-weight:700;color:#f59e0b;">{{ activityLogStats.securityCount }}</div>
+              <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:8px;min-height:46px;">
+                <span style="font-size:16px;">🔒</span>
+                <div style="min-width:0;line-height:1.2;">
+                  <div style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t('modal.activity.stat.security') }}</div>
+                  <div style="font-size:14px;font-weight:800;color:#f59e0b;">{{ activityLogStats.securityCount }}</div>
                 </div>
               </div>
             </div>
@@ -2738,43 +2739,43 @@
                 <input
                   type="text"
                   v-model="activityLogSearch"
-                  :placeholder="t('modal.activity.searchPlaceholder')"
-                  style="width:100%;background:rgba(15,23,42,0.7);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 32px 8px 12px;color:#fff;font-size:12px;box-sizing:border-box;"
+                  :placeholder="currentLang === 'ar' ? '🔍 بحث بالموظف، الفرع، أو العملية...' : '🔍 Search employee, branch, or action...'"
+                  style="width:100%;height:38px;min-height:38px;background:rgba(15,23,42,0.7);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:0 34px 0 12px;color:#fff;font-size:12px;box-sizing:border-box;"
                 />
                 <button
                   v-if="activityLogSearch"
                   @click="activityLogSearch=''"
-                  style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px;padding:4px;"
+                  style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;font-size:13px;padding:4px;"
                 >✕</button>
               </div>
 
-              <!-- Category Tabs -->
-              <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">
+              <!-- Category Tabs (No double emojis, no clipping, hidden scrollbar) -->
+              <div class="activity-filter-scroll">
                 <button
                   v-for="cat in [
-                    { id: 'all', label: t('modal.activity.filter.all'), icon: '🌐' },
-                    { id: 'financial', label: t('modal.activity.filter.sales'), icon: '💰' },
-                    { id: 'targets', label: t('modal.activity.filter.targets'), icon: '🎯' },
-                    { id: 'closes', label: t('modal.activity.filter.closes'), icon: '🔒' },
-                    { id: 'users', label: t('modal.activity.filter.users'), icon: '👥' },
-                    { id: 'security', label: t('modal.activity.filter.security'), icon: '🛡️' },
-                    { id: 'system', label: t('modal.activity.filter.system'), icon: '⚙️' }
+                    { id: 'all', label: currentLang === 'ar' ? 'الكل' : 'All', icon: '🌐' },
+                    { id: 'financial', label: currentLang === 'ar' ? 'مبيعات' : 'Sales', icon: '💰' },
+                    { id: 'targets', label: currentLang === 'ar' ? 'تارجت' : 'Targets', icon: '🎯' },
+                    { id: 'security', label: currentLang === 'ar' ? 'أمان' : 'Security', icon: '🔒' },
+                    { id: 'today', label: currentLang === 'ar' ? 'اليوم' : 'Today', icon: '📅' }
                   ]"
                   :key="cat.id"
+                  type="button"
                   @click="activityLogFilter = cat.id"
                   :style="{
-                    padding: '5px 12px',
+                    padding: '6px 14px',
                     borderRadius: '20px',
-                    fontSize: '11px',
+                    fontSize: '12px',
                     fontWeight: activityLogFilter === cat.id ? '700' : '500',
                     border: '1px solid ' + (activityLogFilter === cat.id ? '#d4a84b' : 'rgba(255,255,255,0.1)'),
                     background: activityLogFilter === cat.id ? 'rgba(212,168,75,0.2)' : 'rgba(15,23,42,0.5)',
                     color: activityLogFilter === cat.id ? '#e6c074' : '#cbd5e1',
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
-                    display: 'flex',
+                    display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '4px'
+                    gap: '5px',
+                    flexShrink: 0
                   }"
                 >
                   <span>{{ cat.icon }}</span>
@@ -2784,12 +2785,12 @@
             </div>
 
             <!-- Log Entries List -->
-            <div v-if="filteredActivityLog.length === 0" style="text-align:center;color:#94a3b8;padding:36px 16px;font-size:13px;background:rgba(15,23,42,0.3);border-radius:8px;border:1px dashed rgba(255,255,255,0.1);">
+            <div v-if="filteredActivityLog.length === 0" style="text-align:center;color:#94a3b8;padding:48px 16px;font-size:13px;background:rgba(15,23,42,0.3);border-radius:8px;border:1px dashed rgba(255,255,255,0.1);min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
               <span style="font-size:24px;display:block;margin-bottom:6px;">📭</span>
               {{ t('modal.activity.empty') }}
             </div>
 
-            <div v-else style="display:flex;flex-direction:column;gap:8px;max-height:440px;overflow-y:auto;padding-right:2px;">
+            <div v-else class="audit-log-list" style="display:flex;flex-direction:column;gap:8px;min-height:240px;max-height:40dvh;overflow-y:auto;padding-inline-end:4px;">
               <div
                 v-for="log in filteredActivityLog"
                 :key="log.id || (log.time + log.action)"
@@ -2805,7 +2806,7 @@
                   gap: '6px'
                 }"
               >
-                <!-- Row 1: Action + Category Badge + Time -->
+                <!-- Row 1: Action + Category Badge + Time (standard numbers) -->
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
                   <div style="display:flex;align-items:center;gap:8px;">
                     <span style="color:#fff;font-weight:700;font-size:13px;">{{ log.action }}</span>
@@ -2823,8 +2824,8 @@
                       {{ getActivityCategoryLabel(log.category) }}
                     </span>
                   </div>
-                  <span style="color:#64748b;font-size:11px;direction:ltr;">
-                    ⏱️ {{ log.time }}
+                  <span style="color:#64748b;font-size:11px;direction:ltr;font-family:system-ui,sans-serif;">
+                    ⏱️ {{ formatAuditTime(log.timestamp || log.time) }}
                   </span>
                 </div>
 
@@ -2853,24 +2854,27 @@
 
           </div>
 
-          <!-- Footer -->
-          <div class="modal-footer-pro" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-            <div style="display:flex;gap:6px;align-items:center;">
-              <button @click="exportActivityLogCSV" class="btn-ghost btn-sm" style="display:flex;align-items:center;gap:4px;color:#38bdf8;border:1px solid rgba(56,189,248,0.3);">
-                <span>📥</span>
-                <span>{{ t('modal.activity.export') }}</span>
-              </button>
-              <button
-                v-if="currentUser && currentUser.role === 'admin'"
-                @click="clearActivityLog"
-                class="btn-danger-subtle btn-sm"
-                style="display:flex;align-items:center;gap:4px;"
-              >
-                <span>🗑️</span>
-                <span>{{ t('modal.activity.clear') }}</span>
-              </button>
-            </div>
-            <button @click="showActivityLog=false" class="btn-ghost btn-sm">{{ t('common.close', 'إغلاق') }}</button>
+          <!-- Footer: 40px compact buttons without redundant close button -->
+          <div class="modal-footer-pro" style="display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:12px 18px;border-top:1px solid rgba(255,255,255,0.08);">
+            <button
+              v-if="currentUser && currentUser.role === 'admin'"
+              @click="clearActivityLog"
+              type="button"
+              class="btn-danger-subtle"
+              style="height:40px;min-height:40px;padding:0 16px;border-radius:10px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;"
+            >
+              <span>🗑️</span>
+              <span>{{ currentLang === 'ar' ? 'مسح السجل' : 'Clear Log' }}</span>
+            </button>
+            <button
+              @click="exportActivityLogCSV"
+              type="button"
+              class="btn-ghost"
+              style="height:40px;min-height:40px;padding:0 16px;border-radius:10px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;color:#38bdf8;border:1px solid rgba(56,189,248,0.35);background:rgba(56,189,248,0.08);white-space:nowrap;"
+            >
+              <span>📥</span>
+              <span>{{ currentLang === 'ar' ? 'تصدير CSV' : 'Export CSV' }}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -3651,7 +3655,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.36.0"></script>
+<script src="app.js?v=23.37.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

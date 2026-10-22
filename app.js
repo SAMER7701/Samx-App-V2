@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.36.0 — app.js
+//  SAMX v23.37.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.36.0';
+const APP_VERSION = '23.37.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -1323,12 +1323,19 @@ createApp({
         list = list.filter(l => l.category === 'sales' || (l.action && (l.action.includes('💰') || l.action.includes('مبيعات'))));
       } else if (this.activityLogFilter === 'targets') {
         list = list.filter(l => l.category === 'target' || (l.action && (l.action.includes('🎯') || l.action.includes('تارجت') || l.action.includes('أبطال'))));
+      } else if (this.activityLogFilter === 'security') {
+        list = list.filter(l => l.category === 'security' || l.category === 'system' || (l.action && (l.action.includes('دخول') || l.action.includes('خروج') || l.action.includes('غير مصرح') || l.action.includes('مسح') || l.action.includes('🛡️') || l.action.includes('⚠️'))));
+      } else if (this.activityLogFilter === 'today') {
+        const now = new Date();
+        list = list.filter(l => {
+          if (!l.timestamp) return false;
+          const d = new Date(l.timestamp);
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+        });
       } else if (this.activityLogFilter === 'closes') {
         list = list.filter(l => l.category === 'closes' || (l.action && (l.action.includes('إغلاق') || l.action.includes('فتح يومية') || l.action.includes('🔒') || l.action.includes('🔓'))));
       } else if (this.activityLogFilter === 'users') {
         list = list.filter(l => l.category === 'users' || l.category === 'branches' || (l.action && (l.action.includes('مستخدم') || l.action.includes('فرع') || l.action.includes('موظف') || l.action.includes('👥') || l.action.includes('🏬'))));
-      } else if (this.activityLogFilter === 'security') {
-        list = list.filter(l => l.category === 'security' || (l.action && (l.action.includes('دخول') || l.action.includes('خروج') || l.action.includes('غير مصرح') || l.action.includes('مسح') || l.action.includes('🛡️') || l.action.includes('⚠️'))));
       } else if (this.activityLogFilter === 'system') {
         list = list.filter(l => l.category === 'system' || (l.action && (l.action.includes('نسخ') || l.action.includes('استيراد') || l.action.includes('تصدير') || l.action.includes('سحاب') || l.action.includes('هوية'))));
       }
@@ -2214,6 +2221,30 @@ createApp({
       const locale = this.t('locale.dateTime');
       return date.toLocaleString(locale);
     },
+    // ⭐ v23.37: تنسيق وقت السجلات بأرقام قياسية إنجليزية موحدة (0-9)
+    formatAuditTime(val) {
+      if (!val) return '';
+      let d;
+      if (typeof val === 'number') {
+        d = new Date(val);
+      } else if (val instanceof Date) {
+        d = val;
+      } else if (typeof val === 'string' && val.trim()) {
+        const parsed = Date.parse(val);
+        d = !isNaN(parsed) ? new Date(parsed) : null;
+      }
+      if (!d || isNaN(d.getTime())) {
+        return String(val).replace(/[٠-٩]/g, digit => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit));
+      }
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      let hours = d.getHours();
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? (this.currentLang === 'ar' ? 'م' : 'PM') : (this.currentLang === 'ar' ? 'ص' : 'AM');
+      hours = hours % 12 || 12;
+      return `${yyyy}-${mm}-${dd} ${String(hours).padStart(2, '0')}:${mins} ${ampm}`;
+    },
 
     // ================================================================
     //  الإعدادات
@@ -2798,7 +2829,7 @@ this.settings = {
         role: currentUser ? currentUser.role : '',
         roleLabel: currentUser ? this.roleLabel(currentUser.role) : '',
         branchName: meta.branchName || (this.selectedBranch ? this.selectedBranch.name : (currentUser && currentUser.branchId ? this.branchName(currentUser.branchId) : '')),
-        time: this.formatDateTime(),
+        time: this.formatAuditTime(timestamp),
         timestamp,
         oldVal: meta.oldVal !== undefined ? meta.oldVal : null,
         newVal: meta.newVal !== undefined ? meta.newVal : null,
