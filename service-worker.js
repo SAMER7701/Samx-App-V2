@@ -1,11 +1,11 @@
 // ================================================================
-//  SAMX — Service Worker v23.31.0
+//  SAMX — Service Worker v23.32.0
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 //  يعمل: Network-First للتنقل مع Fallback للكاش، Offline-First للأصول
 // ================================================================
 
-const CACHE_VERSION = 'samx-v23.31.0';
+const CACHE_VERSION = 'samx-v23.32.0';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -52,7 +52,7 @@ const STATIC_ASSETS = [
 //  INSTALL
 // ================================================================
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing SAMX v23.31.0...');
+  console.log('[SW] Installing SAMX v23.32.0...');
   self.skipWaiting();
   event.waitUntil(
     (async () => {
@@ -78,7 +78,7 @@ self.addEventListener('install', (event) => {
 //  ACTIVATE
 // ================================================================
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating SAMX v23.31.0...');
+  console.log('[SW] Activating SAMX v23.32.0...');
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
@@ -312,4 +312,4 @@ self.addEventListener('message', (event) => {
   }
 });
 
-console.log('[SW] SAMX v23.31.0 loaded ✅');
+console.log('[SW] SAMX v23.32.0 loaded ✅');

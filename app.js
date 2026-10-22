@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.31.0 — app.js
+//  SAMX v23.32.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.31.0';
+const APP_VERSION = '23.32.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -3341,8 +3341,14 @@ this.settings = {
           // السحابة فارغة — هذا أول تشغيل للنظام
           this._cloudPulledOnce = true;
           this.cloudSyncStatus = 'synced';
-          this.loginSyncMsg = this.currentLang === 'ar' ? 'قاعدة بيانات السحابة فارغة ومهيأة ✅' : 'Cloud database is ready ✅';
+          this.loginSyncMsg = this.currentLang === 'ar' ? 'تم تجهيز قاعدة البيانات السحابية بنجاح ✅' : 'Cloud database is ready ✅';
           this.loginSyncMsgType = 'success';
+          if (this._loginSyncMsgTimer) clearTimeout(this._loginSyncMsgTimer);
+          this._loginSyncMsgTimer = setTimeout(() => {
+            if (this.loginSyncMsgType === 'success') {
+              this.loginSyncMsg = '';
+            }
+          }, 3000);
           if ((this.branches && this.branches.length > 0) || (this.staff && this.staff.length > 0)) {
             await this.syncToCloud();
           }
@@ -3495,15 +3501,21 @@ this.settings = {
         this.lastCloudSyncTime = new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
         try { localStorage.setItem('samx_last_cloud_sync', Date.now().toString()); } catch (e) {}
 
-        const usersCount = (this.users || []).length;
-        const dailyCount = Object.keys(this.daily || {}).length;
         this.loginSyncMsg = this.currentLang === 'ar'
-          ? `تم تحديث البيانات من السحابة بنجاح: (${usersCount}) مستخدمين و (${dailyCount}) يومية جاهزة ✅`
-          : `Cloud sync complete: (${usersCount}) users and (${dailyCount}) daily records ready ✅`;
+          ? 'تم تحديث البيانات من السحابة بنجاح ✅'
+          : 'Cloud data synchronized successfully ✅';
         this.loginSyncMsgType = 'success';
 
+        // إخفاء الشريط الأخضر تلقائياً بهدوء بعد 3 ثوانٍ لتبقى الشاشة نظيفة
+        if (this._loginSyncMsgTimer) clearTimeout(this._loginSyncMsgTimer);
+        this._loginSyncMsgTimer = setTimeout(() => {
+          if (this.loginSyncMsgType === 'success') {
+            this.loginSyncMsg = '';
+          }
+        }, 3000);
+
         if (isManual) {
-          this.showToast(this.currentLang === 'ar' ? `تمت مزامنة السحابة بنجاح: (${usersCount}) مستخدمين و (${dailyCount}) يومية ☁️` : 'Data synchronized from cloud ☁️', 'success');
+          this.showToast(this.currentLang === 'ar' ? 'تمت مزامنة السحابة بنجاح ☁️' : 'Data synchronized from cloud ☁️', 'success');
         }
       } catch (err) {
         console.warn('[CloudSync] Sync from cloud error:', err);

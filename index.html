@@ -44,7 +44,7 @@
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
 <!-- ⭐ v23.31: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.31.0" rel="stylesheet">
+<link href="styles.css?v=23.32.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -249,9 +249,11 @@
             <span :style="{ display:'inline-block', animation: cloudSyncStatus==='syncing' ? 'spin 1s linear infinite' : 'none' }">🔄</span>
             <span>{{ currentLang === 'ar' ? 'تحديث البيانات من السحابة' : 'Refresh Data from Cloud' }}</span>
           </button>
-          <p v-if="loginSyncMsg" :style="{ color: loginSyncMsgType === 'success' ? '#4ade80' : '#fda4af', fontSize: '11px', marginTop: '10px', textAlign: 'center', lineHeight: '1.5', background: loginSyncMsgType === 'success' ? 'rgba(74,222,128,0.1)' : 'rgba(244,63,94,0.1)', border: '1px solid ' + (loginSyncMsgType === 'success' ? 'rgba(74,222,128,0.25)' : 'rgba(244,63,94,0.25)'), borderRadius: '8px', padding: '8px 12px' }">
-            {{ loginSyncMsg }}
-          </p>
+          <transition name="fade">
+            <p v-if="loginSyncMsg" :style="{ color: loginSyncMsgType === 'success' ? '#4ade80' : '#fda4af', fontSize: '11px', marginTop: '10px', textAlign: 'center', lineHeight: '1.5', background: loginSyncMsgType === 'success' ? 'rgba(74,222,128,0.1)' : 'rgba(244,63,94,0.1)', border: '1px solid ' + (loginSyncMsgType === 'success' ? 'rgba(74,222,128,0.25)' : 'rgba(244,63,94,0.25)'), borderRadius: '8px', padding: '8px 12px' }">
+              {{ loginSyncMsg }}
+            </p>
+          </transition>
         </div>
       </div>
       <p style="text-align:center;font-size:11px;color:#64748b;margin-top:20px;">{{ activeCopyright }} — {{ t('meta.copyright') }}</p>
@@ -3629,7 +3631,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.31.0"></script>
+<script src="app.js?v=23.32.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

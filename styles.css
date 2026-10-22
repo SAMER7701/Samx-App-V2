@@ -69,8 +69,10 @@ html, body {
   font-family: 'SaudiRiyal', 'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif;
   margin: 0;
   padding: 0;
-  overscroll-behavior: none;
-  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: auto !important;
+  height: auto !important;
+  overscroll-behavior-y: auto;
   font-size: var(--app-font-size, 15px);
 }
 
@@ -80,7 +82,6 @@ body {
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   min-height: 100dvh;
-  overflow-x: hidden;
 }
 
 html.light body {
