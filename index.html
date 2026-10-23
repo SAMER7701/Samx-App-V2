@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v23.40: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.40.0" rel="stylesheet">
+<!-- ⭐ v23.41: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=23.41.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -578,7 +578,7 @@
             <!-- حقل المبيعات العامة بدون موظف بشكل مدمج ومتناسق -->
             <div v-if="canEnterDailySales" style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;">
               <label style="font-size:11px;color:#94a3b8;white-space:nowrap;margin:0;">{{ t('dashboard.target.manualExtraLabel') }}:</label>
-              <input type="number" min="0" inputmode="numeric" :value="branchManualExtra === 0 ? '' : Math.round(branchManualExtra)" @focus="$event.target.select()" @input="branchManualExtra = Math.round(Number($event.target.value) || 0)" class="target-input compact-target-input" placeholder="0" style="flex:1;max-width:180px;">
+              <input type="number" min="0" inputmode="numeric" :value="branchManualExtra === 0 ? '' : Math.round(branchManualExtra)" @focus="$event.target.select()" @input="branchManualExtra = Math.round(Number($event.target.value) || 0)" class="target-input compact-target-input" placeholder="0" style="flex:1;height:40px;min-height:40px;box-sizing:border-box;">
             </div>
           </div>
 
@@ -587,7 +587,7 @@
               <h3 style="font-size:13px;font-weight:bold;color:#34d399;margin:0;">{{ t('dashboard.live.title') }}</h3>
               <span style="font-size:11px;color:#6ee7b7;">{{ liveUpdateTime }}</span>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;">
+            <div class="live-kpi-grid">
               <div style="background:rgba(15,23,42,.5);border-radius:12px;padding:14px;border:1px solid rgba(212,168,75,.2);">
                 <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;">{{ t('dashboard.live.totalBranch') }}</p>
                  <p :class="kpiFlashClass.branchSales" style="font-size:26px;font-weight:900;color:#fff;margin:0;">{{ formatSAR(branchSales) }}</p>
@@ -616,58 +616,75 @@
           </div>
 
           <div class="card" style="border-radius:14px;padding:14px;border-color:rgba(59,130,246,.4);">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
               <div>
                 <h3 style="font-size:13px;font-weight:bold;color:#93c5fd;margin:0 0 2px;">{{ t('dashboard.invPcs.title') }}</h3>
                 <p style="font-size:11px;color:#94a3b8;margin:0;">{{ currentLang === 'ar' ? 'الفواتير والقطع ومتابعة التارجت الشهري' : 'Invoices, Pieces & Monthly Progress' }}</p>
               </div>
-              <span v-if="branchMonthlyTargetTotal > 0" class="badge-gold" style="font-size:11px;padding:3px 10px;font-weight:800;">
-                {{ currentLang === 'ar' ? 'إنجاز الشهر:' : 'Monthly:' }} {{ branchMonthlyAchievementPct.toFixed(1) }}%
-              </span>
             </div>
 
             <!-- 4 Inputs: Invoices, Pieces, Monthly Target, MTD Sales -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;margin-bottom:12px;margin-top:10px;">
+            <div class="inv-pcs-inputs-grid">
               <div>
-                <label style="display:block;font-size:11px;color:#93c5fd;margin-bottom:4px;font-weight:bold;">{{ t('dashboard.invPcs.invoicesLabel') }}</label>
-                <input type="number" min="0" inputmode="numeric" :value="branchInvoicesInput === 0 ? '' : branchInvoicesInput" @focus="$event.target.select()" @input="branchInvoicesInput = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="invoice-input" placeholder="0">
-                <p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ t('dashboard.invPcs.invoicesHint') }}</p>
+                <label style="display:block;font-size:11px;color:#93c5fd;margin-bottom:4px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🧾 {{ t('dashboard.invPcs.invoicesLabel') }}</label>
+                <input type="number" min="0" inputmode="numeric" :value="branchInvoicesInput === 0 ? '' : branchInvoicesInput" @focus="$event.target.select()" @input="branchInvoicesInput = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="invoice-input" placeholder="0" style="height:40px;min-height:40px;font-family:system-ui,sans-serif;direction:ltr;text-align:center;box-sizing:border-box;">
               </div>
               <div>
-                <label style="display:block;font-size:11px;color:#c4b5fd;margin-bottom:4px;font-weight:bold;">{{ t('dashboard.invPcs.piecesLabel') }}</label>
-                <input type="number" min="0" inputmode="numeric" :value="branchPiecesInput === 0 ? '' : branchPiecesInput" @focus="$event.target.select()" @input="branchPiecesInput = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="pieces-input" placeholder="0">
-                <p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ t('dashboard.invPcs.piecesHint') }}</p>
+                <label style="display:block;font-size:11px;color:#c4b5fd;margin-bottom:4px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👕 {{ t('dashboard.invPcs.piecesLabel') }}</label>
+                <input type="number" min="0" inputmode="numeric" :value="branchPiecesInput === 0 ? '' : branchPiecesInput" @focus="$event.target.select()" @input="branchPiecesInput = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="pieces-input" placeholder="0" style="height:40px;min-height:40px;font-family:system-ui,sans-serif;direction:ltr;text-align:center;box-sizing:border-box;">
               </div>
               <div>
-                <label style="display:block;font-size:11px;color:#e6c074;margin-bottom:4px;font-weight:bold;">📅 {{ currentLang === 'ar' ? 'إجمالي تارجت الشهر' : 'Total Month Target' }} ({{ currencySymbol }})</label>
-                <input type="number" min="0" inputmode="numeric" :value="branchMonthlyTargetInput === 0 ? '' : branchMonthlyTargetInput" @focus="$event.target.select()" @input="branchMonthlyTargetInput = Number($event.target.value) || 0" :disabled="!canEditTarget" class="target-input-heroes" placeholder="0">
-                <p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ currentLang === 'ar' ? 'تارجت الشهر المستدعى أو مجموع الأيام' : 'Monthly target or days sum' }}</p>
+                <label style="display:block;font-size:11px;color:#e6c074;margin-bottom:4px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📅 {{ currentLang === 'ar' ? 'تارجت الشهر (﷼)' : 'Month Target (SAR)' }}</label>
+                <input type="text" inputmode="numeric" :value="branchMonthlyTargetInput ? formatNum(branchMonthlyTargetInput) : ''" @focus="$event.target.select()" @input="branchMonthlyTargetInput = Number($event.target.value.replace(/[^\d]/g, '')) || 0" :disabled="!canEditTarget" class="target-input-heroes" placeholder="0" style="height:40px;min-height:40px;font-family:system-ui,sans-serif;direction:ltr;text-align:center;box-sizing:border-box;">
               </div>
               <div>
-                <label style="display:block;font-size:11px;color:#34d399;margin-bottom:4px;font-weight:bold;">📈 {{ currentLang === 'ar' ? 'إجمالي المبيعات حتى اليوم' : 'Total MTD Sales' }} ({{ currencySymbol }})</label>
-                <input type="number" min="0" inputmode="numeric" :value="branchMtdSalesInput === 0 ? '' : branchMtdSalesInput" @focus="$event.target.select()" @input="branchMtdSalesInput = Number($event.target.value) || 0" :disabled="!canEnterDailySales" class="sales-input" placeholder="0">
-                <p style="font-size:10px;color:#94a3b8;margin:4px 0 0;">{{ currentLang === 'ar' ? 'المبيعات التراكمية لاحتساب نسبة الشهر' : 'Cumulative sales to date' }}</p>
+                <label style="display:block;font-size:11px;color:#34d399;margin-bottom:4px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📈 {{ currentLang === 'ar' ? 'مبيعات الشهر (﷼)' : 'MTD Sales (SAR)' }}</label>
+                <input type="text" inputmode="numeric" :value="branchMtdSalesInput ? formatNum(branchMtdSalesInput) : ''" @focus="$event.target.select()" @input="branchMtdSalesInput = Number($event.target.value.replace(/[^\d]/g, '')) || 0" :disabled="!canEnterDailySales" class="sales-input" placeholder="0" style="height:40px;min-height:40px;font-family:system-ui,sans-serif;direction:ltr;text-align:center;box-sizing:border-box;">
               </div>
             </div>
 
             <!-- Indicators: UPT, ATV, Monthly Target Achievement % -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;">
-              <div style="background:linear-gradient(135deg,rgba(59,130,246,.15),transparent);border:1px solid rgba(59,130,246,.4);border-radius:10px;padding:10px 12px;">
-                <p style="font-size:10px;color:#93c5fd;margin:0 0 2px;font-weight:700;">{{ t('dashboard.invPcs.uptLabel') }}</p>
-                <p style="font-size:22px;font-weight:900;color:#fff;margin:4px 0;line-height:1;">{{ branchUPT.toFixed(2) }}</p>
-                <p style="font-size:10px;color:#94a3b8;margin:0;">{{ t('dashboard.invPcs.uptHint', '', { pieces: formatNum(branchPieces), invoices: formatNum(branchInvoices) }) }}</p>
-              </div>
-              <div style="background:linear-gradient(135deg,rgba(212,168,75,.15),transparent);border:1px solid rgba(212,168,75,.4);border-radius:10px;padding:10px 12px;">
-                <p style="font-size:10px;color:#e6c074;margin:0 0 2px;font-weight:700;">{{ t('dashboard.invPcs.atvLabel') }}</p>
-                <p style="font-size:22px;font-weight:900;color:#fff;margin:4px 0;line-height:1;">{{ formatSAR(branchATV) }}</p>
-                <p style="font-size:10px;color:#94a3b8;margin:0;">{{ t('dashboard.invPcs.atvHint') }}</p>
-              </div>
-              <div style="background:linear-gradient(135deg,rgba(16,185,129,.15),transparent);border:1px solid rgba(16,185,129,.4);border-radius:10px;padding:10px 12px;">
-                <p style="font-size:10px;color:#6ee7b7;margin:0 0 2px;font-weight:700;">🎯 {{ currentLang === 'ar' ? 'إنجاز الشهر (MTD)' : 'Monthly (MTD)' }}</p>
-                <p style="font-size:22px;font-weight:900;margin:4px 0;line-height:1;" :style="{color: summaryStatusColor(branchMonthlyAchievementPct)}">
-                  {{ branchMonthlyAchievementPct.toFixed(1) }}%
+            <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;">
+              <div style="background:linear-gradient(135deg,rgba(59,130,246,.15),transparent);border:1px solid rgba(59,130,246,.4);border-radius:10px;padding:10px 12px;min-width:0;">
+                <p style="font-size:11px;color:#93c5fd;margin:0 0 2px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  🎯 {{ currentLang === 'ar' ? 'UPT (معدل القطع)' : 'UPT (Units/Tx)' }}
                 </p>
-                <div class="progress-bar" style="height:4px;margin-top:4px;"><div class="progress-bar-fill" :style="{width: Math.min(branchMonthlyAchievementPct,100)+'%', background: branchMonthlyAchievementPct>=100 ? '#10b981' : branchMonthlyAchievementPct>=70 ? '#f59e0b' : '#ef4444'}"></div></div>
+                <p style="font-size:22px;font-weight:900;color:#fff;margin:4px 0;line-height:1;font-family:system-ui,sans-serif;">{{ branchUPT.toFixed(2) }}</p>
+                <p style="font-size:10px;color:#94a3b8;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ formatNum(branchPieces) }} ÷ {{ formatNum(branchInvoices) }}</p>
+              </div>
+              <div style="background:linear-gradient(135deg,rgba(212,168,75,.15),transparent);border:1px solid rgba(212,168,75,.4);border-radius:10px;padding:10px 12px;min-width:0;">
+                <p style="font-size:11px;color:#e6c074;margin:0 0 2px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  💰 {{ currentLang === 'ar' ? 'ATV (معدل الفاتورة)' : 'ATV (Avg Tx Val)' }}
+                </p>
+                <p style="font-size:22px;font-weight:900;color:#fff;margin:4px 0;line-height:1;font-family:system-ui,sans-serif;">{{ formatNum(branchATV) }} ﷼</p>
+                <p style="font-size:10px;color:#94a3b8;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ currentLang === 'ar' ? 'لكل فاتورة' : 'per invoice' }}</p>
+              </div>
+              <div
+                :style="{
+                  gridColumn: '1 / -1',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  background: branchMonthlyAchievementPct >= 100 ? 'rgba(16,185,129,0.12)' : branchMonthlyAchievementPct >= 70 ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.12)',
+                  border: '1.5px solid ' + (branchMonthlyAchievementPct >= 100 ? 'rgba(16,185,129,0.45)' : branchMonthlyAchievementPct >= 70 ? 'rgba(245,158,11,0.45)' : 'rgba(239,68,68,0.45)'),
+                  transition: 'all 0.2s ease'
+                }"
+              >
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="font-size:13px;">🎯</span>
+                    <span style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;">
+                      {{ currentLang === 'ar' ? 'إنجاز الشهر (MTD)' : 'Monthly (MTD)' }}
+                    </span>
+                  </div>
+                  <div style="font-size:18px;font-weight:900;line-height:1;font-family:system-ui,sans-serif;" :style="{color: branchMonthlyAchievementPct >= 100 ? '#34d399' : branchMonthlyAchievementPct >= 70 ? '#fbbf24' : '#fb7185'}">
+                    {{ branchMonthlyAchievementPct.toFixed(1) }}%
+                  </div>
+                </div>
+                <div class="progress-bar" style="height:6px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;margin:0;">
+                  <div class="progress-bar-fill" :style="{width: Math.min(branchMonthlyAchievementPct,100)+'%', background: branchMonthlyAchievementPct >= 100 ? '#10b981' : branchMonthlyAchievementPct >= 70 ? '#f59e0b' : '#ef4444', height: '100%'}"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -3901,7 +3918,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.40.0"></script>
+<script src="app.js?v=23.41.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

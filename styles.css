@@ -5419,3 +5419,32 @@ header {
 .user-compact-card:hover {
   border-color: rgba(212, 168, 75, 0.35);
 }
+
+/* ─── 10. مؤشرات الفرع وشبكة المبيعات المباشرة (Branch Indicators & Live KPI Grid) ─── */
+.live-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (min-width: 900px) {
+  .live-kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.inv-pcs-inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+  margin-top: 10px;
+}
+@media (min-width: 768px) {
+  .inv-pcs-inputs-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.grid-col-full {
+  grid-column: 1 / -1 !important;
+}

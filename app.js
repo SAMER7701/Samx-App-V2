@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.40.0 — app.js
+//  SAMX v23.41.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.40.0';
+const APP_VERSION = '23.41.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -660,16 +660,17 @@ createApp({
     branchMonthlyTargetInput: {
       get() {
         if (this.dayData && this.dayData.monthlyTarget !== undefined && this.dayData.monthlyTarget !== null && Number(this.dayData.monthlyTarget) > 0) {
-          return Number(this.dayData.monthlyTarget) || 0;
+          return Math.round(Number(this.dayData.monthlyTarget)) || 0;
         }
-        return this.branchMonthlyTargetTotal;
+        return Math.round(Number(this.branchMonthlyTargetTotal) || 0);
       },
       set(val) {
         if (!this.selectedBranchId) return;
         const key = `${this.selectedDate}|${this.selectedBranchId}`;
         const rec = this.normalizeDayRecord(key);
         if (!rec) return;
-        rec.monthlyTarget = Number(val) || 0;
+        const cleanNum = typeof val === 'string' ? val.replace(/[^\d]/g, '') : val;
+        rec.monthlyTarget = Math.round(Number(cleanNum)) || 0;
         this.schedulePersist();
       }
     },
@@ -678,16 +679,17 @@ createApp({
     branchMtdSalesInput: {
       get() {
         if (this.dayData && this.dayData.mtdSales !== undefined && this.dayData.mtdSales !== null && Number(this.dayData.mtdSales) > 0) {
-          return Number(this.dayData.mtdSales) || 0;
+          return Math.round(Number(this.dayData.mtdSales)) || 0;
         }
-        return this.branchMtdSalesCalculated;
+        return Math.round(Number(this.branchMtdSalesCalculated) || 0);
       },
       set(val) {
         if (!this.selectedBranchId) return;
         const key = `${this.selectedDate}|${this.selectedBranchId}`;
         const rec = this.normalizeDayRecord(key);
         if (!rec) return;
-        rec.mtdSales = Number(val) || 0;
+        const cleanNum = typeof val === 'string' ? val.replace(/[^\d]/g, '') : val;
+        rec.mtdSales = Math.round(Number(cleanNum)) || 0;
         this.schedulePersist();
       }
     },
@@ -697,13 +699,13 @@ createApp({
       if (!this.selectedBranchId) return 0;
       // 1. إذا أدخل المستخدم قيمة مخصصة في سجل اليوم
       if (this.dayData && Number(this.dayData.monthlyTarget) > 0) {
-        return Number(this.dayData.monthlyTarget);
+        return Math.round(Number(this.dayData.monthlyTarget));
       }
       // 2. إذا تم استيراد التارجت الشهري
       const month = this.selectedDate ? this.selectedDate.slice(0, 7) : '';
       const monthlyKey = `${month}|${this.selectedBranchId}`;
       if (this.monthlyTargets && Number(this.monthlyTargets[monthlyKey]) > 0) {
-        return Number(this.monthlyTargets[monthlyKey]);
+        return Math.round(Number(this.monthlyTargets[monthlyKey]));
       }
       // 3. أو حساب مجموع تارجت أيام الشهر المسجلة للفرع
       let sumDays = 0;
@@ -714,8 +716,8 @@ createApp({
           }
         }
       }
-      if (sumDays > 0) return sumDays;
-      return (Number(this.dayData.baseTarget) || 0) * 30;
+      if (sumDays > 0) return Math.round(sumDays);
+      return Math.round((Number(this.dayData.baseTarget) || 0) * 30);
     },
 
     // حساب المبيعات التراكمية من بداية الشهر حتى اليوم المختار
@@ -740,15 +742,15 @@ createApp({
           }
         }
       }
-      return sum;
+      return Math.round(sum);
     },
 
     // إجمالي مبيعات الشهر الفعلي المعتمد للحساب والعرض
     branchMtdSalesTotal() {
       if (this.dayData && Number(this.dayData.mtdSales) > 0) {
-        return Number(this.dayData.mtdSales);
+        return Math.round(Number(this.dayData.mtdSales));
       }
-      return this.branchMtdSalesCalculated;
+      return Math.round(this.branchMtdSalesCalculated);
     },
 
     // نسبة وصول الفرع مع تارجت الشهر
