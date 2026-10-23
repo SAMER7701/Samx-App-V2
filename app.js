@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.38.0 — app.js
+//  SAMX v23.39.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.38.0';
+const APP_VERSION = '23.39.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -337,6 +337,7 @@ createApp({
       selectedBranchId: '',
       monthlyMonth: localMonthStr(),
       monthlyBranchId: '',
+      expandedMonthlyDays: {},
       yoyYear: new Date().getFullYear(),
       yoyBranchId: '',
       analyticsBranchId: '',
@@ -1137,21 +1138,21 @@ createApp({
     monthlyBaseTarget: {
       get() {
         if (!this.monthlyTargetKeyBase) return 0;
-        return Number(this.monthlyTargets[this.monthlyTargetKeyBase]) || 0;
+        return Math.round(Number(this.monthlyTargets[this.monthlyTargetKeyBase]) || 0);
       },
       set(val) {
         if (!this.monthlyTargetKeyBase) return;
-        this.monthlyTargets[this.monthlyTargetKeyBase] = Number(val) || 0;
+        this.monthlyTargets[this.monthlyTargetKeyBase] = Math.round(Number(val) || 0);
       },
     },
     monthlyHeroesTarget: {
       get() {
         if (!this.monthlyTargetKeyBase) return 0;
-        return Number(this.monthlyHeroesTargets[this.monthlyTargetKeyBase]) || 0;
+        return Math.round(Number(this.monthlyHeroesTargets[this.monthlyTargetKeyBase]) || 0);
       },
       set(val) {
         if (!this.monthlyTargetKeyBase) return;
-        this.monthlyHeroesTargets[this.monthlyTargetKeyBase] = Number(val) || 0;
+        this.monthlyHeroesTargets[this.monthlyTargetKeyBase] = Math.round(Number(val) || 0);
       },
     },
     monthlyDays() {
@@ -1164,19 +1165,49 @@ createApp({
       const arr = [];
       let cumulative = 0;
       for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const d = this.daily[`${dateStr}|${this.monthlyBranchId}`] || { baseTarget: 0, heroesTarget: 0, staffData: {}, manualExtra: 0 };
-        const sales = staffIds.reduce((sum, id) => sum + (Number(d.staffData?.[id]?.sales) || 0), 0) + (Number(d.manualExtra) || 0);
-        const baseT = Number(d.baseTarget) || 0;
-        const heroesT = Number(d.heroesTarget) || 0;
+        const dayNum = String(day).padStart(2, '0');
+        const dateStr = `${y}-${String(m).padStart(2, '0')}-${dayNum}`;
+        let d = null;
+        if (typeof this.getDayRecord === 'function') {
+          d = this.getDayRecord(dateStr, this.monthlyBranchId, false);
+        } else if (this.daily) {
+          d = this.daily[`${dateStr}|${this.monthlyBranchId}`];
+        }
+        if (!d) d = { baseTarget: 0, heroesTarget: 0, staffData: {}, manualExtra: 0, invoices: 0, pieces: 0 };
+
+        let staffSales = 0;
+        if (d.staffData && typeof d.staffData === 'object') {
+          Object.values(d.staffData).forEach(item => {
+            staffSales += (Number(item?.sales) || 0);
+          });
+        }
+        const sales = Math.round(staffSales + (Number(d.manualExtra) || 0));
+        const baseT = Math.round(Number(d.baseTarget) || 0);
+        const heroesT = Math.round(Number(d.heroesTarget) || 0);
+        const invoices = Math.round(Number(d.invoices) || 0);
+        const pieces = Math.round(Number(d.pieces) || 0);
+        const atv = invoices > 0 ? Math.round(sales / invoices) : 0;
+        const upt = invoices > 0 ? Number((pieces / invoices).toFixed(2)) : 0;
+
         cumulative += sales;
         const dt = new Date(y, m - 1, day);
+        const dayName = this.t(dayKeys[dt.getDay()]);
+
         arr.push({
-          date: dateStr, dayName: this.t(dayKeys[dt.getDay()]), sales,
-          baseTarget: baseT, heroesTarget: heroesT,
+          date: dateStr,
+          dayNum,
+          dayName,
+          sales,
+          baseTarget: baseT,
+          heroesTarget: heroesT,
+          invoices,
+          pieces,
+          atv,
+          upt,
           basePct: baseT > 0 ? (sales / baseT) * 100 : 0,
           heroesPct: heroesT > 0 ? (sales / heroesT) * 100 : 0,
-          cumulative, isToday: dateStr === todayKey,
+          cumulative,
+          isToday: dateStr === todayKey,
         });
       }
       return arr;
@@ -1184,9 +1215,9 @@ createApp({
     monthlyDaysWithSales() { return this.monthlyDays.filter(d => d.sales > 0).length; },
     monthlySummary() {
       const days = this.monthlyDays;
-      const totalSales = days.reduce((s, d) => s + d.sales, 0);
-      const baseT = this.monthlyBaseTarget;
-      const heroesT = this.monthlyHeroesTarget;
+      const totalSales = Math.round(days.reduce((s, d) => s + d.sales, 0));
+      const baseT = Math.round(this.monthlyBaseTarget);
+      const heroesT = Math.round(this.monthlyHeroesTarget);
       return {
         totalSales,
         basePct: baseT > 0 ? (totalSales / baseT) * 100 : 0,
@@ -3159,9 +3190,25 @@ this.settings = {
       const key = `${date}|${branchId}`;
       const rec = this.normalizeDayRecord(key);
       if (!rec) return;
-      rec[field] = Number(value) || 0;
+      rec[field] = Math.round(Number(value) || 0);
       this.autoDistributeForDate(date, branchId);
       this.schedulePersist();
+    },
+
+    toggleMonthlyDay(date) {
+      if (!this.expandedMonthlyDays) this.expandedMonthlyDays = {};
+      this.expandedMonthlyDays[date] = !this.expandedMonthlyDays[date];
+    },
+    isDayExpanded(date) {
+      return !!(this.expandedMonthlyDays && this.expandedMonthlyDays[date]);
+    },
+    gotoMonitoringDate(dateStr) {
+      if (this.monthlyBranchId) {
+        this.selectedBranchId = this.monthlyBranchId;
+      }
+      this.selectedDate = dateStr;
+      this.openView('dashboard');
+      this.showToast(this.t('toast.date.navigated', '', { date: dateStr }), 'success');
     },
     // ================================================================
     //  ⭐ v23.27: التوزيع التلقائي الذكي المرتبط ببيانات الإكسل اليومية
@@ -3224,8 +3271,8 @@ this.settings = {
       const rec = this.normalizeDayRecord(key);
       if (!rec) return null;
       if (Number(rec.baseTarget) === 0 && Number(rec.heroesTarget) === 0) {
-        rec.baseTarget   = Math.round((mBase   / daysInMonth) * 100) / 100;
-        rec.heroesTarget = Math.round((mHeroes / daysInMonth) * 100) / 100;
+        rec.baseTarget   = Math.round(mBase / daysInMonth);
+        rec.heroesTarget = Math.round(mHeroes / daysInMonth);
       }
       return rec;
     },
@@ -4609,8 +4656,8 @@ this.settings = {
       const base = this.monthlyTargetFor(this.distMonth, this.distBranchId, 'base') / n;
       const heroes = this.monthlyTargetFor(this.distMonth, this.distBranchId, 'heroes') / n;
       this.distDays.forEach(d => {
-        d.base = Math.round(base * 100) / 100;
-        d.heroes = Math.round(heroes * 100) / 100;
+        d.base = Math.round(base);
+        d.heroes = Math.round(heroes);
       });
       this.showToast(this.t('toast.distribution.evenly'), 'success');
     },
@@ -4625,8 +4672,8 @@ this.settings = {
         const key = `${d.date}|${this.distBranchId}`;
         const rec = this.normalizeDayRecord(key);
         if (!rec) return;
-        rec.baseTarget = Number(d.base) || 0;
-        rec.heroesTarget = Number(d.heroes) || 0;
+        rec.baseTarget = Math.round(Number(d.base) || 0);
+        rec.heroesTarget = Math.round(Number(d.heroes) || 0);
         count++;
       });
       this.showToast(this.t('toast.distribution.saved', '', { count }), 'success');
@@ -5972,25 +6019,112 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
         const t = this.getChartThemeColors();
         const days = this.monthlyDays || [];
         let cumBase = 0, cumHeroes = 0;
-        const baseLine = days.map(d => { cumBase += (d.baseTarget || 0); return cumBase; });
-        const heroesLine = days.map(d => { cumHeroes += (d.heroesTarget || 0); return cumHeroes; });
+        const baseLine = days.map(d => { cumBase += (d.baseTarget || 0); return Math.round(cumBase); });
+        const heroesLine = days.map(d => { cumHeroes += (d.heroesTarget || 0); return Math.round(cumHeroes); });
+        
         const chart = new Chart(canvas, {
           type: 'line',
           data: {
             labels: days.map(d => d.date.slice(8)),
             datasets: [
-              { label: 'المبيعات', data: days.map(d => d.cumulative), borderColor: t.primary, backgroundColor: t.primaryAlpha(0.15), fill: true, tension: .35, borderWidth: 2 },
-              { label: '🎯 أساسي', data: baseLine, borderColor: t.targetColor, borderDash: [6, 4], borderWidth: 2 },
-              { label: '🏆 أبطال', data: heroesLine, borderColor: t.heroesColor, borderDash: [3, 3], borderWidth: 2 },
+              {
+                label: this.currentLang === 'ar' ? 'المبيعات' : 'Sales',
+                data: days.map(d => Math.round(d.cumulative)),
+                borderColor: t.primary,
+                backgroundColor: t.primaryAlpha(0.12),
+                fill: true,
+                tension: 0.35,
+                borderWidth: 2.5,
+                pointRadius: 2,
+                pointHoverRadius: 5,
+                pointBackgroundColor: t.primary,
+              },
+              {
+                label: this.currentLang === 'ar' ? 'التارجت الأساسي' : 'Base Target',
+                data: baseLine,
+                borderColor: t.targetColor,
+                borderDash: [6, 4],
+                borderWidth: 2.5,
+                pointRadius: 2,
+                pointHoverRadius: 5,
+                pointBackgroundColor: t.targetColor,
+              },
+              {
+                label: this.currentLang === 'ar' ? 'تارجت الأبطال' : 'Heroes Target',
+                data: heroesLine,
+                borderColor: t.heroesColor,
+                borderDash: [3, 3],
+                borderWidth: 2.5,
+                pointRadius: 2,
+                pointHoverRadius: 5,
+                pointBackgroundColor: t.heroesColor,
+              },
             ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: t.textColor, font: { family: 'Cairo' } } } },
+            interaction: {
+              mode: 'index',
+              intersect: false,
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                align: 'center',
+                labels: {
+                  color: t.textColor,
+                  font: { family: 'Cairo', size: 12, weight: '700' },
+                  boxWidth: 10,
+                  boxHeight: 10,
+                  usePointStyle: true,
+                  pointStyle: 'circle',
+                  padding: 14,
+                },
+              },
+              tooltip: {
+                backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                titleFont: { family: 'Cairo', size: 12 },
+                bodyFont: { family: 'Cairo', size: 12 },
+                padding: 10,
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderWidth: 1,
+                callbacks: {
+                  label: (ctx) => {
+                    const val = ctx.parsed.y !== null ? Math.round(ctx.parsed.y).toLocaleString('en-US') : 0;
+                    return ` ${ctx.dataset.label}: ${val} ${this.currencySymbol || 'ر.س'}`;
+                  }
+                }
+              }
+            },
             scales: {
-              x: { ticks: { color: t.textColor, font: { family: 'Cairo', size: 10 } }, grid: { color: t.gridColor } },
-              y: { ticks: { color: t.textColor, font: { family: 'Cairo', size: 10 } }, grid: { color: t.gridColor } },
+              x: {
+                ticks: {
+                  color: t.textColor,
+                  font: { family: 'sans-serif', size: 10 },
+                  callback: function(val, index) {
+                    const lbl = this.getLabelForValue(val);
+                    return String(lbl).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+                  }
+                },
+                grid: { color: t.gridColor },
+              },
+              y: {
+                grace: '10%',
+                beginAtZero: true,
+                ticks: {
+                  color: t.textColor,
+                  font: { family: 'sans-serif', size: 10 },
+                  callback: (val) => {
+                    const num = Math.round(val);
+                    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+                    if (num >= 1000) return Math.round(num / 1000) + 'k';
+                    return num.toString();
+                  }
+                },
+                grid: { color: t.gridColor },
+              },
             },
           },
         });

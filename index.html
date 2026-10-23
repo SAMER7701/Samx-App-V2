@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v23.38: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.38.0" rel="stylesheet">
+<!-- ⭐ v23.39: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=23.39.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -1411,39 +1411,170 @@
 
           <div class="card" style="border-radius:16px;padding:16px;">
             <h3 style="font-size:13px;font-weight:bold;color:#e6c074;margin:0 0 12px;">{{ t('monthly.chart.title') }}</h3>
-            <div style="height:288px;position:relative;">
+            <div style="height:310px;position:relative;">
               <canvas ref="monthlyChart" id="monthlyChart"></canvas>
             </div>
           </div>
-          <div class="card" style="border-radius:16px;padding:16px;">
-            <h3 style="font-size:13px;font-weight:bold;color:#e6c074;margin:0 0 12px;">{{ t('monthly.days.title') }}</h3>
-            <div class="table-responsive" style="max-height:520px;">
-              <table style="width:100%;font-size:13px;border-collapse:separate;border-spacing:0;min-width:780px;">
-                <thead style="position:sticky;top:0;background:#111a2e;z-index:2;">
-                  <tr style="color:#94a3b8;font-size:11px;border-bottom:2px solid #243356;">
-                    <th style="text-align:right;padding:8px;">{{ t('monthly.days.colDate') }}</th>
-                    <th style="text-align:right;padding:8px;">{{ t('monthly.days.colDay') }}</th>
-                    <th style="text-align:right;padding:8px;">{{ t('monthly.days.colBase') }}</th>
-                    <th style="text-align:right;padding:8px;">{{ t('monthly.days.colHeroes') }}</th>
-                    <th style="text-align:right;padding:8px;">{{ t('monthly.days.colSales') }}</th>
-                    <th style="text-align:right;padding:8px;">{{ t('monthly.days.colBasePct') }}</th>
-                    <th style="text-align:right;padding:8px;">{{ t('monthly.days.colHeroesPct') }}</th>
-                    <th style="text-align:right;padding:8px;">{{ t('monthly.days.colCumulative') }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="d in monthlyDays" :key="d.date" :style="{borderBottom:'1px solid rgba(36,51,86,.5)', background: d.isToday ? 'rgba(212,168,75,.1)' : 'transparent', cursor:'pointer'}" @click="gotoDate(d.date)">
-                    <td style="padding:8px;font-size:12px;">{{ d.date.slice(5) }} <span v-if="d.isToday" style="color:#e6c074;font-size:10px;">{{ t('monthly.days.today') }}</span></td>
-                    <td style="padding:8px;font-size:12px;color:#94a3b8;">{{ d.dayName }}</td>
-                    <td style="padding:8px;"><input type="number" min="0" inputmode="numeric" :value="d.baseTarget === 0 ? '' : d.baseTarget" @focus="$event.target.select()" @input.stop="updateDayTarget(d.date, 'baseTarget', $event.target.value)" @click.stop :disabled="!canEditTarget" class="target-input" style="width:80px;" placeholder="0"></td>
-                    <td style="padding:8px;"><input type="number" min="0" inputmode="numeric" :value="d.heroesTarget === 0 ? '' : d.heroesTarget" @focus="$event.target.select()" @input.stop="updateDayTarget(d.date, 'heroesTarget', $event.target.value)" @click.stop :disabled="!canEditTarget" class="target-input" style="width:80px;" placeholder="0"></td>
-                    <td style="padding:8px;font-weight:700;color:#fff;">{{ formatSAR(d.sales) }}</td>
-                    <td style="padding:8px;"><span :style="{fontSize:'12px',fontWeight:'bold',padding:'3px 8px',borderRadius:'5px', background: d.basePct>=100 ? 'rgba(16,185,129,.2)' : d.basePct>=70 ? 'rgba(245,158,11,.2)' : d.basePct>0 ? 'rgba(244,63,94,.2)' : 'rgba(36,51,86,.5)', color: d.basePct>=100 ? '#6ee7b7' : d.basePct>=70 ? '#fcd34d' : d.basePct>0 ? '#fda4af' : '#94a3b8'}">{{ d.basePct.toFixed(0) }}%</span></td>
-                    <td style="padding:8px;"><span :style="{fontSize:'12px',fontWeight:'bold',padding:'3px 8px',borderRadius:'5px', background: d.heroesPct>=100 ? 'rgba(16,185,129,.2)' : d.heroesPct>=70 ? 'rgba(245,158,11,.2)' : d.heroesPct>0 ? 'rgba(244,63,94,.2)' : 'rgba(36,51,86,.5)', color: d.heroesPct>=100 ? '#6ee7b7' : d.heroesPct>=70 ? '#fcd34d' : d.heroesPct>0 ? '#fda4af' : '#94a3b8'}">{{ d.heroesPct.toFixed(0) }}%</span></td>
-                    <td style="padding:8px;font-size:12px;color:#e6c074;font-weight:bold;">{{ formatSAR(d.cumulative) }}</td>
-                  </tr>
-                </tbody>
-              </table>
+
+          <div class="card" style="border-radius:16px;padding:16px;width:100%;box-sizing:border-box;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+              <h3 style="font-size:14px;font-weight:bold;color:#e6c074;margin:0;">{{ t('monthly.days.title') }}</h3>
+              <span style="font-size:11px;color:#94a3b8;">{{ monthlyDays.length }} {{ currentLang === 'ar' ? 'يوم' : 'days' }}</span>
+            </div>
+
+            <!-- قائمة الأيام بنظام بطاقات قابلة للتمدد (Expandable Day Cards) 100% بدون أي سحب أفقي -->
+            <div class="monthly-days-list" style="display:flex;flex-direction:column;gap:8px;width:100%;">
+              <div
+                v-for="d in monthlyDays"
+                :key="d.date"
+                class="monthly-day-card"
+                :style="{
+                  background: isDayExpanded(d.date) ? 'rgba(30, 41, 59, 0.75)' : (d.isToday ? 'rgba(212,168,75,0.08)' : 'rgba(15,23,42,0.55)'),
+                  border: '1px solid ' + (d.isToday ? 'rgba(212,168,75,0.45)' : (isDayExpanded(d.date) ? 'rgba(56,189,248,0.35)' : 'rgba(255,255,255,0.07)')),
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  transition: 'all 0.2s ease',
+                  width: '100%',
+                  boxSizing: 'border-box'
+                }"
+              >
+                <!-- الصف الرئيسي القابل للضغط -->
+                <div
+                  @click="toggleMonthlyDay(d.date)"
+                  style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;user-select:none;gap:10px;width:100%;box-sizing:border-box;"
+                >
+                  <!-- يميناً: أيقونة السهم + اليوم واسم اليوم -->
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+                    <span
+                      style="font-size:11px;color:#94a3b8;transition:transform 0.2s ease;display:inline-block;width:14px;text-align:center;"
+                      :style="{ transform: isDayExpanded(d.date) ? 'rotate(90deg)' : 'none' }"
+                    >
+                      {{ currentLang === 'ar' ? '◀' : '▶' }}
+                    </span>
+                    <span style="font-weight:700;font-size:13px;color:#fff;white-space:nowrap;">
+                      {{ d.dayNum }} {{ d.dayName }}
+                    </span>
+                    <span
+                      v-if="d.isToday"
+                      style="font-size:10px;padding:2px 6px;border-radius:6px;background:rgba(212,168,75,0.2);color:#e6c074;font-weight:700;white-space:nowrap;"
+                    >
+                      {{ t('monthly.days.today') }}
+                    </span>
+                  </div>
+
+                  <!-- وسطاً: المبيعات المحققة بالريال وتحتها التارجت الأساسي لليوم -->
+                  <div style="text-align:center;min-width:0;flex:1;">
+                    <div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;font-family:system-ui,sans-serif;">
+                      {{ d.sales > 0 ? Math.round(d.sales).toLocaleString('en-US') : '0' }} <span style="font-size:10px;font-weight:600;color:#e6c074;">{{ currencySymbol }}</span>
+                    </div>
+                    <div style="font-size:10px;color:#94a3b8;margin-top:2px;white-space:nowrap;">
+                      {{ currentLang === 'ar' ? 'من' : 'of' }} {{ Math.round(d.baseTarget).toLocaleString('en-US') }}
+                    </div>
+                  </div>
+
+                  <!-- يساراً: شارة نسبة التحقيق المئوية -->
+                  <div style="flex-shrink:0;text-align:left;">
+                    <span
+                      :style="{
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        display: 'inline-block',
+                        minWidth: '46px',
+                        textAlign: 'center',
+                        direction: 'ltr',
+                        background: d.basePct >= 100 ? 'rgba(16,185,129,0.18)' : (d.basePct >= 70 ? 'rgba(245,158,11,0.18)' : (d.basePct > 0 ? 'rgba(244,63,94,0.18)' : 'rgba(148,163,184,0.1)')),
+                        color: d.basePct >= 100 ? '#34d399' : (d.basePct >= 70 ? '#fcd34d' : (d.basePct > 0 ? '#fb7185' : '#94a3b8')),
+                        border: '1px solid ' + (d.basePct >= 100 ? 'rgba(16,185,129,0.4)' : (d.basePct >= 70 ? 'rgba(245,158,11,0.4)' : (d.basePct > 0 ? 'rgba(244,63,94,0.4)' : 'rgba(148,163,184,0.2)'))),
+                      }"
+                    >
+                      {{ d.basePct.toFixed(0) }}%
+                    </span>
+                  </div>
+                </div>
+
+                <!-- الدرج الانسيابي عند الفتح (Expandable Accordion Drawer) -->
+                <div
+                  v-if="isDayExpanded(d.date)"
+                  style="border-top:1px solid rgba(255,255,255,0.07);padding:12px 14px;background:rgba(15,23,42,0.4);display:flex;flex-direction:column;gap:12px;"
+                >
+                  <!-- شبكة 2x2: التارجت الأساسي وتارجت الأبطال ومؤشرات اليوم وزر الانتقال -->
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+                    <!-- حقل التارجت الأساسي -->
+                    <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(96,165,250,0.25);border-radius:8px;padding:8px 10px;">
+                      <label style="display:block;font-size:11px;color:#60a5fa;margin-bottom:4px;font-weight:700;">
+                        🎯 {{ t('monthly.days.colBase') }}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        inputmode="numeric"
+                        :value="d.baseTarget === 0 ? '' : Math.round(d.baseTarget)"
+                        @focus="$event.target.select()"
+                        @input="updateDayTarget(d.date, 'baseTarget', $event.target.value)"
+                        :disabled="!canEditTarget"
+                        placeholder="0"
+                        style="width:100%;height:36px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:0 10px;color:#fff;font-size:13px;font-weight:700;direction:ltr;box-sizing:border-box;"
+                      />
+                    </div>
+
+                    <!-- حقل تارجت الأبطال -->
+                    <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(230,192,116,0.25);border-radius:8px;padding:8px 10px;">
+                      <label style="display:block;font-size:11px;color:#e6c074;margin-bottom:4px;font-weight:700;">
+                        🏆 {{ t('monthly.days.colHeroes') }}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        inputmode="numeric"
+                        :value="d.heroesTarget === 0 ? '' : Math.round(d.heroesTarget)"
+                        @focus="$event.target.select()"
+                        @input="updateDayTarget(d.date, 'heroesTarget', $event.target.value)"
+                        :disabled="!canEditTarget"
+                        placeholder="0"
+                        style="width:100%;height:36px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:0 10px;color:#fff;font-size:13px;font-weight:700;direction:ltr;box-sizing:border-box;"
+                      />
+                    </div>
+
+                    <!-- مؤشرات اليوم الإضافية -->
+                    <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;display:flex;align-items:center;justify-content:space-around;gap:8px;font-size:11px;">
+                      <div style="text-align:center;">
+                        <span style="color:#94a3b8;display:block;font-size:10px;">🧾 {{ currentLang === 'ar' ? 'فواتير' : 'Invoices' }}</span>
+                        <strong style="color:#fff;font-family:sans-serif;">{{ d.invoices || 0 }}</strong>
+                      </div>
+                      <div style="text-align:center;">
+                        <span style="color:#94a3b8;display:block;font-size:10px;">🛍️ {{ currentLang === 'ar' ? 'قطع' : 'Pieces' }}</span>
+                        <strong style="color:#fff;font-family:sans-serif;">{{ d.pieces || 0 }}</strong>
+                      </div>
+                      <div style="text-align:center;">
+                        <span style="color:#94a3b8;display:block;font-size:10px;">💳 ATV</span>
+                        <strong style="color:#38bdf8;font-family:sans-serif;">{{ d.atv || 0 }}</strong>
+                      </div>
+                      <div style="text-align:center;">
+                        <span style="color:#94a3b8;display:block;font-size:10px;">📦 UPT</span>
+                        <strong style="color:#a78bfa;font-family:sans-serif;">{{ d.upt || 0 }}</strong>
+                      </div>
+                      <div style="text-align:center;">
+                        <span style="color:#94a3b8;display:block;font-size:10px;">📈 {{ currentLang === 'ar' ? 'تراكمي' : 'Cum.' }}</span>
+                        <strong style="color:#e6c074;font-family:sans-serif;">{{ Math.round(d.cumulative).toLocaleString('en-US') }}</strong>
+                      </div>
+                    </div>
+
+                    <!-- زر سريع للانتقال لتفاصيل ذلك اليوم في لوحة المتابعة -->
+                    <div style="display:flex;align-items:center;">
+                      <button
+                        type="button"
+                        @click="gotoMonitoringDate(d.date)"
+                        style="width:100%;height:54px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:rgba(212,168,75,0.12);border:1px solid rgba(212,168,75,0.35);color:#e6c074;font-weight:700;font-size:12px;cursor:pointer;transition:all 0.2s;"
+                      >
+                        <span>👁️</span>
+                        <span>{{ currentLang === 'ar' ? 'فتح تفاصيل اليوم في لوحة المتابعة' : 'Open Day in Monitoring Dashboard' }}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </template>
@@ -3655,7 +3786,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.38.0"></script>
+<script src="app.js?v=23.39.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

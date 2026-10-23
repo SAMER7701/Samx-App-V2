@@ -5392,3 +5392,15 @@ header {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
 }
+
+/* ─── 8. بطاقات تفصيل الأيام بالتقرير الشهري (Expandable Monthly Day Cards) ─── */
+.monthly-days-list {
+  width: 100%;
+}
+.monthly-day-card {
+  width: 100%;
+  box-sizing: border-box;
+}
+.monthly-day-card:hover {
+  border-color: rgba(212, 168, 75, 0.35);
+}
