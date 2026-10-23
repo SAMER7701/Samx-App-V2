@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.42.0 — app.js
+//  SAMX v23.43.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.42.0';
+const APP_VERSION = '23.43.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -5266,134 +5266,114 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
     // ═══════════════════════════════════════════════════════════════
     //  ⭐ v23.2: مشاركة بطاقة اليوم كصورة
     // ═══════════════════════════════════════════════════════════════
-       async loadHtml2Canvas() {
-      // ⭐ v23.3: المكتبة محمّلة محلياً من index.html
+    async loadHtml2Canvas() {
       if (window.html2canvas) {
         this._html2canvasLoaded = true;
         return true;
       }
-      // احتياطي: حاول التحميل من CDN فقط إذا فشل التحميل المحلي
-      console.warn('[Share] html2canvas غير محمّلة محلياً — محاولة CDN كاحتياطي');
+      try {
+        await this.loadScript('./libs/html2canvas.min.js');
+        if (window.html2canvas) {
+          this._html2canvasLoaded = true;
+          return true;
+        }
+      } catch (e) {
+        console.warn('[Share] Local html2canvas load failed, trying CDN:', e);
+      }
       try {
         await this.loadScript('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
         return !!window.html2canvas;
       } catch (e) {
-        console.error('[Share] فشل تحميل html2canvas:', e);
+        console.error('[Share] CDN html2canvas load failed:', e);
         return false;
       }
     },
 
-    // ⭐ v23.6.5: استخدام html-to-image بدل html2canvas لدعم العربية
-        async generateSummaryImage() {
-      const originalEl = this.$refs.dailySummaryCard;
-      if (!originalEl) {
+    // ⭐ v23.43: توليد صورة بطاقة اليوم بواسطة html2canvas مع دعم التنزيل المباشر
+    async generateSummaryImage() {
+      let targetEl = null;
+      const allCards = document.querySelectorAll('.daily-summary-card');
+      if (allCards.length > 0) {
+        for (const c of allCards) {
+          if (c.offsetParent !== null) {
+            targetEl = c;
+            break;
+          }
+        }
+        if (!targetEl) targetEl = allCards[0];
+      }
+      if (!targetEl && this.$refs.dailySummaryCard) {
+        targetEl = Array.isArray(this.$refs.dailySummaryCard) ? this.$refs.dailySummaryCard[0] : this.$refs.dailySummaryCard;
+      }
+
+      if (!targetEl) {
         console.warn('[Share] dailySummaryCard ref not found');
         return null;
       }
-      if (!window.htmlToImage) {
-        console.error('[Share] html-to-image not loaded');
-        return null;
+
+      if (!window.html2canvas) {
+        await this.loadHtml2Canvas();
       }
 
-      // ⭐ v23.11.7: إنشاء نسخة أفقية (1200px) off-screen
-      const wrapper = document.createElement('div');
-      wrapper.style.cssText = 'position:fixed;left:-99999px;top:0;pointer-events:none;z-index:-1;opacity:0;';
-      const clone = originalEl.cloneNode(true);
-      // ⭐ v23.12: صورة عمودية — إزالة is-horizontal + تحديد عرض ثابت
-      clone.classList.remove('is-horizontal');
-      clone.classList.add('is-export-card');
-      clone.style.width = '720px';
-      clone.style.maxWidth = '720px';
-      clone.removeAttribute('id');
-      // إزالة أي inline display:none من الأصل
-      clone.style.display = '';
-      wrapper.appendChild(clone);
-      document.body.appendChild(wrapper);
-
-      // انتظر تحميل الخطوط
-      if (document.fonts && document.fonts.load) {
+      // المحاولة 1: html2canvas
+      if (window.html2canvas) {
         try {
-          await Promise.all([
-            document.fonts.load('400 14px Cairo'),
-            document.fonts.load('600 14px Cairo'),
-            document.fonts.load('700 14px Cairo'),
-            document.fonts.load('900 14px Cairo'),
-            document.fonts.load('400 14px Tajawal'),
-            document.fonts.load('700 14px Tajawal'),
-          ]);
+          const canvas = await window.html2canvas(targetEl, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: this.darkMode ? '#0e1628' : '#ffffff',
+            logging: false,
+          });
+          if (canvas && canvas.width > 0 && canvas.height > 0) {
+            return canvas;
+          }
         } catch (e) {
-          console.warn('[Share] Font load warning:', e);
+          console.warn('[Share] html2canvas failed, trying html-to-image:', e);
         }
       }
-      // انتظر الـ layout الكامل للكلون
-      await new Promise(r => setTimeout(r, 400));
 
-      try {
-        const dataUrl = await window.htmlToImage.toPng(clone, {
-          pixelRatio: 2,
-          backgroundColor: this.darkMode ? '#0e1628' : '#ffffff',
-          cacheBust: true,
-          skipFonts: false,
-          filter: (node) => {
-            if (node.style && node.style.display === 'none') return false;
-            return true;
-          },
-          style: {
-            fontFamily: "'SaudiRiyal', 'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif",
-            direction: this.currentLang === 'ar' ? 'rtl' : 'ltr',
-          },
-        });
-
-        return await new Promise((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            resolve(canvas);
-          };
-          img.onerror = reject;
-          img.src = dataUrl;
-        });
-      } catch (e) {
-        console.error('[Share] html-to-image failed:', e);
-        return null;
-      } finally {
-        // ⭐ تنظيف دائماً
-        try { wrapper.remove(); } catch (e) {}
+      // المحاولة 2: html-to-image كاحتياطي
+      if (window.htmlToImage && typeof window.htmlToImage.toPng === 'function') {
+        try {
+          const dataUrl = await window.htmlToImage.toPng(targetEl, {
+            pixelRatio: 2,
+            backgroundColor: this.darkMode ? '#0e1628' : '#ffffff',
+            cacheBust: true,
+          });
+          return await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0);
+              resolve(canvas);
+            };
+            img.onerror = reject;
+            img.src = dataUrl;
+          });
+        } catch (e) {
+          console.error('[Share] html-to-image fallback also failed:', e);
+        }
       }
+
+      return null;
     },
-       // ⭐ v23.11.8: توليد الصورة (blob + dataUrl)
-    async _getOrCreateImageBlob() {
-      if (this._cachedShareBlob && this._cachedShareDataUrl) {
-        return {
-          blob: this._cachedShareBlob,
-          dataUrl: this._cachedShareDataUrl,
-        };
-      }
 
+    // ⭐ v23.43: كائن الصورة (blob + dataUrl + canvas)
+    async _getOrCreateImageBlob() {
       const canvas = await this.generateSummaryImage();
       if (!canvas) return null;
 
-      const blob = await this.canvasToBlob(canvas);
-      if (!blob) return null;
-
       let dataUrl = '';
       try { dataUrl = canvas.toDataURL('image/png'); } catch (e) {}
-
-      this._cachedShareBlob = blob;
-      this._cachedShareDataUrl = dataUrl;
-      setTimeout(() => {
-        this._cachedShareBlob = null;
-        this._cachedShareDataUrl = null;
-      }, 60000);
-
-      return { blob, dataUrl };
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      return { blob, dataUrl, canvas };
     },
 
-        // ⭐ v23.12-NEW: توليد + تنزيل مباشر (بدون Modal معاينة)
+    // ⭐ v23.43: توليد وتنزيل مباشر مدعوم وموثوق في جميع المتصفحات
     async generateAndDownload() {
       if (this.shareGenerating) {
         console.log('[Download] already generating');
@@ -5404,72 +5384,28 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
 
       const safetyTimer = setTimeout(() => {
         if (this.shareGenerating) {
-          console.warn('[Download] safety timeout');
           this.shareGenerating = false;
           this.showToast('⚠️ استغرق التوليد وقتاً طويلاً', 'warning');
         }
       }, 15000);
 
       try {
-        this.showToast('⏳ جارٍ توليد الصورة...', 'success');
-        const result = await this._getOrCreateImageBlob();
-
-        if (!result || !result.blob) {
-          this.showToast('❌ فشل توليد الصورة', 'error');
+        const canvas = await this.generateSummaryImage();
+        if (!canvas) {
+          this.showToast(this.t('toast.share.imageFailed', '❌ فشل إنشاء صورة التقرير'), 'error');
           return;
         }
 
-        const branch = this.selectedBranch;
-        const filename = `SAMX_${branch ? branch.code : 'Report'}_${this.selectedDate}.png`;
+        const filename = `SAMX-Daily-Report-${this.selectedDate}.png`;
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-        // ─── المحاولة 1: File System Access API (Chrome Desktop) ───
-        if (window.showSaveFilePicker) {
-          try {
-            const handle = await window.showSaveFilePicker({
-              suggestedName: filename,
-              types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }],
-            });
-            const writable = await handle.createWritable();
-            await writable.write(result.blob);
-            await writable.close();
-            this.showToast('✅ تم حفظ الصورة', 'success');
-            this.vibrate([10, 30, 10]);
-            return;
-          } catch (e) {
-            if (e.name === 'AbortError') return; // المستخدم ألغى
-            console.warn('[Download] SaveFilePicker failed, falling back:', e);
-          }
-        }
-
-        // ─── المحاولة 2: data URL (يعمل جيداً على Android Chrome) ───
-        if (result.dataUrl && result.dataUrl.startsWith('data:')) {
-          const a = document.createElement('a');
-          a.href = result.dataUrl;
-          a.download = filename;
-          a.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => { try { document.body.removeChild(a); } catch(e) {} }, 2000);
-          this.showToast('✅ تم التنزيل — ابحث في مجلد Downloads', 'success');
-          this.vibrate([10, 30, 10]);
-          return;
-        }
-
-        // ─── المحاولة 3: blob URL (fallback أخير) ───
-        const url = URL.createObjectURL(result.blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          try { document.body.removeChild(a); } catch(e) {}
-          URL.revokeObjectURL(url);
-        }, 3000);
-        this.showToast('✅ تم التنزيل — ابحث في مجلد Downloads', 'success');
+        this.showToast(this.t('toast.share.imageDownloaded', '✅ تم تنزيل صورة التقرير بنجاح'), 'success');
         this.vibrate([10, 30, 10]);
-
       } catch (e) {
         console.error('[Download] generateAndDownload failed:', e);
         this.showToast('❌ فشل التنزيل: ' + (e.message || ''), 'error');
@@ -5479,112 +5415,50 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       }
     },
 
-    // ⭐ v23.11.8: مشاركة مباشرة (من داخل Modal المعاينة)
+    // ⭐ v23.43: مشاركة مباشرة من Modal المعاينة
     async shareImageDirect(target = 'native') {
-      if (!this.previewImageBlob) {
-        this.showToast('⚠️ لا توجد صورة جاهزة', 'warning');
-        return;
-      }
-
+      const filename = `SAMX-Daily-Report-${this.selectedDate}.png`;
       const blob = this.previewImageBlob;
-      const filename = this.previewImageFilename || 'SAMX.png';
-      const file = new File([blob], filename, { type: 'image/png' });
-      const shareText = this.buildShareText();
+      const shareText = this.buildShareText ? this.buildShareText() : '';
 
-      // ⭐ Web Share API — لا نستخدم canShare هنا
-      if (navigator.share) {
-        try {
-          // تجربة مباشرة (بعض الأجهزة ترفض canShare لكن تقبل share)
-          const shareData = { files: [file], title: 'SAMX Report', text: shareText };
-          await navigator.share(shareData);
-          this.showToast('✅ تمت المشاركة', 'success');
-          return;
-        } catch (e) {
-          if (e.name === 'AbortError') {
-            console.log('[Share] user cancelled');
-            return;
-          }
-          console.warn('[Share] share with files failed:', e);
+      if (blob) {
+        const file = new File([blob], filename, { type: 'image/png' });
+        const shareData = {
+          files: [file],
+          title: 'SAMX Report',
+          text: shareText
+        };
 
-          // محاولة بدون ملفات (نص فقط)
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
           try {
-            await navigator.share({ title: 'SAMX Report', text: shareText });
-            this.showToast('✅ تمت مشاركة النص', 'success');
-            return;
-          } catch (e2) {
-            if (e2.name === 'AbortError') return;
-            console.warn('[Share] share text failed:', e2);
-          }
-        }
-      }
-
-      // ─ Fallback نهائي: نسخ النص + إرشاد ─
-      try { await navigator.clipboard.writeText(shareText); } catch (e) {}
-      this.showToast('💡 الصورة أمامك — اضغط مطولاً عليها لحفظها', 'warning');
-    },
-
-    // ⭐ v23.11.8: تنزيل مباشر (من داخل Modal المعاينة)
-    async downloadSummaryImage() {
-      if (!this.previewImageBlob) {
-        this.showToast('⚠️ لا توجد صورة جاهزة', 'warning');
-        return;
-      }
-
-      const blob = this.previewImageBlob;
-      const filename = this.previewImageFilename || 'SAMX.png';
-
-      try {
-        // المحاولة 1: File System Access API (Chrome Desktop)
-        if (window.showSaveFilePicker) {
-          try {
-            const handle = await window.showSaveFilePicker({
-              suggestedName: filename,
-              types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }],
-            });
-            const writable = await handle.createWritable();
-            await writable.write(blob);
-            await writable.close();
-            this.showToast('✅ تم حفظ الصورة', 'success');
-            this.vibrate([10, 30, 10]);
+            await navigator.share(shareData);
+            this.showToast(this.t('toast.share.success', '✅ تمت المشاركة بنجاح'), 'success');
             return;
           } catch (e) {
-            if (e.name === 'AbortError') return;
-            console.warn('[Download] SaveFilePicker failed:', e);
+            if (e && e.name === 'AbortError') return;
+            console.warn('[Share] preview share failed, fallback to download:', e);
           }
         }
-
-        // المحاولة 2: data URL (يعمل على Android Chrome بشكل أفضل)
-        if (this.previewImageUrl && this.previewImageUrl.startsWith('data:')) {
-          const a = document.createElement('a');
-          a.href = this.previewImageUrl;
-          a.download = filename;
-          a.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => { try { document.body.removeChild(a); } catch(e) {} }, 2000);
-          this.showToast('✅ تم التنزيل — ابحث في مجلد Downloads', 'success');
-          this.vibrate([10, 30, 10]);
-          return;
-        }
-
-        // المحاولة 3: blob URL
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          try { document.body.removeChild(a); } catch(e) {}
-          URL.revokeObjectURL(url);
-        }, 3000);
-        this.showToast('✅ تم التنزيل — ابحث في مجلد Downloads', 'success');
-        this.vibrate([10, 30, 10]);
-      } catch (e) {
-        console.error('[Download] failed:', e);
-        this.showToast('❌ فشل التنزيل', 'error');
       }
+
+      await this.downloadSummaryImage();
+    },
+
+    // ⭐ v23.43: تنزيل مباشر من Modal المعاينة
+    async downloadSummaryImage() {
+      const filename = `SAMX-Daily-Report-${this.selectedDate}.png`;
+      if (this.previewImageUrl) {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = this.previewImageUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        this.showToast(this.t('toast.share.imageDownloaded', '✅ تم تنزيل صورة التقرير بنجاح'), 'success');
+        this.vibrate([10, 30, 10]);
+        return;
+      }
+      await this.generateAndDownload();
     },
 
     // ⭐ v23.11.8: إغلاق Modal المعاينة
@@ -5703,53 +5577,70 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
 
     async shareAsImage() {
       if (!this.selectedBranch) {
-        this.showToast(this.t('toast.share.noBranch'), 'warning');
+        this.showToast(this.t('toast.share.noBranch', '⚠️ الرجاء اختيار الفرع أولاً'), 'warning');
         return;
       }
-      this.showToast(this.t('toast.share.generating'), 'success');
+      if (this.shareGenerating) return;
+      this.shareGenerating = true;
+      this.vibrate(15);
 
-      const canvas = await this.generateSummaryImage();
-      if (!canvas) {
-        this.showToast(this.t('toast.share.imageFailed'), 'error');
-        return;
-      }
-      const blob = await this.canvasToBlob(canvas);
-      if (!blob) {
-        this.showToast(this.t('toast.share.imageCreateFailed'), 'error');
-        return;
-      }
-      const filename = `SAMX_${this.selectedBranch.code}_${this.selectedDate}.png`;
-      const file = new File([blob], filename, { type: 'image/png' });
-      const shareText = this.buildShareText();
+      const safetyTimer = setTimeout(() => {
+        if (this.shareGenerating) {
+          this.shareGenerating = false;
+        }
+      }, 15000);
 
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
+      try {
+        const canvas = await this.generateSummaryImage();
+        if (!canvas) {
+          this.showToast(this.t('toast.share.imageFailed', '❌ فشل إنشاء صورة التقرير'), 'error');
+          return;
+        }
+
+        const filename = `SAMX-Daily-Report-${this.selectedDate}.png`;
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const shareText = this.buildShareText ? this.buildShareText() : '';
+
+        if (blob) {
+          const file = new File([blob], filename, { type: 'image/png' });
+          const shareData = {
             files: [file],
             title: this.t('toast.share.title', '', { branch: this.selectedBranch.name }),
             text: shareText,
-          });
-          this.showToast(this.t('toast.share.success'), 'success');
-          return;
-        } catch (e) {
-          if (e && e.name === 'AbortError') return;
-          console.warn('[Share] navigator.share failed:', e);
-        }
-      }
+          };
 
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.style.position = 'fixed';
-      a.style.left = '-9999px';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        try { document.body.removeChild(a); } catch (e) {}
-        URL.revokeObjectURL(url);
-      }, 2000);
-      this.showToast(this.t('toast.share.imageDownloaded'), 'success');
+          if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            try {
+              await navigator.share(shareData);
+              this.showToast(this.t('toast.share.success', '✅ تمت المشاركة بنجاح'), 'success');
+              return;
+            } catch (e) {
+              if (e && e.name === 'AbortError') {
+                console.log('[Share] User cancelled share');
+                return;
+              }
+              console.warn('[Share] navigator.share failed, falling back to download:', e);
+            }
+          }
+        }
+
+        // Fallback: direct download if native share is unsupported or failed
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.showToast(this.t('toast.share.imageDownloaded', '✅ تم تنزيل صورة التقرير بنجاح'), 'success');
+        this.vibrate([10, 30, 10]);
+      } catch (err) {
+        console.error('[Share] shareAsImage error:', err);
+        this.showToast('❌ فشلت العملية: ' + (err.message || ''), 'error');
+      } finally {
+        clearTimeout(safetyTimer);
+        this.shareGenerating = false;
+      }
     },
     // ================================================================
     //  ⭐ v21: مشاركة التوقع
