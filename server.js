@@ -9,6 +9,15 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Enable CORS for all assets
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
+
 // Rewrite subpath static asset requests (e.g., /dashboard/app.js -> /app.js, /kpi/libs/* -> /libs/*)
 app.use((req, res, next) => {
   const libsIdx = req.path.indexOf('/libs/');
@@ -51,7 +60,7 @@ app.get('/api/sync', (req, res) => {
         status: 'ok',
         bindingConfigured: true,
         data: content.payload,
-        version: content.version || '23.43.0',
+        version: content.version || '23.44.0',
         updated_at: content.updated_at || Date.now()
       });
     }
@@ -96,7 +105,7 @@ app.post('/api/sync', (req, res) => {
       } catch (err) {}
     }
 
-    const version = body.version || '23.43.0';
+    const version = body.version || '23.44.0';
     const now = Date.now();
     fs.writeFileSync(LOCAL_SYNC_FILE, JSON.stringify({ payload: mergedPayload, version, updated_at: now }, null, 2), 'utf-8');
     return res.json({ success: true, bindingConfigured: true, updated_at: now, version });

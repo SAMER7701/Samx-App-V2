@@ -2,34 +2,9 @@
   "payload": {
     "branches": [
       {
-        "id": "id_jtjj8r0ol2qm",
-        "name": "Al Nakheel Mall",
-        "code": "61"
-      },
-      {
-        "id": "id_7bewqd2kl2qm",
-        "name": "Alreem",
-        "code": "42"
-      },
-      {
-        "id": "id_c8j1qjkjl2qm",
-        "name": "Alkhobar",
-        "code": "73"
-      },
-      {
-        "id": "id_sscauv7yl2qm",
-        "name": "Hafouf",
-        "code": "53"
-      },
-      {
-        "id": "id_g0admoq5l2qm",
-        "name": "Unaiza",
-        "code": "13"
-      },
-      {
-        "id": "id_o6pn6xgel2qm",
-        "name": "Buraida",
-        "code": "31"
+        "id": "id_0wolaflwy4d7",
+        "name": "فرع جدة",
+        "code": "JED"
       }
     ],
     "staff": [
@@ -332,6 +307,552 @@
         "invoices": 0,
         "pieces": 0,
         "isClosed": false
+      },
+      "2026-10-21|id_g0admoq5l2qm": {
+        "baseTarget": 3342.45,
+        "heroesTarget": 3910.67,
+        "manualExtra": 0,
+        "staffData": {
+          "id_8xg29141l2qm": {
+            "target": 835.61,
+            "heroesTarget": 977.67,
+            "sales": 0
+          },
+          "id_sc27rwnjl2qm": {
+            "target": 835.61,
+            "heroesTarget": 977.67,
+            "sales": 0
+          },
+          "id_hta2swn8l2qm": {
+            "target": 835.61,
+            "heroesTarget": 977.67,
+            "sales": 0
+          },
+          "id_2ftoa3sal2qm": {
+            "target": 835.61,
+            "heroesTarget": 977.67,
+            "sales": 0
+          }
+        },
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-13|id_g0admoq5l2qm": {
+        "baseTarget": 3342.45,
+        "heroesTarget": 3910.67,
+        "manualExtra": 0,
+        "staffData": {
+          "id_8xg29141l2qm": {
+            "target": 835.61,
+            "heroesTarget": 977.67,
+            "sales": 0
+          },
+          "id_sc27rwnjl2qm": {
+            "target": 835.61,
+            "heroesTarget": 977.67,
+            "sales": 0
+          },
+          "id_hta2swn8l2qm": {
+            "target": 835.61,
+            "heroesTarget": 977.67,
+            "sales": 0
+          },
+          "id_2ftoa3sal2qm": {
+            "target": 835.61,
+            "heroesTarget": 977.67,
+            "sales": 0
+          }
+        },
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-22|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984.34,
+        "heroesTarget": 4661.68,
+        "manualExtra": 0,
+        "staffData": {
+          "id_fh0m6zf2l2qm": {
+            "target": 1328,
+            "heroesTarget": 1554,
+            "sales": 0
+          },
+          "id_i5qryr7ml2qm": {
+            "target": 1328,
+            "heroesTarget": 1554,
+            "sales": 0
+          },
+          "id_4u9xy7dxl2qm": {
+            "target": 1328,
+            "heroesTarget": 1554,
+            "sales": 0
+          }
+        },
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-23|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984.34,
+        "heroesTarget": 4661.68,
+        "manualExtra": 0,
+        "staffData": {
+          "id_fh0m6zf2l2qm": {
+            "target": 1328,
+            "heroesTarget": 1554,
+            "sales": 0
+          },
+          "id_i5qryr7ml2qm": {
+            "target": 1328,
+            "heroesTarget": 1554,
+            "sales": 0
+          },
+          "id_4u9xy7dxl2qm": {
+            "target": 1328,
+            "heroesTarget": 1554,
+            "sales": 0
+          }
+        },
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-23|id_7bewqd2kl2qm": {
+        "baseTarget": 3999.2,
+        "heroesTarget": 4679.07,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-23|id_c8j1qjkjl2qm": {
+        "baseTarget": 5253.32,
+        "heroesTarget": 6146.38,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-23|id_sscauv7yl2qm": {
+        "baseTarget": 3422.51,
+        "heroesTarget": 4004.33,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-23|id_g0admoq5l2qm": {
+        "baseTarget": 3342.45,
+        "heroesTarget": 3910.67,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-23|id_o6pn6xgel2qm": {
+        "baseTarget": 2584.7,
+        "heroesTarget": 3024.1,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-01|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {
+          "id_fh0m6zf2l2qm": {
+            "target": 1328,
+            "heroesTarget": 1554,
+            "sales": 0
+          },
+          "id_i5qryr7ml2qm": {
+            "target": 1328,
+            "heroesTarget": 1554,
+            "sales": 0
+          },
+          "id_4u9xy7dxl2qm": {
+            "target": 1328,
+            "heroesTarget": 1554,
+            "sales": 0
+          }
+        },
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-02|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-03|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-04|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-05|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-06|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-07|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-08|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-09|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-10|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-11|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-12|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-13|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-14|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-17|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-24|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {
+          "id_fh0m6zf2l2qm": {
+            "target": 1328,
+            "heroesTarget": 1554,
+            "sales": 0
+          },
+          "id_i5qryr7ml2qm": {
+            "target": 1328,
+            "heroesTarget": 1554,
+            "sales": 0
+          },
+          "id_4u9xy7dxl2qm": {
+            "target": 1328,
+            "heroesTarget": 1554,
+            "sales": 0
+          }
+        },
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-25|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-26|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-27|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-28|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-29|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-30|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-31|id_jtjj8r0ol2qm": {
+        "baseTarget": 3984,
+        "heroesTarget": 4662,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-01|id_7bewqd2kl2qm": {
+        "baseTarget": 3999,
+        "heroesTarget": 4679,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-01|id_c8j1qjkjl2qm": {
+        "baseTarget": 5253,
+        "heroesTarget": 6146,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-01|id_sscauv7yl2qm": {
+        "baseTarget": 3423,
+        "heroesTarget": 4004,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-01|id_g0admoq5l2qm": {
+        "baseTarget": 3342,
+        "heroesTarget": 3911,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-01|id_o6pn6xgel2qm": {
+        "baseTarget": 2585,
+        "heroesTarget": 3024,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-24|id_7bewqd2kl2qm": {
+        "baseTarget": 3999,
+        "heroesTarget": 4679,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-24|id_c8j1qjkjl2qm": {
+        "baseTarget": 5253,
+        "heroesTarget": 6146,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-24|id_sscauv7yl2qm": {
+        "baseTarget": 3423,
+        "heroesTarget": 4004,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-24|id_g0admoq5l2qm": {
+        "baseTarget": 3342,
+        "heroesTarget": 3911,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-24|id_o6pn6xgel2qm": {
+        "baseTarget": 2585,
+        "heroesTarget": 3024,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-23|b1": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-23|id_xc9s2192q8ae": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-23|id_vjnic7rjqlpn": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-23|id_d5fpgelpqxr2": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-23|id_ro8bg5myr964": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-23|id_cscv4vitxtgk": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-23|id_0wolaflwy4d7": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0
       }
     },
     "monthlyTargets": {
@@ -352,7 +873,8 @@
     },
     "attendance": {
       "2026-10-15|id_i5qryr7ml2qm": true,
-      "2026-10-15|id_fh0m6zf2l2qm": true
+      "2026-10-15|id_fh0m6zf2l2qm": true,
+      "2026-10-22|id_fh0m6zf2l2qm": true
     },
     "users": [
       {
@@ -427,8 +949,8 @@
       },
       "sectorTemplate": "retail"
     },
-    "updated_at": 1792544962129
+    "updated_at": 1792798516434
   },
-  "version": "23.29.0",
-  "updated_at": 1792545786859
+  "version": "23.44.0",
+  "updated_at": 1792798516447
 }
