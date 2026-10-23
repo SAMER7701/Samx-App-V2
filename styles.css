@@ -5404,3 +5404,18 @@ header {
 .monthly-day-card:hover {
   border-color: rgba(212, 168, 75, 0.35);
 }
+
+/* ─── 9. بطاقات إدارة المستخدمين والصلاحيات (Compact User Cards & Permissions Grid) ─── */
+.permission-box-compact:hover {
+  border-color: rgba(212, 168, 75, 0.45) !important;
+}
+.users-compact-list {
+  width: 100%;
+}
+.user-compact-card {
+  width: 100%;
+  box-sizing: border-box;
+}
+.user-compact-card:hover {
+  border-color: rgba(212, 168, 75, 0.35);
+}
