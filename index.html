@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v23.41: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.41.0" rel="stylesheet">
+<!-- ⭐ v23.42: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=23.42.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -2006,54 +2006,42 @@
               </div>
             </div>
             <div style="margin-top:16px;padding-top:16px;border-top:1px solid #243356;">
-              <h4 style="font-size:12px;color:#e6c074;margin:0 0 12px;font-weight:700;">{{ t('users.form.permissions') }}</h4>
-              <!-- شبكة الصلاحيات المدمجة من عمودين بارتفاع 42px -->
-              <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:8px;">
+              <h4 style="font-size:12px;color:#e6c074;margin:0 0 10px;font-weight:700;">🔐 {{ t('users.form.permissions') }}</h4>
+              <!-- الأقراص التفاعلية الذكية المرنة (Smart Selectable Pills) - Mobile-First 360px -->
+              <div class="permission-pills-container" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;box-sizing:border-box;">
                 <label
                   v-for="perm in permissionList"
                   :key="perm.key"
-                  class="permission-box-compact"
+                  class="permission-pill"
+                  :class="{ 'selected': userForm.permissions[perm.key] }"
                   :style="{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    minHeight: '42px',
-                    height: '42px',
-                    padding: '0 12px',
-                    background: userForm.permissions[perm.key] ? 'rgba(212, 168, 75, 0.12)' : 'rgba(15, 23, 42, 0.6)',
-                    border: '1.5px solid ' + (userForm.permissions[perm.key] ? '#d4a84b' : 'rgba(255, 255, 255, 0.12)'),
+                    flex: '1 1 calc(50% - 8px)',
+                    minWidth: '130px',
+                    maxWidth: '100%',
+                    boxSizing: 'border-box',
+                    height: '38px',
+                    minHeight: '38px',
+                    padding: '0 10px',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    fontSize: '13px',
+                    fontSize: '12px',
                     userSelect: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '6px',
                     transition: 'all 0.15s ease',
-                    boxSizing: 'border-box'
+                    background: userForm.permissions[perm.key] ? 'rgba(234,179,8,0.15)' : 'rgba(255,255,255,0.04)',
+                    border: '1px solid ' + (userForm.permissions[perm.key] ? '#eab308' : 'rgba(255,255,255,0.15)'),
+                    color: userForm.permissions[perm.key] ? '#fef08a' : '#cbd5e1'
                   }"
                 >
-                  <span style="display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:#fff;">
-                    <span style="font-size:14px;flex-shrink:0;">{{ perm.icon }}</span>
-                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;">{{ t('permissions.' + perm.key, perm.label) }}</span>
-                  </span>
                   <input type="checkbox" v-model="userForm.permissions[perm.key]" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;">
-                  <span
-                    :style="{
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '6px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      fontSize: '12px',
-                      fontWeight: '900',
-                      background: userForm.permissions[perm.key] ? '#d4a84b' : 'rgba(255, 255, 255, 0.06)',
-                      border: '1.5px solid ' + (userForm.permissions[perm.key] ? '#d4a84b' : 'rgba(255, 255, 255, 0.25)'),
-                      color: '#0b1220',
-                      transition: 'all 0.15s ease'
-                    }"
-                  >
-                    <span v-if="userForm.permissions[perm.key]">✓</span>
+                  <span style="display:inline-flex;align-items:center;gap:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;">
+                    <span style="font-size:14px;flex-shrink:0;">{{ perm.icon }}</span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ t('permissions.' + perm.key, perm.label) }}</span>
                   </span>
+                  <span v-if="userForm.permissions[perm.key]" style="font-size:12px;font-weight:900;color:#eab308;flex-shrink:0;margin-inline-start:4px;">✓</span>
                 </label>
               </div>
             </div>
@@ -2084,9 +2072,8 @@
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
               <h3 style="font-size:14px;font-weight:bold;color:#e6c074;margin:0;display:flex;align-items:center;gap:6px;">
                 <span>👥</span>
-                <span>{{ t('users.list.title', '', { count: users.length }) }}</span>
+                <span>{{ currentLang === 'ar' ? 'المستخدمون' : 'Users' }} ({{ users.length }})</span>
               </h3>
-              <span style="font-size:11px;color:#94a3b8;">{{ users.length }} {{ currentLang === 'ar' ? 'مستخدم' : 'users' }}</span>
             </div>
 
             <!-- قائمة المستخدمين كبطاقات مدمجة أنيقة (Compact User Cards) 100% بدون أي سحب أفقي -->
@@ -3918,7 +3905,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.41.0"></script>
+<script src="app.js?v=23.42.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

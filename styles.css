@@ -5405,9 +5405,22 @@ header {
   border-color: rgba(212, 168, 75, 0.35);
 }
 
-/* ─── 9. بطاقات إدارة المستخدمين والصلاحيات (Compact User Cards & Permissions Grid) ─── */
-.permission-box-compact:hover {
-  border-color: rgba(212, 168, 75, 0.45) !important;
+/* ─── 9. بطاقات إدارة المستخدمين والصلاحيات (Smart Selectable Pills & Compact User Cards) ─── */
+.permission-pills-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.permission-pill {
+  transition: all 0.15s ease;
+}
+.permission-pill:hover {
+  border-color: rgba(234, 179, 8, 0.45) !important;
+}
+.permission-pill.selected {
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.12);
 }
 .users-compact-list {
   width: 100%;
