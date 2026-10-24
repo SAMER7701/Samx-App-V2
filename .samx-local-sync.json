@@ -897,7 +897,8 @@
         "manualExtra": 0,
         "staffData": {},
         "invoices": 0,
-        "pieces": 0
+        "pieces": 0,
+        "isClosed": false
       }
     },
     "monthlyTargets": {
@@ -994,8 +995,8 @@
       },
       "sectorTemplate": "retail"
     },
-    "updated_at": 1792800517713
+    "updated_at": 1792801016872
   },
   "version": "23.45.0",
-  "updated_at": 1792800517719
+  "updated_at": 1792801016879
 }

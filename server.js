@@ -60,7 +60,7 @@ app.get('/api/sync', (req, res) => {
         status: 'ok',
         bindingConfigured: true,
         data: content.payload,
-        version: content.version || '23.45.0',
+        version: content.version || '23.46.0',
         updated_at: content.updated_at || Date.now()
       });
     }

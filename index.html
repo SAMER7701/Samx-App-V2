@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v23.45: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.45.0" rel="stylesheet">
+<!-- ⭐ v23.46: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=23.46.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -345,11 +345,6 @@
             <button @click="setLanguage(currentLang === 'ar' ? 'en' : 'ar')" class="btn-ghost header-icon-btn" style="font-weight:800;font-size:14px;" aria-label="Language">🌍</button>
           </div>
 
-          <!-- Settings -->
-          <div class="tooltip-container" :data-tooltip="t('header.tooltips.settings')">
-            <button @click="showSettings=true" class="btn-ghost header-icon-btn" aria-label="Settings">⚙️</button>
-          </div>
-
           <!-- Activity Log -->
           <div v-if="canViewActivityLog" class="tooltip-container hide-mobile" :data-tooltip="t('header.tooltips.activity')">
             <button @click="openActivityLog" class="btn-ghost header-icon-btn" aria-label="Activity Log">📜</button>
@@ -384,7 +379,7 @@
       </transition>
     </header>
     <!-- ============ MAIN ============ -->
-    <main class="main-container" style="flex:1;max-width:100%;width:100%;margin:0;padding:16px 20px 100px;min-height:100dvh;">
+    <main class="main-container" style="flex:1;max-width:100%;width:100%;margin:0;padding:8px 10px 70px;box-sizing:border-box;">
 
       <!-- ============================================================
            WELCOME SCREEN
@@ -3905,7 +3900,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.45.0"></script>
+<script src="app.js?v=23.46.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {
