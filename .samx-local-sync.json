@@ -2,9 +2,9 @@
   "payload": {
     "branches": [
       {
-        "id": "id_0wolaflwy4d7",
-        "name": "فرع جدة",
-        "code": "JED"
+        "id": "id_u4lw74lv50k4",
+        "name": "فرع النخيل مول",
+        "code": "NKH"
       }
     ],
     "staff": [
@@ -852,6 +852,51 @@
         "manualExtra": 0,
         "staffData": {},
         "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-24|id_0wolaflwy4d7": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-24|id_77krgevrweug": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-24|id_2mhp6lcswp6i": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-24|id_of2o8hhy3jg3": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-24|id_u4lw74lv50k4": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
         "pieces": 0
       }
     },
@@ -949,8 +994,8 @@
       },
       "sectorTemplate": "retail"
     },
-    "updated_at": 1792798516434
+    "updated_at": 1792800517713
   },
-  "version": "23.44.0",
-  "updated_at": 1792798516447
+  "version": "23.45.0",
+  "updated_at": 1792800517719
 }

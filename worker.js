@@ -143,7 +143,7 @@ async function handleSync(request, env) {
           status: 'saved',
           bindingConfigured: true,
           updated_at: now,
-          version: body.version || '23.44.0',
+          version: body.version || '23.45.0',
         }),
         { status: 200, headers }
       );

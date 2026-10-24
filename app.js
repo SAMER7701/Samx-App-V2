@@ -4,7 +4,7 @@
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.44.0';
+const APP_VERSION = '23.45.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -5285,6 +5285,27 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
     // ═══════════════════════════════════════════════════════════════
     //  ⭐ v23.2: مشاركة بطاقة اليوم كصورة
     // ═══════════════════════════════════════════════════════════════
+    async loadHtmlToImage() {
+      if (window.htmlToImage && typeof window.htmlToImage.toPng === 'function') {
+        return true;
+      }
+      try {
+        await this.loadScript('./libs/html-to-image.min.js');
+        if (window.htmlToImage && typeof window.htmlToImage.toPng === 'function') {
+          return true;
+        }
+      } catch (e) {
+        console.warn('[Share] Local html-to-image load failed, trying CDN:', e);
+      }
+      try {
+        await this.loadScript('https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.min.js');
+        return !!(window.htmlToImage && typeof window.htmlToImage.toPng === 'function');
+      } catch (e) {
+        console.error('[Share] CDN html-to-image load failed:', e);
+        return false;
+      }
+    },
+
     async loadHtml2Canvas() {
       if (window.html2canvas) {
         this._html2canvasLoaded = true;
@@ -5308,7 +5329,7 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       }
     },
 
-    // ⭐ v23.44: تنزيل ملف الكانفاس بأسلوب متوافق مع كافة المتصفحات والهواتف
+    // ⭐ v23.45: تنزيل ملف الكانفاس بأسلوب متوافق مع كافة المتصفحات والهواتف
     async _downloadCanvas(canvas, filename) {
       filename = filename || `SAMX-Daily-Report-${this.selectedDate || 'today'}.png`;
 
@@ -5362,7 +5383,7 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       return true;
     },
 
-    // ⭐ v23.44: توليد صورة بطاقة اليوم بواسطة html2canvas مع دعم النسخ والتحميل المباشر
+    // ⭐ v23.45: توليد صورة بطاقة اليوم بواسطة html-to-image لدعم اللغة العربية المتصلة بدون تقطيع
     async generateSummaryImage() {
       // 1. تحديد بطاقة الملخص بدقة
       let targetEl = null;
@@ -5382,6 +5403,10 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
         return null;
       }
 
+      // تحميل المكتبات إذا لزم الأمر
+      if (!window.htmlToImage) {
+        await this.loadHtmlToImage();
+      }
       if (!window.html2canvas) {
         await this.loadHtml2Canvas();
       }
@@ -5408,6 +5433,8 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
       clone.style.boxSizing = 'border-box';
       clone.style.background = this.darkMode ? '#0e1628' : '#ffffff';
       clone.style.color = this.darkMode ? '#ffffff' : '#0f172a';
+      clone.style.letterSpacing = '0px';
+      clone.setAttribute('dir', 'rtl');
 
       // استبدال الشعار بـ DataURL لمنع التلويث (Taint) ولمنع أخطاء CORS
       const logoImg = clone.querySelector('.summary-logo img');
@@ -5425,26 +5452,8 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
 
       let canvas = null;
       try {
-        // المحاولة 1: html2canvas مع allowTaint: false و useCORS: true
-        if (window.html2canvas) {
-          try {
-            canvas = await window.html2canvas(clone, {
-              scale: 2,
-              useCORS: true,
-              allowTaint: false,
-              backgroundColor: this.darkMode ? '#0e1628' : '#ffffff',
-              logging: false,
-              scrollX: 0,
-              scrollY: 0,
-              windowWidth: 640,
-            });
-          } catch (e) {
-            console.warn('[Share] html2canvas failed, trying fallback:', e);
-          }
-        }
-
-        // المحاولة 2: html-to-image كاحتياطي
-        if ((!canvas || !canvas.width || !canvas.height) && window.htmlToImage && typeof window.htmlToImage.toPng === 'function') {
+        // المحاولة 1 (الأساسية): html-to-image لدعم اللغة العربية وتوصيل الحروف بشكل أصلي وطبيعي
+        if (window.htmlToImage && typeof window.htmlToImage.toPng === 'function') {
           try {
             const dataUrl = await window.htmlToImage.toPng(clone, {
               pixelRatio: 2,
@@ -5466,8 +5475,26 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
                 img.src = dataUrl;
               });
             }
+          } catch (e) {
+            console.warn('[Share] html-to-image failed, trying html2canvas fallback:', e);
+          }
+        }
+
+        // المحاولة 2 (احتياطي فقط): html2canvas في حال تعذر html-to-image
+        if ((!canvas || !canvas.width || !canvas.height) && window.html2canvas) {
+          try {
+            canvas = await window.html2canvas(clone, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: false,
+              backgroundColor: this.darkMode ? '#0e1628' : '#ffffff',
+              logging: false,
+              scrollX: 0,
+              scrollY: 0,
+              windowWidth: 640,
+            });
           } catch (e2) {
-            console.warn('[Share] html-to-image fallback failed:', e2);
+            console.warn('[Share] html2canvas fallback failed:', e2);
           }
         }
       } finally {
