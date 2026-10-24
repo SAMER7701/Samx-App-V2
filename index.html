@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v23.47: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.47.0" rel="stylesheet">
+<!-- ⭐ v23.48: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=23.48.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -393,10 +393,12 @@
           <button @click="morningAlert=''; dismissMorningAlert()">{{ t('notif.morning.ok') }}</button>
         </div>
 
-        <h1 class="welcome-title">{{ t('service.welcome.title', '', { name: currentUser.fullName }) }}</h1>
-        <p class="welcome-subtitle">{{ t('service.welcome.subtitle') }}</p>
+        <div class="welcome-header">
+          <h1 class="welcome-title">{{ t('service.welcome.title', '', { name: currentUser.fullName }) }}</h1>
+          <p class="welcome-subtitle">{{ t('service.welcome.subtitle') }}</p>
+        </div>
 
-                <div class="services-grid">
+        <div class="services-grid">
 
           <!-- ⭐ PRIMARY #1: لوحة المتابعة -->
           <div class="service-card service-card-primary" @click="openView('dashboard')" :data-tooltip="t('service.dashboard.tooltip')">
@@ -457,7 +459,7 @@
           <div v-if="canManageBranches" class="service-card service-card-compact" @click="openView('branches')" :data-tooltip="t('service.branches.tooltip')">
             <div class="service-card-icon">🏬</div>
             <p class="service-card-title">{{ t('service.branches.title').replace('🏬 ', '') }}</p>
-            <span class="service-card-subtitle-inline">{{ t('service.branches.sub', '', { count: branches.length }) }}</span>
+            <span class="service-card-count-badge">{{ branchCountLabel }}</span>
             <span class="service-card-arrow">→</span>
           </div>
 
@@ -465,7 +467,7 @@
           <div v-if="canManageStaff" class="service-card service-card-compact" @click="openView('staff')" :data-tooltip="t('service.staff.tooltip')">
             <div class="service-card-icon">👥</div>
             <p class="service-card-title">{{ t('service.staff.title').replace('👥 ', '') }}</p>
-            <span class="service-card-subtitle-inline">{{ t('service.staff.sub', '', { count: staff.length }) }}</span>
+            <span class="service-card-count-badge">{{ staffCountLabel }}</span>
             <span class="service-card-arrow">→</span>
           </div>
 
@@ -473,7 +475,7 @@
           <div v-if="currentUser && currentUser.role==='admin'" class="service-card service-card-compact" @click="openView('users')" :data-tooltip="t('service.users.tooltip')">
             <div class="service-card-icon">🔐</div>
             <p class="service-card-title">{{ t('service.users.title').replace('🔐 ', '') }}</p>
-            <span class="service-card-subtitle-inline">{{ t('service.users.sub', '', { count: users.length }) }}</span>
+            <span class="service-card-count-badge">{{ userCountLabel }}</span>
             <span class="service-card-arrow">→</span>
           </div>
 
@@ -3898,7 +3900,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.47.0"></script>
+<script src="app.js?v=23.48.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

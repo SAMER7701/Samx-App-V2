@@ -1848,26 +1848,39 @@ html.light [style*="background: rgba(30, 58, 95"] {
   min-height: auto;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   width: 100%;
   max-width: 100%;
   padding: 2px 0 0;
+  box-sizing: border-box;
+}
+.welcome-header {
+  text-align: center;
+  margin: 0 auto 6px;
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 .welcome-title {
   font-size: 18px;
   font-weight: 900;
   color: #fff;
-  margin: 0 0 2px;
+  margin: 0 auto 2px;
   text-align: center;
   line-height: 1.25;
+  width: 100%;
 }
 html.light .welcome-title { color: #0f172a; }
 .welcome-subtitle {
   font-size: 11.5px;
   color: #94a3b8;
-  margin: 0 0 8px;
+  margin: 0 auto 8px;
   text-align: center;
   line-height: 1.25;
+  width: 100%;
 }
 html.light .welcome-subtitle { color: #64748b; }
 
@@ -2063,14 +2076,22 @@ html.light .welcome-subtitle { color: #64748b; }
   color: #e5e7eb;
   letter-spacing: .1px;
 }
+.service-card-count-badge,
 .service-card-compact .service-card-subtitle-inline {
-  font-size: 9px;
-  color: #94a3b8;
-  font-weight: 700;
-  background: rgba(148, 163, 184, .15);
-  padding: 1px 5px;
-  border-radius: 4px;
+  font-size: 9.5px;
+  color: #f5cf7a;
+  font-weight: 800;
+  background: rgba(212, 168, 75, 0.16);
+  border: 1px solid rgba(212, 168, 75, 0.35);
+  padding: 1px 6px;
+  border-radius: 6px;
   flex-shrink: 0;
+  line-height: 1.25;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 .service-card-compact .service-card-arrow {
   font-size: 12px;
@@ -2123,9 +2144,11 @@ html.light .service-card-compact:hover {
 html.light .service-card-compact .service-card-title {
   color: #1e293b;
 }
+html.light .service-card-count-badge,
 html.light .service-card-compact .service-card-subtitle-inline {
-  background: rgba(0, 0, 0, .06);
-  color: #334155;
+  background: rgba(212, 168, 75, 0.14);
+  border-color: rgba(212, 168, 75, 0.45);
+  color: #926615;
 }
 /* ══════════════════════════════════════════════════════════════
    ⭐ Responsive
@@ -4077,15 +4100,21 @@ html.light .lang-fab:hover {
     font-size: 9px !important;
   }
 
-  /* 11. Welcome Title أصغر */
+  /* 11. Welcome Title أصغر وموسّط تماماً */
+  .welcome-header {
+    text-align: center !important;
+    margin: 0 auto 4px !important;
+  }
   .welcome-title {
     font-size: 17px !important;
-    margin-bottom: 2px !important;
+    margin: 0 auto 2px !important;
+    text-align: center !important;
   }
 
   .welcome-subtitle {
     font-size: 11px !important;
-    margin-bottom: 8px !important;
+    margin: 0 auto 8px !important;
+    text-align: center !important;
   }
 
   /* 12. KPI Cards أصغر */

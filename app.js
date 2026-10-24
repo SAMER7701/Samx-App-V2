@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.47.0 — app.js
+//  SAMX v23.48.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.47.0';
+const APP_VERSION = '23.48.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -1524,6 +1524,29 @@ createApp({
       if (this.currentUser.role === 'admin') return true;
       const u = this.users.find(x => x.id === this.currentUser.id);
       return u && u.permissions && u.permissions.manageStaff === true;
+    },
+    // ⭐ v23.48: العدادات الديناميكية لبطاقات الإدارة بالشاشة الرئيسية
+    branchCountLabel() {
+      const count = Array.isArray(this.branches) ? this.branches.length : 0;
+      if (this.currentLang === 'ar') {
+        if (count >= 3 && count <= 10) return `${count} فروع`;
+        return `${count} فرع`;
+      }
+      return count === 1 ? '1 branch' : `${count} branches`;
+    },
+    staffCountLabel() {
+      const count = Array.isArray(this.staff) ? this.staff.length : 0;
+      if (this.currentLang === 'ar') {
+        return `${count} موظف`;
+      }
+      return count === 1 ? '1 staff' : `${count} staff`;
+    },
+    userCountLabel() {
+      const count = Array.isArray(this.users) ? this.users.length : 0;
+      if (this.currentLang === 'ar') {
+        return `${count} مستخدم`;
+      }
+      return count === 1 ? '1 user' : `${count} users`;
     },
     canExport() {
       if (!this.currentUser) return false;
