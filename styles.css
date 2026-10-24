@@ -5579,3 +5579,63 @@ header {
 .grid-col-full {
   grid-column: 1 / -1 !important;
 }
+
+/* ─── 11. شريط الخلاصة اللحظي العائم للموبايل أثناء إدخال المبيعات (Sticky Mini-Bar) ─── */
+.sticky-sales-summary-bar {
+  position: -webkit-sticky;
+  position: sticky;
+  top: calc(var(--app-header-height, 60px) + 4px);
+  z-index: 25;
+  background: linear-gradient(135deg, rgba(14, 23, 42, 0.96) 0%, rgba(20, 32, 58, 0.96) 100%);
+  border: 1px solid rgba(212, 168, 75, 0.45);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-sizing: border-box;
+}
+
+.sticky-summary-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+}
+
+.sticky-summary-item .label {
+  color: #94a3b8;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sticky-summary-item .val {
+  font-weight: 900;
+  font-family: system-ui, sans-serif;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.sticky-summary-item .val.highlight {
+  color: #f5cf7a;
+  font-size: 13px;
+}
+
+html.light .sticky-sales-summary-bar {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(241, 245, 249, 0.96) 100%);
+  border-color: rgba(212, 168, 75, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+html.light .sticky-summary-item .label {
+  color: #64748b;
+}
+
+html.light .sticky-summary-item .val.highlight {
+  color: #926615;
+}
+

@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.49.0 — app.js
+//  SAMX v23.50.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.49.0';
+const APP_VERSION = '23.50.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -675,21 +675,34 @@ createApp({
       }
     },
 
-    // ⭐ v23.15: إجمالي تارجت الشهر المستدعى أو المجمع من تارجت أيام الشهر
+    // ⭐ v23.50: إجمالي تارجت الشهر المركزي — يقرأ ويحدث في monthlyTargets لتثبيته طوال أيام الشهر
     branchMonthlyTargetInput: {
       get() {
-        if (this.dayData && this.dayData.monthlyTarget !== undefined && this.dayData.monthlyTarget !== null && Number(this.dayData.monthlyTarget) > 0) {
+        if (!this.selectedBranchId || !this.selectedDate) return 0;
+        const month = this.selectedDate.slice(0, 7);
+        const monthlyKey = `${month}|${this.selectedBranchId}`;
+        if (this.monthlyTargets && Number(this.monthlyTargets[monthlyKey]) > 0) {
+          return Math.round(Number(this.monthlyTargets[monthlyKey])) || 0;
+        }
+        if (this.dayData && Number(this.dayData.monthlyTarget) > 0) {
           return Math.round(Number(this.dayData.monthlyTarget)) || 0;
         }
         return Math.round(Number(this.branchMonthlyTargetTotal) || 0);
       },
       set(val) {
-        if (!this.selectedBranchId) return;
-        const key = `${this.selectedDate}|${this.selectedBranchId}`;
-        const rec = this.normalizeDayRecord(key);
-        if (!rec) return;
+        if (!this.selectedBranchId || !this.selectedDate) return;
         const cleanNum = typeof val === 'string' ? val.replace(/[^\d]/g, '') : val;
-        rec.monthlyTarget = Math.round(Number(cleanNum)) || 0;
+        const numVal = Math.round(Number(cleanNum)) || 0;
+        const month = this.selectedDate.slice(0, 7);
+        const monthlyKey = `${month}|${this.selectedBranchId}`;
+        if (!this.monthlyTargets) this.monthlyTargets = {};
+        this.monthlyTargets[monthlyKey] = numVal;
+
+        // مزامنة سجل اليوم أيضاً
+        const dayKey = `${this.selectedDate}|${this.selectedBranchId}`;
+        const rec = this.normalizeDayRecord(dayKey);
+        if (rec) rec.monthlyTarget = numVal;
+
         this.schedulePersist();
       }
     },
@@ -716,15 +729,15 @@ createApp({
     // حساب التارجت الشهري الإجمالي للفرع
     branchMonthlyTargetTotal() {
       if (!this.selectedBranchId) return 0;
-      // 1. إذا أدخل المستخدم قيمة مخصصة في سجل اليوم
-      if (this.dayData && Number(this.dayData.monthlyTarget) > 0) {
-        return Math.round(Number(this.dayData.monthlyTarget));
-      }
-      // 2. إذا تم استيراد التارجت الشهري
       const month = this.selectedDate ? this.selectedDate.slice(0, 7) : '';
       const monthlyKey = `${month}|${this.selectedBranchId}`;
+      // 1. التارجت الشهري المركزي للفرع
       if (this.monthlyTargets && Number(this.monthlyTargets[monthlyKey]) > 0) {
         return Math.round(Number(this.monthlyTargets[monthlyKey]));
+      }
+      // 2. إذا أدخل المستخدم قيمة مخصصة في سجل اليوم
+      if (this.dayData && Number(this.dayData.monthlyTarget) > 0) {
+        return Math.round(Number(this.dayData.monthlyTarget));
       }
       // 3. أو حساب مجموع تارجت أيام الشهر المسجلة للفرع
       let sumDays = 0;
@@ -3237,6 +3250,18 @@ this.settings = {
       rec[field] = Math.round(Number(value) || 0);
       this.autoDistributeForDate(date, branchId);
       this.schedulePersist();
+    },
+
+    // ⭐ v23.50: استعادة الحساب التراكمي التلقائي لمبيعات الشهر (MTD Sales)
+    resetManualMtdSales() {
+      if (!this.selectedDate || !this.selectedBranchId) return;
+      const key = `${this.selectedDate}|${this.selectedBranchId}`;
+      const rec = this.normalizeDayRecord(key);
+      if (rec) {
+        rec.mtdSales = 0;
+        this.schedulePersist();
+        this.showToast(this.currentLang === 'ar' ? 'تمت العودة للحساب التراكمي التلقائي لمبيعات الشهر ↺' : 'Restored auto-calculated MTD sales ↺', 'info');
+      }
     },
 
     toggleMonthlyDay(date) {

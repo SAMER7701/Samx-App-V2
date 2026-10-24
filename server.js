@@ -105,7 +105,7 @@ app.post('/api/sync', (req, res) => {
       } catch (err) {}
     }
 
-    const version = body.version || '23.45.0';
+    const version = body.version || '23.50.0';
     const now = Date.now();
     fs.writeFileSync(LOCAL_SYNC_FILE, JSON.stringify({ payload: mergedPayload, version, updated_at: now }, null, 2), 'utf-8');
     return res.json({ success: true, bindingConfigured: true, updated_at: now, version });
