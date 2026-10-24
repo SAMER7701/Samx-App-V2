@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v23.48: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.48.0" rel="stylesheet">
+<!-- ⭐ v23.49: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=23.49.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -3593,23 +3593,6 @@
                 </div>
               </div>
 
-              <!-- ⭐ v23.16: حجم عرض النوافذ والخطوط (UI Scale & Zoom) -->
-              <div class="settings-card">
-                <h4 class="settings-label">🔍 {{ currentLang === 'ar' ? 'حجم عرض النوافذ والخطوط' : 'UI & Font Scale' }}</h4>
-                <p class="settings-subtext">{{ currentLang === 'ar' ? 'تكبير أو تصغير أبعاد الواجهات والنوافذ لتناسب مقاس شاشة هاتفك' : 'Adjust interface and modal scale for optimal viewing on your device' }}</p>
-                <div class="settings-option-row">
-                  <button @click="setUiScale(90)" :class="['settings-option', (Number(settings.uiScale)||100)===90 ? 'active' : '']">
-                    {{ currentLang === 'ar' ? 'مدمج 90%' : 'Compact 90%' }}
-                  </button>
-                  <button @click="setUiScale(100)" :class="['settings-option', (Number(settings.uiScale)||100)===100 ? 'active' : '']">
-                    {{ currentLang === 'ar' ? 'افتراضي 100%' : 'Default 100%' }}
-                  </button>
-                  <button @click="setUiScale(115)" :class="['settings-option', (Number(settings.uiScale)||100)===115 ? 'active' : '']">
-                    {{ currentLang === 'ar' ? 'كبير 115%' : 'Large 115%' }}
-                  </button>
-                </div>
-              </div>
-
               <!-- Distribution & Layout -->
               <div class="settings-card">
                 <h4 class="settings-label">⚡ {{ t('settings.layout.autoDist') }}</h4>
@@ -3900,7 +3883,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.48.0"></script>
+<script src="app.js?v=23.49.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

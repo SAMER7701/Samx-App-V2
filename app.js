@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.48.0 — app.js
+//  SAMX v23.49.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.48.0';
+const APP_VERSION = '23.49.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -2836,8 +2836,8 @@ this.settings = {
       this.lockError = '';
       const user = this.users.find(u => u.id === this.currentUser.id);
       if (!user) { this.lockError = 'المستخدم غير موجود'; return; }
-      const hash = await sha256(this.lockPassword);
-      if (hash !== user.passwordHash) {
+      const isOk = await verifyPassword(this.lockPassword, user.passwordHash);
+      if (!isOk) {
         this.lockError = 'كلمة المرور خاطئة';
         this.lockPassword = '';
         return;
@@ -4281,11 +4281,11 @@ this.settings = {
       rec.closedAt = Date.now();
       rec.closedBy = this.currentUser ? this.currentUser.fullName : 'المدير';
       rec.closedRole = this.currentUser ? this.currentUser.role : 'admin';
-      rec.closedSales = this.branchTotalSales;
+      rec.closedSales = this.branchSales;
       rec.closedInvoices = this.branchInvoices;
       rec.closeNote = (this.closeDayNote || '').trim() || (this.currentLang === 'ar' ? 'إغلاق واعتماد رسمي' : 'Official shift close');
 
-      this.logActivity('🔒 إغلاق يومية', `${this.selectedBranch?.name || ''} - تاريخ: ${this.selectedDate} • المبيعات: ${this.formatSAR(this.branchTotalSales)}`);
+      this.logActivity('🔒 إغلاق يومية', `${this.selectedBranch?.name || ''} - تاريخ: ${this.selectedDate} • المبيعات: ${this.formatSAR(this.branchSales)}`);
       this.persist();
       this.vibrate([20, 50, 20]);
       this.showCloseDayModal = false;
@@ -5918,6 +5918,16 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
         if (this.currentView === 'yoy') this.renderYoYChart();
         else this.safeDestroyChart('yoyChartInstance');
       });
+    },
+
+    // ⭐ v23.49: تحديث مخطط الموظفين مع Debounce 200ms لمنع TypeError
+    scheduleStaffChartRefresh() {
+      clearTimeout(this._staffChartRefreshTimer);
+      this._staffChartRefreshTimer = setTimeout(() => {
+        if (this.currentView === 'dashboard' || this.currentView === 'kpi') {
+          this.renderStaffChart();
+        }
+      }, 200);
     },
 
     renderStaffChart() {

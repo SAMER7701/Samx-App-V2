@@ -63,7 +63,7 @@
 }
 
 /* ============ الأساسيات ============ */
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+*, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 html, body {
   font-family: 'SaudiRiyal', 'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif;
