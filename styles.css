@@ -1141,99 +1141,176 @@ html[lang="en"] .input-with-icon.input-with-toggle {
   font-weight: 700;
 }
 
-/* ============ App Update Notification Banner (Top-Center Floating) ============ */
+/* ============ App Update Notification Banner (Compact Floating Top Banner) ============ */
 .update-toast {
   position: fixed;
-  top: 16px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
-  width: min(94vw, 540px);
-  background: linear-gradient(135deg, #091224 0%, #152545 60%, #1a2f57 100%);
-  border: 2px solid #e6c074;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 28px rgba(212, 168, 75, 0.45);
+  width: auto;
+  max-width: 92vw;
+  background: linear-gradient(135deg, rgba(9, 18, 36, 0.96) 0%, rgba(21, 37, 69, 0.96) 60%, rgba(26, 47, 87, 0.96) 100%);
+  border: 1.5px solid rgba(230, 192, 116, 0.85);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65), 0 0 16px rgba(212, 168, 75, 0.25);
   color: #ffffff;
-  padding: 14px 18px;
-  border-radius: 18px;
+  padding: 6px 12px;
+  border-radius: 9999px;
   z-index: 999999;
   display: flex;
-  gap: 14px;
+  gap: 8px;
   align-items: center;
-  animation: bannerDropIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  justify-content: space-between;
+  animation: bannerDropIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-sizing: border-box;
 }
 @keyframes bannerDropIn {
   from { transform: translate(-50%, -100%); opacity: 0; }
   to { transform: translate(-50%, 0); opacity: 1; }
 }
 .update-toast-icon {
-  font-size: 32px;
+  font-size: 18px;
+  line-height: 1;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 2px;
   animation: pulseGlow 2s infinite ease-in-out;
 }
 @keyframes pulseGlow {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px #e6c074); }
-  50% { transform: scale(1.12); filter: drop-shadow(0 0 14px #e6c074); }
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px #e6c074); }
+  50% { transform: scale(1.12); filter: drop-shadow(0 0 10px #e6c074); }
 }
 .update-toast-content {
   flex: 1;
   min-width: 0;
-}
-.update-toast-title {
-  font-size: 14px;
-  font-weight: 900;
-  color: #f5cf7a;
-  margin: 0 0 3px 0;
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.update-toast-desc {
+.update-toast-title {
   font-size: 12px;
-  color: #e2e8f0;
+  font-weight: 800;
+  color: #f5cf7a;
   margin: 0;
-  line-height: 1.35;
+  line-height: 1.25;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.update-toast-ver {
+  font-size: 11px;
+  font-weight: 700;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 6px;
+  border-radius: 6px;
+  direction: ltr;
+  display: inline-block;
+  flex-shrink: 0;
 }
 .update-toast-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 .update-toast-btn {
   background: linear-gradient(135deg, #d4a84b, #f5cf7a);
   color: #0b1220;
   border: none;
-  border-radius: 12px;
-  padding: 10px 16px;
-  font-size: 13px;
+  border-radius: 9999px;
+  padding: 5px 12px;
+  font-size: 11.5px;
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(212, 168, 75, 0.5);
+  box-shadow: 0 2px 10px rgba(212, 168, 75, 0.4);
   transition: transform 0.15s ease, filter 0.15s ease;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  line-height: 1.2;
 }
 .update-toast-btn:hover {
-  filter: brightness(1.08);
+  filter: brightness(1.1);
 }
 .update-toast-btn:active {
   transform: scale(0.95);
 }
 .update-toast-close {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.08);
   color: #94a3b8;
-  border: none;
-  font-size: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 12px;
   cursor: pointer;
-  padding: 6px;
+  padding: 4px 7px;
   line-height: 1;
-  border-radius: 6px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
 }
 .update-toast-close:hover {
+  background: rgba(255, 255, 255, 0.18);
   color: #ffffff;
+}
+
+html.light .update-toast {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 250, 252, 0.97) 100%);
+  border-color: #d4a84b;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.15), 0 0 16px rgba(212, 168, 75, 0.2);
+  color: #0f172a;
+}
+html.light .update-toast-title {
+  color: #926615;
+}
+html.light .update-toast-ver {
+  color: #475569;
+  background: rgba(0, 0, 0, 0.06);
+}
+html.light .update-toast-close {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #64748b;
+}
+html.light .update-toast-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #0f172a;
+}
+
+@media (max-width: 480px) {
+  .update-toast {
+    top: 12px;
+    padding: 5px 8px;
+    gap: 5px;
+    border-radius: 12px;
+  }
+  .update-toast-icon {
+    font-size: 16px;
+  }
+  .update-toast-title {
+    font-size: 11px;
+    gap: 4px;
+  }
+  .update-toast-ver {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+  .update-toast-btn {
+    padding: 4px 9px;
+    font-size: 11px;
+  }
+  .update-toast-close {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
 }
 
 /* ============ Version Badge ============ */

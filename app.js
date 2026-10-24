@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.46.0 — app.js
+//  SAMX v23.47.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.46.0';
+const APP_VERSION = '23.47.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';

@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v23.46: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.46.0" rel="stylesheet">
+<!-- ⭐ v23.47: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=23.47.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -130,23 +130,21 @@
       <button @click="dismissInstallBanner" style="background:transparent;color:#94a3b8;padding:4px 8px;cursor:pointer;border:none;font-size:14px;" title="إغلاق نهائي">✕</button>
     </div>
   </transition>
-  <!-- ============ Update Banner (Top-Center Floating) ============ -->
+  <!-- ============ Update Banner (Compact Floating Top Banner) ============ -->
   <transition name="fade">
-    <div v-if="showUpdateToast" class="update-toast">
-      <span class="update-toast-icon">🚀</span>
+    <div v-if="showUpdateToast" class="update-toast" role="alert">
+      <span class="update-toast-icon" aria-hidden="true">🚀</span>
       <div class="update-toast-content">
         <p class="update-toast-title">
-          <span>🎉</span>
-          <span>{{ currentLang === 'ar' ? ('يتوفر إصدار جديد للتطبيق (v' + appVersion + ')') : ('New App Update Available (v' + appVersion + ')') }}</span>
+          <span>{{ currentLang === 'ar' ? 'تحديث جديد متوفر' : 'Update Available' }}</span>
+          <span class="update-toast-ver">(v{{ appVersion }})</span>
         </p>
-        <p class="update-toast-desc">{{ currentLang === 'ar' ? 'تمت إضافة تحسينات هامة للأداء وتجربة الجوال، اضغط للتحديث الفوري' : 'Performance and mobile enhancements are ready. Tap to update immediately.' }}</p>
       </div>
       <div class="update-toast-actions">
         <button @click="applyUpdate" class="update-toast-btn">
-          <span>⚡</span>
-          <span>{{ currentLang === 'ar' ? 'تحديث الآن' : 'Update Now' }}</span>
+          <span>{{ currentLang === 'ar' ? 'تحديث الآن ⚡' : 'Update ⚡' }}</span>
         </button>
-        <button @click="showUpdateToast = false" class="update-toast-close" title="إغلاق">✕</button>
+        <button @click="showUpdateToast = false" class="update-toast-close" :title="currentLang === 'ar' ? 'إغلاق' : 'Close'" aria-label="Close">✕</button>
       </div>
     </div>
   </transition>
@@ -3900,7 +3898,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.46.0"></script>
+<script src="app.js?v=23.47.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {
