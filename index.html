@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v23.45: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.45.0" rel="stylesheet">
+<!-- ⭐ v24.0: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=24.0.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -2117,14 +2117,14 @@
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
               <h3 style="font-size:14px;font-weight:bold;color:#e6c074;margin:0;display:flex;align-items:center;gap:6px;">
                 <span>👥</span>
-                <span>{{ currentLang === 'ar' ? 'المستخدمون' : 'Users' }} ({{ users.length }})</span>
+                <span>{{ currentLang === 'ar' ? 'المستخدمون' : 'Users' }} ({{ safeUsersList.length }})</span>
               </h3>
             </div>
 
             <!-- قائمة المستخدمين كبطاقات مدمجة أنيقة (Compact User Cards) 100% بدون أي سحب أفقي -->
             <div class="users-compact-list" style="display:flex;flex-direction:column;gap:10px;width:100%;">
               <div
-                v-for="u in users"
+                v-for="u in safeUsersList"
                 :key="u.id"
                 class="user-compact-card"
                 :style="{
@@ -4040,7 +4040,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.45.0"></script>
+<script src="app.js?v=24.0.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

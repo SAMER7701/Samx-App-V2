@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.45.0 — app.js
+//  SAMX v24.0.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.45.0';
+const APP_VERSION = '24.0.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -209,43 +209,59 @@ function normalizeDigits(str) {
     .replace(/[\u06F0-\u06F9]/g, d => '0123456789'['۰۱۲۳۴۵۶۷۸۹'.indexOf(d)]);
 }
 
-// ⭐ v23.29: التحقق المرن والشامل من كلمات المرور عبر كافة المنصات والمتصفحات
+// ⭐ v24.0.0: فحص التساوي الآمن زمنياً لمنع هجمات التوقيت (Timing-Attack Resistant Equality)
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
+// ⭐ v24.0.0: التحقق المعزز أمنياً من كلمات المرور مع دعم تطبيع الأرقام (Eastern Arabic & Western digits)
 async function verifyPassword(inputPassword, storedHash) {
   if (!inputPassword || !storedHash) return false;
   const p = String(inputPassword).trim();
   const pNorm = normalizeDigits(p);
+  const targetHash = String(storedHash).trim();
 
-  // 1. فحص عبر sha256 (النص الأصلي والمطبّع)
+  // 1. فحص عبر sha256 المعزز (النص الأصلي والمطبّع)
   const h1 = await sha256(p);
-  if (h1 === storedHash) return true;
+  if (timingSafeEqual(h1, targetHash)) return true;
   if (pNorm !== p) {
     const h1Norm = await sha256(pNorm);
-    if (h1Norm === storedHash) return true;
+    if (timingSafeEqual(h1Norm, targetHash)) return true;
   }
 
-  // 2. فحص WebCrypto المجرد (بدون بادئة w_)
+  // 2. فحص WebCrypto المجرد (بدون بادئة w_) ومع بادئة w_
   if (window.crypto && window.crypto.subtle) {
     try {
       const buf = new TextEncoder().encode(p);
       const hash = await crypto.subtle.digest('SHA-256', buf);
       const rawHex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-      if (rawHex === storedHash || ('w_' + rawHex) === storedHash) return true;
+      if (timingSafeEqual(rawHex, targetHash) || timingSafeEqual('w_' + rawHex, targetHash)) return true;
 
       if (pNorm !== p) {
         const bufNorm = new TextEncoder().encode(pNorm);
         const hashNorm = await crypto.subtle.digest('SHA-256', bufNorm);
         const rawHexNorm = Array.from(new Uint8Array(hashNorm)).map(b => b.toString(16).padStart(2, '0')).join('');
-        if (rawHexNorm === storedHash || ('w_' + rawHexNorm) === storedHash) return true;
+        if (timingSafeEqual(rawHexNorm, targetHash) || timingSafeEqual('w_' + rawHexNorm, targetHash)) return true;
       }
     } catch (e) {}
   }
 
-  // 3. فحص Fallback hash (f_)
-  if (('f_' + simpleHash(p)) === storedHash || simpleHash(p) === storedHash) return true;
-  if (('f_' + simpleHash(pNorm)) === storedHash || simpleHash(pNorm) === storedHash) return true;
+  // 3. فحص Fallback hash (بادئة f_ وبدونها)
+  const f1 = simpleHash(p);
+  if (timingSafeEqual('f_' + f1, targetHash) || timingSafeEqual(f1, targetHash)) return true;
+  if (pNorm !== p) {
+    const f1Norm = simpleHash(pNorm);
+    if (timingSafeEqual('f_' + f1Norm, targetHash) || timingSafeEqual(f1Norm, targetHash)) return true;
+  }
 
-  // 4. مطابقة نصية مباشرة
-  if (p === storedHash || pNorm === storedHash) return true;
+  // 4. مطابقة نصية مباشرة للحسابات القديمة غير المشفرة (Legacy Support)
+  if (timingSafeEqual(p, targetHash) || timingSafeEqual(pNorm, targetHash)) return true;
 
   return false;
 }
@@ -1678,6 +1694,20 @@ createApp({
       }
       return arr;
     },
+    // ⭐ v24.0.0: عزل بيانات الاعتماد الحساسة (passwordHash) وإتاحة القائمة فقط للمشرف المصرح
+    safeUsersList() {
+      if (!this.currentUser || this.currentUser.role !== 'admin') {
+        return [];
+      }
+      return (this.users || []).map(u => ({
+        id: u.id,
+        username: u.username,
+        fullName: u.fullName,
+        role: u.role,
+        branchId: u.branchId || '',
+        permissions: { ...(u.permissions || {}) },
+      }));
+    },
   },
 
   watch: {
@@ -2222,8 +2252,12 @@ createApp({
       console.log('[Seed] Update dismissed');
     },
 
-    // تصدير Seed (v23.8: مع المستخدمين بكلمات مرورهم الأصلية)
+    // تصدير Seed (v24.0.0: صلاحية للمدير العام فقط مع تأمين بيانات الاعتماد)
     exportSeed() {
+      if (!this.currentUser || this.currentUser.role !== 'admin') {
+        this.showToast(this.currentLang === 'ar' ? 'تصدير بيانات Seed متاح للمدير العام فقط ⛔' : 'Only Admin can export Seed ⛔', 'error');
+        return;
+      }
       const version = prompt(this.t('seed.export.versionPrompt'), '1.0');
       if (!version) return;
 
@@ -2300,6 +2334,10 @@ createApp({
     },
     // إعادة تحميل Seed يدوياً
     forceReloadSeed() {
+      if (!this.currentUser || this.currentUser.role !== 'admin') {
+        this.showToast(this.currentLang === 'ar' ? 'تحديث Seed متاح للمدير العام فقط ⛔' : 'Only Admin can reload Seed ⛔', 'error');
+        return;
+      }
       if (!confirm(this.t('seed.reload.confirm'))) return;
       const seed = window.SAMX_SEED;
       if (!seed) {
@@ -2863,17 +2901,28 @@ this.settings = {
     },
     async unlockApp() {
       this.lockError = '';
+      if (!this.currentUser) return;
+      const cleanInput = normalizeDigits(String(this.lockPassword || '').trim());
+      if (!cleanInput) {
+        this.lockError = this.currentLang === 'ar' ? 'أدخل كلمة المرور' : 'Enter password';
+        return;
+      }
       const user = this.users.find(u => u.id === this.currentUser.id);
-      if (!user) { this.lockError = 'المستخدم غير موجود'; return; }
-      const isOk = await verifyPassword(this.lockPassword, user.passwordHash);
+      if (!user) {
+        this.lockError = this.currentLang === 'ar' ? 'المستخدم غير موجود' : 'User not found';
+        return;
+      }
+      const isOk = await verifyPassword(cleanInput, user.passwordHash);
       if (!isOk) {
-        this.lockError = 'كلمة المرور خاطئة';
+        this.lockError = this.currentLang === 'ar' ? 'كلمة المرور غير صحيحة' : 'Incorrect password';
         this.lockPassword = '';
+        this.vibrate([40, 30, 40]);
         return;
       }
       this.isLocked = false;
       this.lockPassword = '';
       this.lockError = '';
+      this.vibrate([10, 30, 10]);
       this.showToast(this.t('toast.lock.unlocked'), 'success');
     },
     // ================================================================
@@ -4108,10 +4157,10 @@ this.settings = {
     },
     async doLogin() {
       this.loginError = '';
-      const inputUsername = (this.loginForm.username || '').trim().toLowerCase();
-      const inputPassword = (this.loginForm.password || '').trim();
+      const inputUsername = normalizeDigits((this.loginForm.username || '').trim()).toLowerCase();
+      const inputPassword = normalizeDigits(String(this.loginForm.password || '').trim());
       if (!inputUsername || !inputPassword) {
-        this.loginError = 'أدخل اسم المستخدم وكلمة المرور';
+        this.loginError = this.currentLang === 'ar' ? 'أدخل اسم المستخدم وكلمة المرور' : 'Please enter username and password';
         return;
       }
       this.loggingIn = true;
@@ -4156,12 +4205,28 @@ this.settings = {
           this.loggingIn = false;
           return;
         }
+
+        // ⭐ v24.0.0: عزل وتجريد بيانات الاعتماد الحساسة (passwordHash) من الجلسة النشطة
         this.currentUser = {
-          id: user.id, username: user.username, fullName: user.fullName,
-          role: user.role, branchId: user.branchId || '',
+          id: user.id,
+          username: user.username,
+          fullName: user.fullName,
+          role: user.role,
+          branchId: user.branchId || '',
+          permissions: { ...(user.permissions || ROLE_PERMISSIONS[user.role] || DEFAULT_PERMISSIONS) }
         };
+        delete this.currentUser.passwordHash;
+
         const storage = this.rememberMe ? localStorage : sessionStorage;
         try { storage.setItem('samx_session', JSON.stringify(this.currentUser)); } catch (e) {}
+
+        // تأمين حفظ الجلسة في IndexedDB
+        this.getDB().then(sdb => {
+          if (sdb && sdb.saveSettings) {
+            sdb.saveSettings({ ...this.settings, activeSession: this.currentUser }, 'app_session');
+          }
+        }).catch(() => {});
+
         this.loginForm = { username: '', password: '' };
         this.load();
         this.setDefaultSelections();
@@ -4187,23 +4252,56 @@ this.settings = {
     },
     doLogout() {
       if (!confirm(this.t('confirm.logout'))) return;
-      this.logActivity(this.t('log.logout'), this.currentUser.fullName);
+      this.logActivity(this.t('log.logout'), this.currentUser?.fullName || '');
       this.persistNow();
       this.currentUser = null;
       try {
         sessionStorage.removeItem('samx_session');
         localStorage.removeItem('samx_session');
       } catch (e) {}
+      this.getDB().then(sdb => {
+        if (sdb && sdb.saveSettings) {
+          sdb.saveSettings({ ...this.settings, activeSession: null }, 'app_session');
+        }
+      }).catch(() => {});
       this.currentView = 'welcome';
     },
-    restoreSession() {
+    async restoreSession() {
       try {
         const s = sessionStorage.getItem('samx_session') || localStorage.getItem('samx_session');
         if (s) {
-          this.currentUser = JSON.parse(s);
-          this.load();
-          this.setDefaultSelections();
-          this.currentView = 'welcome';
+          const parsed = JSON.parse(s);
+          if (parsed && parsed.id) {
+            delete parsed.passwordHash;
+            // التحقق من صلاحيات المستخدم مع قاعدة البيانات المحلية IndexedDB
+            let liveUser = null;
+            try {
+              const sdb = await this.getDB();
+              if (sdb && sdb.getUserById) {
+                liveUser = await sdb.getUserById(parsed.id);
+              }
+            } catch (err) {}
+            if (!liveUser && Array.isArray(this.users)) {
+              liveUser = this.users.find(u => u.id === parsed.id);
+            }
+
+            if (liveUser) {
+              this.currentUser = {
+                id: liveUser.id,
+                username: liveUser.username,
+                fullName: liveUser.fullName,
+                role: liveUser.role,
+                branchId: liveUser.branchId || '',
+                permissions: { ...(liveUser.permissions || ROLE_PERMISSIONS[liveUser.role] || DEFAULT_PERMISSIONS) }
+              };
+            } else {
+              this.currentUser = parsed;
+            }
+            delete this.currentUser.passwordHash;
+            this.load();
+            this.setDefaultSelections();
+            this.currentView = 'welcome';
+          }
         }
       } catch (e) {}
     },
@@ -4937,8 +5035,8 @@ this.settings = {
       this.branchForm = { name: '', code: '' };
     },
     deleteBranch(id) {
-      if (!this.canManageBranches) {
-        this.showToast(this.t('branches.noPermission', 'غير مصرح لك بإدارة الفروع ⛔'), 'error');
+      if (!this.currentUser || (!this.canManageBranches && this.currentUser.role !== 'admin')) {
+        this.showToast(this.t('branches.noPermission', 'غير مصرح لك بإدارة وحذف الفروع ⛔'), 'error');
         return;
       }
       if (!confirm(this.t('branches.confirm.delete'))) return;
@@ -4957,7 +5055,7 @@ this.settings = {
     //  Staff
     // ================================================================
     saveStaff() {
-      if (!this.canManageStaff) {
+      if (!this.currentUser || (!this.canManageStaff && this.currentUser.role !== 'admin')) {
         this.showToast(this.t('staffView.noPermission', 'غير مصرح لك بإدارة الموظفين ⛔'), 'error');
         return;
       }
@@ -4987,8 +5085,8 @@ this.settings = {
       this.staffForm = { name: '', code: '', branchId: '', jobTitle: '' };
     },
     deleteStaff(id) {
-      if (!this.canManageStaff) {
-        this.showToast(this.t('staffView.noPermission', 'غير مصرح لك بإدارة الموظفين ⛔'), 'error');
+      if (!this.currentUser || (!this.canManageStaff && this.currentUser.role !== 'admin')) {
+        this.showToast(this.t('staffView.noPermission', 'غير مصرح لك بإدارة وحذف الموظفين ⛔'), 'error');
         return;
       }
       if (!confirm(this.t('staffView.confirm.delete'))) return;
@@ -5044,6 +5142,10 @@ this.settings = {
       this.distDays.forEach(d => { d.base = 0; d.heroes = 0; });
     },
     saveDistribution() {
+      if (!this.currentUser || (!this.canEditTarget && this.currentUser.role !== 'admin')) {
+        this.showToast(this.currentLang === 'ar' ? 'غير مصرح لك بتعديل وتوزيع التارجت ⛔' : 'Not authorized to edit targets ⛔', 'error');
+        return;
+      }
       if (!this.distBranchId) return;
       let count = 0;
       this.distDays.forEach(d => {
@@ -5061,6 +5163,10 @@ this.settings = {
       nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
     },
     clearDistribution() {
+      if (!this.currentUser || (!this.canEditTarget && this.currentUser.role !== 'admin')) {
+        this.showToast(this.currentLang === 'ar' ? 'غير مصرح لك بتعديل وتوزيع التارجت ⛔' : 'Not authorized to edit targets ⛔', 'error');
+        return;
+      }
       if (!confirm(this.t('confirm.clearDistribution'))) return;
       const [y, m] = this.distMonth.split('-').map(Number);
       const daysInMonth = new Date(y, m, 0).getDate();
@@ -5227,6 +5333,10 @@ this.settings = {
       return false;
     },
     confirmImport() {
+      if (!this.currentUser || (!this.canEditTarget && this.currentUser.role !== 'admin')) {
+        this.showToast(this.currentLang === 'ar' ? 'غير مصرح لك باستيراد وتعديل التارجت ⛔' : 'Not authorized to import targets ⛔', 'error');
+        return;
+      }
       if (!this.importPreview.length) return;
       const meta = this.importMeta || {};
       const month = meta.detectedMonth;
@@ -7209,6 +7319,10 @@ this.settings = {
       e.target.value = '';
     },
     clearAll() {
+      if (!this.currentUser || this.currentUser.role !== 'admin') {
+        this.showToast(this.currentLang === 'ar' ? 'مسح كافة البيانات متاح للمدير العام فقط ⛔' : 'Only Admin can clear all data ⛔', 'error');
+        return;
+      }
       if (!confirm(this.t('confirm.clearAllData'))) return;
       if (!confirm(this.t('confirm.clearAllDataFinal'))) return;
       this.saveAutoBackup();
@@ -7523,8 +7637,8 @@ this.settings = {
           });
         }
       });
-      if (this.currentUser.role === 'admin') {
-        this.users.forEach(u => {
+      if (this.currentUser && this.currentUser.role === 'admin') {
+        this.safeUsersList.forEach(u => {
           if (u.fullName.toLowerCase().includes(q) || u.username.toLowerCase().includes(q)) {
             results.push({
               id: u.id, type: 'user', icon: '🔐',

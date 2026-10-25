@@ -30,7 +30,7 @@ app.use((req, res, next) => {
   }
 
   const baseName = path.basename(req.path);
-  const rootFiles = ['app.js', 'styles.css', 'seed-data.js', 'manifest.json', 'samx-logo.svg', 'service-worker.js', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
+  const rootFiles = ['app.js', 'db.js', 'styles.css', 'seed-data.js', 'manifest.json', 'samx-logo.svg', 'service-worker.js', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
   if (rootFiles.includes(baseName) && req.path !== '/' + baseName) {
     const targetFile = path.join(__dirname, baseName);
     if (fs.existsSync(targetFile)) {
@@ -60,7 +60,7 @@ app.get('/api/sync', (req, res) => {
         status: 'ok',
         bindingConfigured: true,
         data: content.payload,
-        version: content.version || '23.49.0',
+        version: content.version || '24.0.0',
         updated_at: content.updated_at || Date.now()
       });
     }

@@ -1,11 +1,11 @@
 // ================================================================
-//  SAMX — Service Worker v23.45.0
+//  SAMX — Service Worker v24.0.0
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 //  يعمل: Network-First للتنقل مع Fallback للكاش، Offline-First للأصول
 // ================================================================
 
-const CACHE_VERSION = 'samx-v23.45.0';
+const CACHE_VERSION = 'samx-v24.0.0';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -17,6 +17,7 @@ const STATIC_ASSETS = [
   './manifest.json',
   './styles.css',
   './app.js',
+  './db.js',
   './samx-logo.svg',
   './icon-192.png',
   './icon-512.png',
@@ -52,7 +53,7 @@ const STATIC_ASSETS = [
 //  INSTALL
 // ================================================================
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing SAMX v23.33.0...');
+  console.log('[SW] Installing SAMX v24.0.0...');
   self.skipWaiting();
   event.waitUntil(
     (async () => {
