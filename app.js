@@ -2414,7 +2414,10 @@ createApp({
     saveSettingsToStorage() {
       try { localStorage.setItem('samx_settings_v14', JSON.stringify(this.settings)); } catch (e) {}
       this.getDB().then(sdb => {
-        if (sdb && sdb.saveSettings) sdb.saveSettings(this.settings);
+        if (sdb && sdb.saveSettings) {
+          const cleanSettings = JSON.parse(JSON.stringify(this.settings || {}));
+          sdb.saveSettings(cleanSettings);
+        }
       }).catch(() => {});
     },
     async loadSettingsFromStorage() {
@@ -3505,12 +3508,17 @@ this.settings = {
         const sdb = await this.getDB();
         if (!sdb) return;
 
+        // تحويل ونزع تفاعلية Vue 3 (Unwrap Reactive Proxies) لتجنب DataCloneError
+        const rawBranches = JSON.parse(JSON.stringify(this.branches || []));
+        const rawStaff = JSON.parse(JSON.stringify(this.staff || []));
+        const rawSettings = JSON.parse(JSON.stringify(this.settings || {}));
+
         // 1. حفظ الفروع والموظفين في IndexedDB
-        if (Array.isArray(this.branches) && this.branches.length > 0 && sdb.saveBranchesBatch) {
-          await sdb.saveBranchesBatch(this.branches);
+        if (rawBranches.length > 0 && sdb.saveBranchesBatch) {
+          await sdb.saveBranchesBatch(rawBranches);
         }
-        if (Array.isArray(this.staff) && this.staff.length > 0 && sdb.saveStaffBatch) {
-          await sdb.saveStaffBatch(this.staff);
+        if (rawStaff.length > 0 && sdb.saveStaffBatch) {
+          await sdb.saveStaffBatch(rawStaff);
         }
 
         // 2. حفظ سجل اليوم المحدد وسجلات المبيعات
@@ -3518,27 +3526,30 @@ this.settings = {
           const key = `${this.selectedDate}|${this.selectedBranchId}`;
           const currentDayRec = this.daily[key];
           if (currentDayRec) {
-            await sdb.saveDayRecord(this.selectedDate, this.selectedBranchId, currentDayRec);
+            const rawDayRec = JSON.parse(JSON.stringify(currentDayRec));
+            await sdb.saveDayRecord(this.selectedDate, this.selectedBranchId, rawDayRec);
           }
         }
 
         // 3. حفظ التارجت الشهري
         if (this.monthlyTargets && typeof this.monthlyTargets === 'object' && sdb.saveMonthlyTarget) {
-          const mKeys = Object.keys(this.monthlyTargets);
+          const rawMonthly = JSON.parse(JSON.stringify(this.monthlyTargets || {}));
+          const rawHeroes = JSON.parse(JSON.stringify(this.monthlyHeroesTargets || {}));
+          const mKeys = Object.keys(rawMonthly);
           for (const mk of mKeys) {
             const parts = mk.split('|');
             if (parts.length >= 2) {
               await sdb.saveMonthlyTarget(parts[0], parts.slice(1).join('|'), {
-                baseTarget: Number(this.monthlyTargets[mk]) || 0,
-                heroesTarget: Number(this.monthlyHeroesTargets?.[mk]) || 0,
+                baseTarget: Number(rawMonthly[mk]) || 0,
+                heroesTarget: Number(rawHeroes?.[mk]) || 0,
               });
             }
           }
         }
 
         // 4. حفظ الإعدادات
-        if (this.settings && sdb.saveSettings) {
-          await sdb.saveSettings(this.settings);
+        if (rawSettings && sdb.saveSettings) {
+          await sdb.saveSettings(rawSettings);
         }
       } catch (err) {
         console.warn('[SamxDB] Async persistToIndexedDB error (non-fatal):', err);
@@ -3608,14 +3619,21 @@ this.settings = {
         if (!sdb) sdb = await this.getDB();
         if (!sdb) return;
 
-        if (Array.isArray(this.branches) && this.branches.length > 0 && sdb.saveBranchesBatch) {
-          await sdb.saveBranchesBatch(this.branches);
+        const rawBranches = JSON.parse(JSON.stringify(this.branches || []));
+        const rawStaff = JSON.parse(JSON.stringify(this.staff || []));
+        const rawDaily = JSON.parse(JSON.stringify(this.daily || {}));
+        const rawTargets = JSON.parse(JSON.stringify(this.monthlyTargets || {}));
+        const rawHeroesTargets = JSON.parse(JSON.stringify(this.monthlyHeroesTargets || {}));
+        const rawSettings = JSON.parse(JSON.stringify(this.settings || {}));
+
+        if (rawBranches.length > 0 && sdb.saveBranchesBatch) {
+          await sdb.saveBranchesBatch(rawBranches);
         }
-        if (Array.isArray(this.staff) && this.staff.length > 0 && sdb.saveStaffBatch) {
-          await sdb.saveStaffBatch(this.staff);
+        if (rawStaff.length > 0 && sdb.saveStaffBatch) {
+          await sdb.saveStaffBatch(rawStaff);
         }
-        if (this.daily && typeof this.daily === 'object' && sdb.saveDayRecord) {
-          const promises = Object.entries(this.daily).map(([key, data]) => {
+        if (rawDaily && typeof rawDaily === 'object' && sdb.saveDayRecord) {
+          const promises = Object.entries(rawDaily).map(([key, data]) => {
             const parts = key.split('|');
             if (parts.length >= 2) {
               return sdb.saveDayRecord(parts[0], parts.slice(1).join('|'), data);
@@ -3624,11 +3642,11 @@ this.settings = {
           });
           await Promise.all(promises);
         }
-        if (this.monthlyTargets && typeof this.monthlyTargets === 'object' && sdb.saveMonthlyTarget) {
-          const mtPromises = Object.entries(this.monthlyTargets).map(([key, baseVal]) => {
+        if (rawTargets && typeof rawTargets === 'object' && sdb.saveMonthlyTarget) {
+          const mtPromises = Object.entries(rawTargets).map(([key, baseVal]) => {
             const parts = key.split('|');
             if (parts.length >= 2) {
-              const heroesVal = this.monthlyHeroesTargets?.[key] || 0;
+              const heroesVal = rawHeroesTargets?.[key] || 0;
               return sdb.saveMonthlyTarget(parts[0], parts.slice(1).join('|'), {
                 baseTarget: Number(baseVal) || 0,
                 heroesTarget: Number(heroesVal) || 0,
@@ -3638,8 +3656,8 @@ this.settings = {
           });
           await Promise.all(mtPromises);
         }
-        if (this.settings && typeof this.settings === 'object' && sdb.saveSettings) {
-          await sdb.saveSettings(this.settings);
+        if (rawSettings && typeof rawSettings === 'object' && sdb.saveSettings) {
+          await sdb.saveSettings(rawSettings);
         }
         console.log('[SamxDB] ✅ Migration to IndexedDB completed successfully');
       } catch (e) {
@@ -4080,7 +4098,8 @@ this.settings = {
       try { localStorage.setItem('samx_users', JSON.stringify(this.users)); } catch (e) {}
       this.getDB().then(sdb => {
         if (sdb && sdb.saveUser && Array.isArray(this.users)) {
-          for (const u of this.users) {
+          const rawUsers = JSON.parse(JSON.stringify(this.users || []));
+          for (const u of rawUsers) {
             if (u && u.id) sdb.saveUser(u);
           }
         }

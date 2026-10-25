@@ -125,6 +125,35 @@ export async function initDatabase() {
   return await samxDbInstance.init();
 }
 
+/**
+ * تحويل أي كائن (بما في ذلك كائنات Vue 3 التفاعلية Reactive Proxies) إلى كائن بسيط نقي (Plain Object)
+ * لمنع حدوث خطأ DataCloneError عند التخزين في IndexedDB
+ */
+export function toRawClone(data) {
+  if (data === null || data === undefined) return data;
+  try {
+    return JSON.parse(JSON.stringify(data));
+  } catch (e) {
+    if (Array.isArray(data)) {
+      return data.map(item => toRawClone(item));
+    }
+    if (typeof data === 'object') {
+      const copy = {};
+      for (const [key, val] of Object.entries(data)) {
+        if (typeof val !== 'function' && typeof val !== 'symbol') {
+          try {
+            copy[key] = JSON.parse(JSON.stringify(val));
+          } catch (err) {
+            copy[key] = toRawClone(val);
+          }
+        }
+      }
+      return copy;
+    }
+    return data;
+  }
+}
+
 // ================================================================
 //  دوال مساعدة لجدول الفروع (Branches)
 // ================================================================
@@ -149,20 +178,20 @@ export async function getBranchByCode(code) {
 export async function saveBranch(branch) {
   if (!branch || !branch.id) throw new Error('Branch must have a valid id');
   const db = await samxDbInstance.getDb();
-  await db.branches.put({
-    ...branch,
-    id: String(branch.id),
-    code: String(branch.code || '').trim(),
-    name: String(branch.name || '').trim(),
-    updatedAt: Date.now(),
-  });
-  return branch;
+  const clean = toRawClone(branch);
+  clean.id = String(branch.id);
+  clean.code = String(branch.code || '').trim();
+  clean.name = String(branch.name || '').trim();
+  clean.updatedAt = Date.now();
+  await db.branches.put(clean);
+  return clean;
 }
 
 export async function saveBranchesBatch(branchesList) {
   if (!Array.isArray(branchesList) || branchesList.length === 0) return 0;
   const db = await samxDbInstance.getDb();
-  const sanitized = branchesList.map(b => ({
+  const rawList = toRawClone(branchesList);
+  const sanitized = rawList.map(b => ({
     ...b,
     id: String(b.id),
     code: String(b.code || '').trim(),
@@ -204,22 +233,22 @@ export async function getStaffById(id) {
 export async function saveStaffMember(staffMember) {
   if (!staffMember || !staffMember.id) throw new Error('Staff member must have a valid id');
   const db = await samxDbInstance.getDb();
-  await db.staff.put({
-    ...staffMember,
-    id: String(staffMember.id),
-    branchId: String(staffMember.branchId || ''),
-    code: String(staffMember.code || '').trim(),
-    name: String(staffMember.name || '').trim(),
-    jobTitle: staffMember.jobTitle || 'بائع',
-    updatedAt: Date.now(),
-  });
-  return staffMember;
+  const clean = toRawClone(staffMember);
+  clean.id = String(staffMember.id);
+  clean.branchId = String(staffMember.branchId || '');
+  clean.code = String(staffMember.code || '').trim();
+  clean.name = String(staffMember.name || '').trim();
+  clean.jobTitle = staffMember.jobTitle || 'بائع';
+  clean.updatedAt = Date.now();
+  await db.staff.put(clean);
+  return clean;
 }
 
 export async function saveStaffBatch(staffList) {
   if (!Array.isArray(staffList) || staffList.length === 0) return 0;
   const db = await samxDbInstance.getDb();
-  const sanitized = staffList.map(s => ({
+  const rawList = toRawClone(staffList);
+  const sanitized = rawList.map(s => ({
     ...s,
     id: String(s.id),
     branchId: String(s.branchId || ''),
@@ -260,10 +289,12 @@ export async function saveDayRecord(date, branchId, data = {}) {
   const key = makeDayKey(date, branchId);
   const db = await samxDbInstance.getDb();
   const existing = (await db.daily.get(key)) || {};
+  const cleanData = toRawClone(data);
+  const cleanExisting = toRawClone(existing);
 
   const record = {
-    ...existing,
-    ...data,
+    ...cleanExisting,
+    ...cleanData,
     key,
     date: String(date).trim(),
     branchId: String(branchId).trim(),
@@ -273,12 +304,12 @@ export async function saveDayRecord(date, branchId, data = {}) {
     mtdSales: Number(data.mtdSales ?? existing.mtdSales ?? 0),
     invoices: Number(data.invoices ?? existing.invoices ?? 0),
     pieces: Number(data.pieces ?? existing.pieces ?? 0),
-    staffData: data.staffData || existing.staffData || {},
+    staffData: cleanData.staffData || cleanExisting.staffData || {},
     isClosed: Boolean(data.isClosed ?? existing.isClosed ?? false),
     updatedAt: Date.now(),
   };
 
-  await db.daily.put(record);
+  await db.daily.put(toRawClone(record));
   return record;
 }
 
@@ -286,7 +317,7 @@ export async function updateStaffSales(date, branchId, staffId, salesValue) {
   if (!date || !branchId || !staffId) return null;
   const key = makeDayKey(date, branchId);
   const db = await samxDbInstance.getDb();
-  const record = (await db.daily.get(key)) || {
+  const rawRecord = (await db.daily.get(key)) || {
     key,
     date: String(date).trim(),
     branchId: String(branchId).trim(),
@@ -296,6 +327,7 @@ export async function updateStaffSales(date, branchId, staffId, salesValue) {
     staffData: {},
     isClosed: false,
   };
+  const record = toRawClone(rawRecord);
 
   if (!record.staffData) record.staffData = {};
   const currentStaffRec = record.staffData[staffId] || { sales: 0, target: 0, heroesTarget: 0 };
@@ -303,7 +335,7 @@ export async function updateStaffSales(date, branchId, staffId, salesValue) {
   record.staffData[staffId] = currentStaffRec;
   record.updatedAt = Date.now();
 
-  await db.daily.put(record);
+  await db.daily.put(toRawClone(record));
   return record;
 }
 
@@ -320,7 +352,8 @@ export async function getDaysByMonth(month, branchId = null) {
 export async function closeDayRecord(date, branchId, closeMeta = {}) {
   const key = makeDayKey(date, branchId);
   const db = await samxDbInstance.getDb();
-  const rec = (await db.daily.get(key)) || { key, date, branchId };
+  const rawRec = (await db.daily.get(key)) || { key, date, branchId };
+  const rec = toRawClone(rawRec);
 
   rec.isClosed = true;
   rec.closedAt = Date.now();
@@ -329,22 +362,23 @@ export async function closeDayRecord(date, branchId, closeMeta = {}) {
   rec.closeNote = closeMeta.closeNote || '';
   rec.updatedAt = Date.now();
 
-  await db.daily.put(rec);
+  await db.daily.put(toRawClone(rec));
   return rec;
 }
 
 export async function reopenDayRecord(date, branchId, reason = '') {
   const key = makeDayKey(date, branchId);
   const db = await samxDbInstance.getDb();
-  const rec = await db.daily.get(key);
-  if (!rec) return null;
+  const rawRec = await db.daily.get(key);
+  if (!rawRec) return null;
+  const rec = toRawClone(rawRec);
 
   rec.isClosed = false;
   rec.reopenedAt = Date.now();
   rec.reopenReason = reason;
   rec.updatedAt = Date.now();
 
-  await db.daily.put(rec);
+  await db.daily.put(toRawClone(rec));
   return rec;
 }
 
@@ -376,10 +410,12 @@ export async function saveMonthlyTarget(month, branchId, targetData = {}) {
   const key = makeMonthKey(month, branchId);
   const db = await samxDbInstance.getDb();
   const existing = (await db.monthlyTargets.get(key)) || {};
+  const cleanData = toRawClone(targetData);
+  const cleanExisting = toRawClone(existing);
 
   const record = {
-    ...existing,
-    ...targetData,
+    ...cleanExisting,
+    ...cleanData,
     key,
     month: String(month).trim(),
     branchId: String(branchId).trim(),
@@ -388,7 +424,7 @@ export async function saveMonthlyTarget(month, branchId, targetData = {}) {
     updatedAt: Date.now(),
   };
 
-  await db.monthlyTargets.put(record);
+  await db.monthlyTargets.put(toRawClone(record));
   return record;
 }
 
@@ -424,14 +460,13 @@ export async function getUserByUsername(username) {
 export async function saveUser(user) {
   if (!user || !user.id) throw new Error('User must have a valid id');
   const db = await samxDbInstance.getDb();
-  await db.users.put({
-    ...user,
-    id: String(user.id),
-    username: String(user.username || '').trim(),
-    role: user.role || 'manager',
-    updatedAt: Date.now(),
-  });
-  return user;
+  const clean = toRawClone(user);
+  clean.id = String(user.id);
+  clean.username = String(user.username || '').trim();
+  clean.role = user.role || 'manager';
+  clean.updatedAt = Date.now();
+  await db.users.put(clean);
+  return clean;
 }
 
 export async function deleteUser(id) {
@@ -452,12 +487,13 @@ export async function getSettings(id = 'app_settings') {
 
 export async function saveSettings(settingsData, id = 'app_settings') {
   const db = await samxDbInstance.getDb();
+  const clean = toRawClone(settingsData);
   const record = {
-    ...settingsData,
+    ...clean,
     id,
     updatedAt: Date.now(),
   };
-  await db.settings.put(record);
+  await db.settings.put(toRawClone(record));
   return record;
 }
 
@@ -503,6 +539,7 @@ if (typeof window !== 'undefined') {
   window.SamxDB = {
     samxDbInstance,
     initDatabase,
+    toRawClone,
     // Branches
     getAllBranches,
     getBranchById,
