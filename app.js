@@ -2413,11 +2413,24 @@ createApp({
     // ================================================================
     saveSettingsToStorage() {
       try { localStorage.setItem('samx_settings_v14', JSON.stringify(this.settings)); } catch (e) {}
+      this.getDB().then(sdb => {
+        if (sdb && sdb.saveSettings) sdb.saveSettings(this.settings);
+      }).catch(() => {});
     },
-    loadSettingsFromStorage() {
+    async loadSettingsFromStorage() {
       try {
         const saved = JSON.parse(localStorage.getItem('samx_settings_v14') || '{}');
         if (saved && typeof saved === 'object') this.settings = { ...this.settings, ...saved };
+      } catch (e) {}
+      try {
+        const sdb = await this.getDB();
+        if (sdb && sdb.getSettings) {
+          const idbSettings = await sdb.getSettings();
+          if (idbSettings && typeof idbSettings === 'object') {
+            this.settings = { ...this.settings, ...idbSettings };
+            this.applyAllSettings();
+          }
+        }
       } catch (e) {}
     },
     applyAllSettings() {
@@ -3421,6 +3434,9 @@ this.settings = {
         localStorage.setItem('samx_attendance', JSON.stringify(this.attendance || {}));
         localStorage.setItem('samx_theme', this.darkMode ? 'dark' : 'light');
         try { localStorage.setItem('samx_staff_chart_type', this.staffChartType); } catch(e) {}
+        // ⭐ v24.0.0: حفظ تدريجي متوازي غير متزامن في IndexedDB (SamxDatabaseV24)
+        this.persistToIndexedDB();
+
         // ⭐ v23.18: إرسال نسخة للسحابة في الخلفية (Cloudflare D1)
         this.triggerCloudSyncDebounced();
       } catch (e) { console.warn('persist error', e); }
@@ -3430,6 +3446,7 @@ this.settings = {
       this.persist();
     },
     load() {
+      // 1. قراءة سريعة أولية من الكاش/localStorage لتفادي أي وميض أو تجميد في الواجهة (Zero UI Freeze)
       try {
         this.branches = JSON.parse(localStorage.getItem('samx_branches')) || [];
         this.staff = JSON.parse(localStorage.getItem('samx_staff')) || [];
@@ -3448,6 +3465,186 @@ this.settings = {
       this.applyTheme();
       this._dataLoaded = true;   // ⭐ v23.9-SHIELD: فتح البوابة
       console.log('[load] ✅ Data loaded:', this.branches.length, 'branches,', this.staff.length, 'staff');
+
+      // 2. تحميل ومزامنة طبقة قاعدة البيانات المحلية الحديثة (IndexedDB SamxDatabaseV24) بالخلفية
+      this.hydrateFromIndexedDB();
+    },
+
+    // ================================================================
+    //  ⭐ v24.0.0: تكامل طبقة قاعدة البيانات المحلية (IndexedDB SamxDatabaseV24)
+    // ================================================================
+    async getDB() {
+      if (typeof window !== 'undefined' && window.SamxDB) {
+        return window.SamxDB;
+      }
+      try {
+        const mod = await import('./db.js');
+        if (mod) {
+          if (typeof window !== 'undefined' && !window.SamxDB) {
+            window.SamxDB = mod.default && mod.initDatabase ? mod : (mod.default || mod);
+          }
+          return mod.initDatabase ? mod : (mod.default || mod);
+        }
+      } catch (e) {
+        if (typeof document !== 'undefined' && !window.SamxDB) {
+          await new Promise((resolve) => {
+            const s = document.createElement('script');
+            s.type = 'module';
+            s.src = './db.js';
+            s.onload = () => resolve();
+            s.onerror = () => resolve();
+            document.head.appendChild(s);
+          });
+        }
+      }
+      return typeof window !== 'undefined' ? window.SamxDB : null;
+    },
+
+    async persistToIndexedDB() {
+      try {
+        const sdb = await this.getDB();
+        if (!sdb) return;
+
+        // 1. حفظ الفروع والموظفين في IndexedDB
+        if (Array.isArray(this.branches) && this.branches.length > 0 && sdb.saveBranchesBatch) {
+          await sdb.saveBranchesBatch(this.branches);
+        }
+        if (Array.isArray(this.staff) && this.staff.length > 0 && sdb.saveStaffBatch) {
+          await sdb.saveStaffBatch(this.staff);
+        }
+
+        // 2. حفظ سجل اليوم المحدد وسجلات المبيعات
+        if (this.selectedDate && this.selectedBranchId && sdb.saveDayRecord) {
+          const key = `${this.selectedDate}|${this.selectedBranchId}`;
+          const currentDayRec = this.daily[key];
+          if (currentDayRec) {
+            await sdb.saveDayRecord(this.selectedDate, this.selectedBranchId, currentDayRec);
+          }
+        }
+
+        // 3. حفظ التارجت الشهري
+        if (this.monthlyTargets && typeof this.monthlyTargets === 'object' && sdb.saveMonthlyTarget) {
+          const mKeys = Object.keys(this.monthlyTargets);
+          for (const mk of mKeys) {
+            const parts = mk.split('|');
+            if (parts.length >= 2) {
+              await sdb.saveMonthlyTarget(parts[0], parts.slice(1).join('|'), {
+                baseTarget: Number(this.monthlyTargets[mk]) || 0,
+                heroesTarget: Number(this.monthlyHeroesTargets?.[mk]) || 0,
+              });
+            }
+          }
+        }
+
+        // 4. حفظ الإعدادات
+        if (this.settings && sdb.saveSettings) {
+          await sdb.saveSettings(this.settings);
+        }
+      } catch (err) {
+        console.warn('[SamxDB] Async persistToIndexedDB error (non-fatal):', err);
+      }
+    },
+
+    async hydrateFromIndexedDB() {
+      try {
+        const sdb = await this.getDB();
+        if (!sdb || !sdb.initDatabase) return;
+
+        await sdb.initDatabase();
+
+        const rawDb = sdb.samxDbInstance ? await sdb.samxDbInstance.getDb() : null;
+        const [idbBranches, idbStaff, idbDaily, idbMonthlyTargets, idbSettings] = await Promise.all([
+          sdb.getAllBranches ? sdb.getAllBranches().catch(() => []) : Promise.resolve([]),
+          sdb.getAllStaff ? sdb.getAllStaff().catch(() => []) : Promise.resolve([]),
+          rawDb ? rawDb.daily.toArray().catch(() => []) : Promise.resolve([]),
+          sdb.getAllMonthlyTargets ? sdb.getAllMonthlyTargets().catch(() => []) : Promise.resolve([]),
+          sdb.getSettings ? sdb.getSettings().catch(() => null) : Promise.resolve(null),
+        ]);
+
+        const hasIdbData = (idbBranches && idbBranches.length > 0) || (idbStaff && idbStaff.length > 0);
+
+        if (hasIdbData) {
+          if (Array.isArray(idbBranches) && idbBranches.length > 0) {
+            this.branches = idbBranches;
+          }
+          if (Array.isArray(idbStaff) && idbStaff.length > 0) {
+            this.staff = idbStaff;
+          }
+          if (Array.isArray(idbDaily) && idbDaily.length > 0) {
+            idbDaily.forEach(rec => {
+              if (rec && rec.key) {
+                this.daily[rec.key] = rec;
+              }
+            });
+          }
+          if (Array.isArray(idbMonthlyTargets) && idbMonthlyTargets.length > 0) {
+            idbMonthlyTargets.forEach(mt => {
+              if (mt && mt.key) {
+                this.monthlyTargets[mt.key] = mt.baseTarget || 0;
+                if (mt.heroesTarget) {
+                  this.monthlyHeroesTargets[mt.key] = mt.heroesTarget;
+                }
+              }
+            });
+          }
+          if (idbSettings && typeof idbSettings === 'object') {
+            this.settings = { ...this.settings, ...idbSettings };
+            this.applyAllSettings();
+          }
+          this.normalizeAllDailyRecords();
+          console.log('[SamxDB] ✅ Loaded data from IndexedDB (SamxDatabaseV24):', this.branches.length, 'branches,', this.staff.length, 'staff');
+        } else {
+          // هجرة أولية سلسة من localStorage إلى IndexedDB
+          console.log('[SamxDB] 🚀 First time migration: syncing localStorage data into IndexedDB...');
+          await this.migrateLocalStorageToIndexedDB(sdb);
+        }
+      } catch (err) {
+        console.warn('[SamxDB] Hydration from IndexedDB failed, running on localStorage fallback:', err);
+      }
+    },
+
+    async migrateLocalStorageToIndexedDB(sdb) {
+      try {
+        if (!sdb) sdb = await this.getDB();
+        if (!sdb) return;
+
+        if (Array.isArray(this.branches) && this.branches.length > 0 && sdb.saveBranchesBatch) {
+          await sdb.saveBranchesBatch(this.branches);
+        }
+        if (Array.isArray(this.staff) && this.staff.length > 0 && sdb.saveStaffBatch) {
+          await sdb.saveStaffBatch(this.staff);
+        }
+        if (this.daily && typeof this.daily === 'object' && sdb.saveDayRecord) {
+          const promises = Object.entries(this.daily).map(([key, data]) => {
+            const parts = key.split('|');
+            if (parts.length >= 2) {
+              return sdb.saveDayRecord(parts[0], parts.slice(1).join('|'), data);
+            }
+            return Promise.resolve();
+          });
+          await Promise.all(promises);
+        }
+        if (this.monthlyTargets && typeof this.monthlyTargets === 'object' && sdb.saveMonthlyTarget) {
+          const mtPromises = Object.entries(this.monthlyTargets).map(([key, baseVal]) => {
+            const parts = key.split('|');
+            if (parts.length >= 2) {
+              const heroesVal = this.monthlyHeroesTargets?.[key] || 0;
+              return sdb.saveMonthlyTarget(parts[0], parts.slice(1).join('|'), {
+                baseTarget: Number(baseVal) || 0,
+                heroesTarget: Number(heroesVal) || 0,
+              });
+            }
+            return Promise.resolve();
+          });
+          await Promise.all(mtPromises);
+        }
+        if (this.settings && typeof this.settings === 'object' && sdb.saveSettings) {
+          await sdb.saveSettings(this.settings);
+        }
+        console.log('[SamxDB] ✅ Migration to IndexedDB completed successfully');
+      } catch (e) {
+        console.warn('[SamxDB] Migration to IndexedDB error:', e);
+      }
     },
 
     // ================================================================
@@ -3800,6 +3997,22 @@ this.settings = {
     //  Users Management
     // ================================================================
     async initUsers() {
+      // 1. محاولة استرجاع المستخدمين أولاً من قاعدة البيانات المحلية IndexedDB
+      try {
+        const sdb = await this.getDB();
+        if (sdb && sdb.getAllUsers) {
+          const idbUsers = await sdb.getAllUsers();
+          if (Array.isArray(idbUsers) && idbUsers.length > 0) {
+            this.users = idbUsers;
+            try { localStorage.setItem('samx_users', JSON.stringify(this.users)); } catch (e) {}
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('[Users] IndexedDB load attempt:', e);
+      }
+
+      // 2. Fallback السريع من localStorage
       try {
         const stored = localStorage.getItem('samx_users');
         if (stored) {
@@ -3837,6 +4050,7 @@ this.settings = {
 
             this.users = parsed;
             try { localStorage.setItem('samx_users', JSON.stringify(this.users)); } catch (e) {}
+            this.persistUsers();
             return;
           }
         }
@@ -3860,9 +4074,17 @@ this.settings = {
       }
       this.users = initialUsers;
       try { localStorage.setItem('samx_users', JSON.stringify(this.users)); } catch (e) {}
+      this.persistUsers();
     },
     persistUsers() {
       try { localStorage.setItem('samx_users', JSON.stringify(this.users)); } catch (e) {}
+      this.getDB().then(sdb => {
+        if (sdb && sdb.saveUser && Array.isArray(this.users)) {
+          for (const u of this.users) {
+            if (u && u.id) sdb.saveUser(u);
+          }
+        }
+      }).catch(() => {});
       this.triggerCloudSyncDebounced();
     },
     async doLogin() {
@@ -4036,6 +4258,9 @@ this.settings = {
 
       this.users = this.users.filter(x => x.id !== id);
       this.persistUsers();
+      this.getDB().then(sdb => {
+        if (sdb && sdb.deleteUser) sdb.deleteUser(id);
+      }).catch(() => {});
       this.showToast(this.t('users.toast.deleted'), 'success');
       this.logActivity(this.t('log.user.delete'), u.username);
       // ⭐ v23.25: رفع فوري مباشر لسحابة D1 مع انتظار الاكتمال
@@ -4356,6 +4581,15 @@ this.settings = {
       this.vibrate([20, 50, 20]);
       this.showCloseDayModal = false;
       this.showToast(this.currentLang === 'ar' ? 'تم اعتماد وإغلاق اليومية بنجاح 🔒✅' : 'Day shift closed & sealed successfully 🔒✅', 'success');
+      this.getDB().then(sdb => {
+        if (sdb && sdb.closeDayRecord) {
+          sdb.closeDayRecord(this.selectedDate, this.selectedBranchId, {
+            closedBy: rec.closedBy,
+            closedRole: rec.closedRole,
+            closeNote: rec.closeNote,
+          });
+        }
+      }).catch(() => {});
     },
     openReopenModal() {
       if (!this.canReopenDay) {
@@ -4387,6 +4621,11 @@ this.settings = {
       this.vibrate(25);
       this.showReopenDayModal = false;
       this.showToast(this.currentLang === 'ar' ? 'تمت إعادة فتح اليومية للتعديل 🔓' : 'Day reopened for editing 🔓', 'info');
+      this.getDB().then(sdb => {
+        if (sdb && sdb.reopenDayRecord) {
+          sdb.reopenDayRecord(this.selectedDate, this.selectedBranchId, this.reopenDayReason);
+        }
+      }).catch(() => {});
     },
 
     // ================================================================
@@ -4688,6 +4927,10 @@ this.settings = {
       this.branches = this.branches.filter(b => b.id !== id);
       this.staff = this.staff.filter(s => s.branchId !== id);
       if (this.selectedBranchId === id) this.selectedBranchId = '';
+      this.persist();
+      this.getDB().then(sdb => {
+        if (sdb && sdb.deleteBranch) sdb.deleteBranch(id);
+      }).catch(() => {});
       this.showToast(this.t('branches.toast.deleted'), 'success');
       this.logActivity(this.t('log.branch.delete'), b ? b.name : '');
     },
@@ -4732,6 +4975,10 @@ this.settings = {
       if (!confirm(this.t('staffView.confirm.delete'))) return;
       const s = this.staff.find(x => x.id === id);
       this.staff = this.staff.filter(s => s.id !== id);
+      this.persist();
+      this.getDB().then(sdb => {
+        if (sdb && sdb.deleteStaffMember) sdb.deleteStaffMember(id);
+      }).catch(() => {});
       this.showToast(this.t('staffView.toast.deleted'), 'success');
       this.logActivity(this.t('log.staff.delete'), s ? s.name : '');
     },
@@ -6953,6 +7200,9 @@ this.settings = {
       this.monthlyHeroesTargets = {};
       this.attendance = {};
       this.persist();
+      this.getDB().then(sdb => {
+        if (sdb && sdb.clearAllDatabase) sdb.clearAllDatabase();
+      }).catch(() => {});
       this.showToast(this.t('toast.backup.cleared'), 'success');
       this.showBackupModal = false;
       this.logActivity(this.t('log.clearAll'), '');
