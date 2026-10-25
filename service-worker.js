@@ -1,14 +1,16 @@
 // ================================================================
-//  SAMX — Service Worker v24.0.0
+//  SAMX — Service Worker v24.3.0
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 //  يعمل: Network-First للتنقل مع Fallback للكاش، Offline-First للأصول
 // ================================================================
 
-const CACHE_VERSION = 'samx-v24.0.0';
+const CACHE_VERSION = 'samx-v24.3.0';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
+// ⭐ v24.3.0: الأصول الأساسية فقط تُخزَّن مسبقاً عند التثبيت
+// المكتبات الثقيلة (PDF, Excel, Canvas) تُحمَّل Lazy ديناميكياً وتُخزَّن في الكاش عند الطلب
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -24,36 +26,31 @@ const STATIC_ASSETS = [
   './icon-maskable-512.png',
   './libs/vue.global.prod.js',
   './libs/chart.umd.min.js',
-  './libs/jspdf.umd.min.js',
-  './libs/jspdf.plugin.autotable.min.js',
-  // ⭐ v23.9: xlsx يُحمَّل Lazy — لا يُخزَّن مسبقاً
-  // (يُخزَّن تلقائياً عند أول استخدام عبر runtime cache)
-  // ⭐ v23.9: html2canvas محلي (مشاركة البطاقة كصورة)
-  './libs/html2canvas.min.js',
-  './libs/html-to-image.min.js',
   './seed-data.js',
-  // ⭐ v23.9: الخطوط — ضرورية للعمل offline
   './libs/cairo-base64.css',
   './libs/saudi-riyal-font.css',
   './libs/i18n/ar.js',
   './libs/i18n/en.js',
   './libs/i18n/index.js',
-  './libs/Amiri-Regular.ttf',
-  './libs/fonts/cairo/Cairo-Regular.ttf',
-  './libs/fonts/cairo/Cairo-SemiBold.ttf',
-  './libs/fonts/cairo/Cairo-Bold.ttf',
-  './libs/fonts/cairo/Cairo-Black.ttf',
-  './libs/fonts/saudi-riyal/saudi_riyal.woff2',
-  './libs/fonts/saudi-riyal/saudi_riyal.ttf',
-  './libs/fonts/saudi-riyal/saudi_riyal_bold.woff2',
-  './libs/fonts/saudi-riyal/saudi_riyal_bold.ttf',
 ];
+
+// دالة حماية مساحة التخزين من التضخم (Runtime Cache Limiter)
+async function trimCache(cacheName, maxItems = 50) {
+  try {
+    const cache = await caches.open(cacheName);
+    const keys = await cache.keys();
+    if (keys.length > maxItems) {
+      await cache.delete(keys[0]);
+      await trimCache(cacheName, maxItems);
+    }
+  } catch (e) {}
+}
 
 // ================================================================
 //  INSTALL
 // ================================================================
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing SAMX v24.0.0...');
+  console.log('[SW] Installing SAMX v24.3.0 (Streamlined Core Pre-cache)...');
   self.skipWaiting();
   event.waitUntil(
     (async () => {
@@ -69,7 +66,7 @@ self.addEventListener('install', (event) => {
       if (failed > 0) {
         console.warn(`[SW] ${failed} / ${STATIC_ASSETS.length} assets failed to cache (proceeding anyway)`);
       } else {
-        console.log(`[SW] ✅ All ${STATIC_ASSETS.length} assets cached`);
+        console.log(`[SW] ✅ All ${STATIC_ASSETS.length} core assets cached`);
       }
     })()
   );
@@ -79,7 +76,7 @@ self.addEventListener('install', (event) => {
 //  ACTIVATE
 // ================================================================
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating SAMX v23.36.0...');
+  console.log('[SW] Activating SAMX v24.3.0...');
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
@@ -90,7 +87,10 @@ self.addEventListener('activate', (event) => {
             key !== CACHE_STATIC &&
             key !== CACHE_RUNTIME
           )
-          .map(key => caches.delete(key))
+          .map(key => {
+            console.log('[SW] 🧹 Purging obsolete cache:', key);
+            return caches.delete(key);
+          })
       );
       await self.clients.claim();
     })()
@@ -217,7 +217,10 @@ async function handleSameOrigin(request) {
         });
       }
       const clone = response.clone();
-      caches.open(CACHE_RUNTIME).then(cache => cache.put(request, clone));
+      caches.open(CACHE_RUNTIME).then(cache => {
+        cache.put(request, clone);
+        trimCache(CACHE_RUNTIME, 50);
+      });
     }
     return response;
   } catch (err) {

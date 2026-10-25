@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v24.0.0 — app.js
+//  SAMX v24.3.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '24.0.0';
+const APP_VERSION = '24.3.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -329,6 +329,112 @@ async function getLogoDataURL(logoUrl) {
     };
     img.src = logoUrl;
   });
+}
+
+// ================================================================
+//  ⭐ v24.3.0: محمل المكتبات الكسول الموحّد (Lazy Load Helper)
+//  تحميل ديناميكي غير حاجب للواجهة للمكتبات الثقيلة عند الحاجة فقط
+// ================================================================
+const _libraryRegistry = {
+  xlsx: {
+    check: () => window.XLSX && typeof window.XLSX.write === 'function',
+    sources: [
+      'libs/xlsx.bundle.js',
+      'https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js'
+    ],
+    name: 'XLSX (Excel)'
+  },
+  htmlToImage: {
+    check: () => window.htmlToImage && typeof window.htmlToImage.toPng === 'function',
+    sources: [
+      './libs/html-to-image.min.js',
+      'https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.min.js'
+    ],
+    name: 'html-to-image'
+  },
+  html2canvas: {
+    check: () => typeof window.html2canvas === 'function',
+    sources: [
+      './libs/html2canvas.min.js',
+      'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'
+    ],
+    name: 'html2canvas'
+  },
+  pdf: {
+    check: () => window.jspdf && window.jspdf.jsPDF,
+    groups: [
+      ['./libs/jspdf.umd.min.js', './libs/jspdf.plugin.autotable.min.js'],
+      ['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js']
+    ],
+    name: 'jsPDF + AutoTable'
+  }
+};
+
+const _lazyLoadingPromises = {};
+
+function loadScriptSource(src) {
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      if (existing.dataset.loaded === 'true') {
+        resolve(true);
+        return;
+      }
+      existing.addEventListener('load', () => resolve(true), { once: true });
+      existing.addEventListener('error', () => reject(new Error('Failed ' + src)), { once: true });
+      setTimeout(resolve, 150); // fallback timeout in case already executed
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.onload = () => {
+      script.dataset.loaded = 'true';
+      resolve(true);
+    };
+    script.onerror = () => reject(new Error('Failed to load ' + src));
+    document.head.appendChild(script);
+  });
+}
+
+async function lazyLoadLibrary(libKey) {
+  const config = _libraryRegistry[libKey];
+  if (!config) throw new Error(`Unknown library: ${libKey}`);
+  if (config.check()) return true;
+  if (_lazyLoadingPromises[libKey]) return _lazyLoadingPromises[libKey];
+
+  _lazyLoadingPromises[libKey] = (async () => {
+    if (config.groups) {
+      for (const group of config.groups) {
+        try {
+          await Promise.all(group.map(src => loadScriptSource(src)));
+          if (config.check()) {
+            console.log(`[LazyLoad] ✅ ${config.name} loaded`);
+            return true;
+          }
+        } catch (e) {
+          console.warn(`[LazyLoad] Group failed for ${config.name}:`, e);
+        }
+      }
+    } else if (config.sources) {
+      for (const src of config.sources) {
+        try {
+          await loadScriptSource(src);
+          if (config.check()) {
+            console.log(`[LazyLoad] ✅ ${config.name} loaded from ${src}`);
+            return true;
+          }
+        } catch (e) {
+          console.warn(`[LazyLoad] Source failed for ${config.name} (${src}):`, e);
+        }
+      }
+    }
+    return !!config.check();
+  })();
+
+  const result = await _lazyLoadingPromises[libKey];
+  _lazyLoadingPromises[libKey] = null;
+  return !!result;
 }
 
 const { createApp, nextTick, markRaw, toRaw } = Vue;
@@ -2888,7 +2994,12 @@ this.settings = {
     //  Auto Lock
     // ================================================================
     setupAutoLock() {
+      let lastReset = 0;
       const resetTimer = () => {
+        const now = Date.now();
+        // ⭐ v24.3.0: تقليل استهلاك المعالج واستقرار التمرير على الموبايل
+        if (now - lastReset < 3000) return;
+        lastReset = now;
         clearTimeout(this._lockTimer);
         this._lockTimer = setTimeout(() => {
           if (this.currentUser) { this.isLocked = true; this.lockPassword = ''; }
@@ -3069,8 +3180,20 @@ this.settings = {
       if (this.activityLog.length > 500) this.activityLog.length = 500;
       this.persistActivityLog();
     },
-    persistActivityLog() {
-      try { localStorage.setItem('samx_activity_log', JSON.stringify(this.activityLog)); } catch (e) {}
+    persistActivityLog(immediate = false) {
+      if (immediate) {
+        if (this._persistLogTimer) {
+          clearTimeout(this._persistLogTimer);
+          this._persistLogTimer = null;
+        }
+        try { localStorage.setItem('samx_activity_log', JSON.stringify(this.activityLog)); } catch (e) {}
+        return;
+      }
+      if (this._persistLogTimer) return;
+      this._persistLogTimer = setTimeout(() => {
+        this._persistLogTimer = null;
+        try { localStorage.setItem('samx_activity_log', JSON.stringify(this.activityLog)); } catch (e) {}
+      }, 400);
     },
     loadActivityLog() {
       try { this.activityLog = JSON.parse(localStorage.getItem('samx_activity_log')) || []; } catch (e) {}
@@ -3190,14 +3313,51 @@ this.settings = {
     },
 
     // ================================================================
-    //  Live KPI
+    //  Live KPI & Input Performance (Debounced / Throttled)
     // ================================================================
     flashKpi(field) {
+      this._kpiFlashTimers = this._kpiFlashTimers || {};
+      if (this._kpiFlashTimers[field]) clearTimeout(this._kpiFlashTimers[field]);
       this.kpiFlashClass[field] = 'kpi-flash';
-      setTimeout(() => { this.kpiFlashClass[field] = ''; }, 500);
+      this._kpiFlashTimers[field] = setTimeout(() => {
+        this.kpiFlashClass[field] = '';
+        delete this._kpiFlashTimers[field];
+      }, 450);
     },
     updateLiveTime() {
       this.liveUpdateTime = this.formatTime();
+    },
+
+    // ⭐ v24.3.0: Debounce activity logging for rapid inputs to avoid main thread jank
+    debounceStaffFieldLog(staffId, field, initialOldVal, finalNewVal, sName, bName) {
+      this._staffLogDebouncers = this._staffLogDebouncers || {};
+      const logKey = `${staffId}_${field}`;
+      if (!this._staffLogDebouncers[logKey]) {
+        this._staffLogDebouncers[logKey] = { initialOldVal };
+      }
+      const debouncer = this._staffLogDebouncers[logKey];
+      debouncer.finalNewVal = finalNewVal;
+      clearTimeout(debouncer.timer);
+      debouncer.timer = setTimeout(() => {
+        const startVal = debouncer.initialOldVal;
+        const endVal = debouncer.finalNewVal;
+        delete this._staffLogDebouncers[logKey];
+        if (startVal === endVal) return;
+
+        if (field === 'sales') {
+          this.logActivity('💰 تعديل مبيعات', `${sName}: ${this.formatNum(startVal)} → ${this.formatNum(endVal)} (${bName} • ${this.selectedDate})`, {
+            category: 'sales', level: 'info', oldVal: startVal, newVal: endVal, diff: endVal - startVal, branchName: bName
+          });
+        } else if (field === 'target') {
+          this.logActivity('🎯 تعديل تارجت', `${sName}: ${this.formatNum(startVal)} → ${this.formatNum(endVal)} (${bName} • ${this.selectedDate})`, {
+            category: 'target', level: 'info', oldVal: startVal, newVal: endVal, diff: endVal - startVal, branchName: bName
+          });
+        } else if (field === 'heroesTarget') {
+          this.logActivity('⭐ تعديل تارجت الأبطال', `${sName}: ${this.formatNum(startVal)} → ${this.formatNum(endVal)} (${bName} • ${this.selectedDate})`, {
+            category: 'target', level: 'info', oldVal: startVal, newVal: endVal, diff: endVal - startVal, branchName: bName
+          });
+        }
+      }, 600);
     },
 
     // ================================================================
@@ -3247,23 +3407,16 @@ this.settings = {
         const staffMember = this.staff.find(s => s.id === staffId);
         const sName = staffMember ? staffMember.name : staffId;
         const bName = this.selectedBranch ? this.selectedBranch.name : '';
+
+        // ⭐ v24.3.0: تسجيل العمليات مع تأخير مؤقت (Debounce) لمنع اختناق الخيط الرئيسي على الموبايل
+        this.debounceStaffFieldLog(staffId, field, oldVal, newVal, sName, bName);
+
         if (field === 'sales') {
-          this.logActivity('💰 تعديل مبيعات', `${sName}: ${this.formatNum(oldVal)} → ${this.formatNum(newVal)} (${bName} • ${this.selectedDate})`, {
-            category: 'sales', level: 'info', oldVal, newVal, diff: newVal - oldVal, branchName: bName
-          });
           this.flashKpi('branchSales');
           this.flashKpi('basePct');
           this.flashKpi('heroesPct');
           this.checkConfetti();
           this.scheduleStaffChartRefresh();
-        } else if (field === 'target') {
-          this.logActivity('🎯 تعديل تارجت', `${sName}: ${this.formatNum(oldVal)} → ${this.formatNum(newVal)} (${bName} • ${this.selectedDate})`, {
-            category: 'target', level: 'info', oldVal, newVal, diff: newVal - oldVal, branchName: bName
-          });
-        } else if (field === 'heroesTarget') {
-          this.logActivity('⭐ تعديل تارجت الأبطال', `${sName}: ${this.formatNum(oldVal)} → ${this.formatNum(newVal)} (${bName} • ${this.selectedDate})`, {
-            category: 'target', level: 'info', oldVal, newVal, diff: newVal - oldVal, branchName: bName
-          });
         }
         this.schedulePersist();
       }
@@ -3288,9 +3441,10 @@ this.settings = {
         const staffMember = this.staff.find(s => s.id === staffId);
         const sName = staffMember ? staffMember.name : staffId;
         const bName = this.selectedBranch ? this.selectedBranch.name : '';
-        this.logActivity('💰 تعديل سريع للمبيعات', `${sName}: (${delta > 0 ? '+' : ''}${delta}) ${this.formatNum(cur)} → ${this.formatNum(nextVal)} (${bName})`, {
-          category: 'sales', level: 'info', oldVal: cur, newVal: nextVal, diff: delta, branchName: bName
-        });
+
+        // ⭐ v24.3.0: دمج وتأخير عمليات التعديل السريع المتتابعة (Batch Debounced Logging)
+        this.debounceStaffFieldLog(staffId, 'sales', cur, nextVal, sName, bName);
+
         this.vibrate(8);
         this.flashKpi('branchSales');
         this.flashKpi('basePct');
@@ -4535,17 +4689,21 @@ this.settings = {
       this.triggerCloudSyncDebounced();
       this.showToast(this.t('toast.attendance.distributed', '', { count: present.length }), 'success');
     },
-    // ⭐ v23.17: قياس ارتفاع رأس التطبيق لتجنب قص عناوين النوافذ عند التمرير
+    // ⭐ v24.3.0: قياس ارتفاع رأس التطبيق بانسيابية مع requestAnimationFrame لتجنب Reflow غير الضروري
     syncHeaderHeight() {
-      try {
-        const header = document.querySelector('header');
-        if (header) {
-          const h = header.getBoundingClientRect().height;
-          if (h > 0) {
-            document.documentElement.style.setProperty('--app-header-height', Math.round(h) + 'px');
+      if (this._syncHeaderRaf) cancelAnimationFrame(this._syncHeaderRaf);
+      this._syncHeaderRaf = requestAnimationFrame(() => {
+        this._syncHeaderRaf = null;
+        try {
+          const header = document.querySelector('header');
+          if (header) {
+            const h = header.getBoundingClientRect().height;
+            if (h > 0) {
+              document.documentElement.style.setProperty('--app-header-height', Math.round(h) + 'px');
+            }
           }
-        }
-      } catch (e) {}
+        } catch (e) {}
+      });
     },
     // ⭐ v23.10: Pull-to-Refresh
     setupPullToRefresh() {
@@ -5671,57 +5829,13 @@ this.settings = {
     },
 
     // ================================================================
-    //  ⭐ v23: تحميل مكتبة xlsx-js-style
-    //  الإصلاح: نبحث عن window.XLSX (وليس XLSXStyle)
+    //  ⭐ v24.3.0: تحميل Lazy لمكتبة Excel (xlsx-js-style)
     // ================================================================
-    // ⭐ v23.3: تحميل Lazy — يُستدعى عند أول استخدام فقط
-    _xlsxLoadingPromise: null,
     async loadXlsxStyleLib() {
-      // ✅ محمّلة مسبقاً؟
-      if (window.XLSX && typeof window.XLSX.write === 'function') return true;
-
-      // ✅ جارٍ التحميل بالفعل؟ — ارجع نفس الـ Promise (يمنع التحميل المزدوج)
-      if (this._xlsxLoadingPromise) return this._xlsxLoadingPromise;
-
-      this._xlsxLoadingPromise = (async () => {
-        // محاولة 1: محلي
-        try {
-          await this.loadScript('libs/xlsx.bundle.js');
-          if (window.XLSX && typeof window.XLSX.write === 'function') {
-            console.log('[Excel] ✅ تم تحميل xlsx محلياً');
-            return true;
-          }
-        } catch (e) {
-          console.warn('[Excel] فشل التحميل المحلي:', e);
-        }
-
-        // محاولة 2: CDN كاحتياطي
-        try {
-          await this.loadScript('https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js');
-          const ok = !!(window.XLSX && typeof window.XLSX.write === 'function');
-          if (ok) console.log('[Excel] ✅ تم تحميل xlsx من CDN');
-          return ok;
-        } catch (e) {
-          console.error('[Excel] فشل التحميل من CDN أيضاً:', e);
-          return false;
-        }
-      })();
-
-      const result = await this._xlsxLoadingPromise;
-      this._xlsxLoadingPromise = null;
-      return result;
+      return await lazyLoadLibrary('xlsx');
     },
     loadScript(src) {
-      return new Promise((resolve, reject) => {
-        const existing = document.querySelector(`script[src="${src}"]`);
-        if (existing) { setTimeout(resolve, 100); return; }
-        const script = document.createElement('script');
-        script.src = src;
-        script.async = true;
-        script.onload = () => resolve(true);
-        script.onerror = () => reject(new Error('Failed to load ' + src));
-        document.head.appendChild(script);
-      });
+      return loadScriptSource(src);
     },
 
     // ⭐ v23.2-FIX: حفظ Excel بموثوقية على الجوال (بديل XLSX.writeFile)
@@ -5754,50 +5868,16 @@ this.settings = {
     },
 
     // ═══════════════════════════════════════════════════════════════
-    //  ⭐ v23.2: مشاركة بطاقة اليوم كصورة
+    //  ⭐ v24.3.0: تحميل Lazy لمكتبات توليد ومشاركة الصور
     // ═══════════════════════════════════════════════════════════════
     async loadHtmlToImage() {
-      if (window.htmlToImage && typeof window.htmlToImage.toPng === 'function') {
-        return true;
-      }
-      try {
-        await this.loadScript('./libs/html-to-image.min.js');
-        if (window.htmlToImage && typeof window.htmlToImage.toPng === 'function') {
-          return true;
-        }
-      } catch (e) {
-        console.warn('[Share] Local html-to-image load failed, trying CDN:', e);
-      }
-      try {
-        await this.loadScript('https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.min.js');
-        return !!(window.htmlToImage && typeof window.htmlToImage.toPng === 'function');
-      } catch (e) {
-        console.error('[Share] CDN html-to-image load failed:', e);
-        return false;
-      }
+      return await lazyLoadLibrary('htmlToImage');
     },
 
     async loadHtml2Canvas() {
-      if (window.html2canvas) {
-        this._html2canvasLoaded = true;
-        return true;
-      }
-      try {
-        await this.loadScript('./libs/html2canvas.min.js');
-        if (window.html2canvas) {
-          this._html2canvasLoaded = true;
-          return true;
-        }
-      } catch (e) {
-        console.warn('[Share] Local html2canvas load failed, trying CDN:', e);
-      }
-      try {
-        await this.loadScript('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
-        return !!window.html2canvas;
-      } catch (e) {
-        console.error('[Share] CDN html2canvas load failed:', e);
-        return false;
-      }
+      const ok = await lazyLoadLibrary('html2canvas');
+      if (ok) this._html2canvasLoaded = true;
+      return ok;
     },
 
     // ⭐ v23.45: تنزيل ملف الكانفاس بأسلوب متوافق مع كافة المتصفحات والهواتف
@@ -5942,12 +6022,8 @@ this.settings = {
         // المحاولة 2 (احتياطي فقط - Fallback): تحميل واستخدام html-to-image فقط عند تعذر html2canvas
         if (!canvas || !canvas.width || !canvas.height) {
           try {
-            if (!window.htmlToImage) {
-              try {
-                await this.loadScript('./libs/html-to-image.min.js');
-              } catch (errLoad) {
-                await this.loadHtmlToImage();
-              }
+            if (!window.htmlToImage || typeof window.htmlToImage.toPng !== 'function') {
+              await this.loadHtmlToImage();
             }
             if (window.htmlToImage && typeof window.htmlToImage.toPng === 'function') {
               const dataUrl = await window.htmlToImage.toPng(clone, {
@@ -6734,31 +6810,10 @@ this.settings = {
     },
 
     // ================================================================
-    //  PDF Exports
+    //  ⭐ v24.3.0: تحميل Lazy لمكتبات PDF (jsPDF + AutoTable)
     // ================================================================
     async loadPdfLibs() {
-      if (window.jspdf && window.jspdf.jsPDF) return true;
-      if (this._pdfLoadingPromise) return this._pdfLoadingPromise;
-      this._pdfLoadingPromise = (async () => {
-        try {
-          await this.loadScript('./libs/jspdf.umd.min.js');
-          await this.loadScript('./libs/jspdf.plugin.autotable.min.js');
-          if (window.jspdf && window.jspdf.jsPDF) return true;
-        } catch (e) {
-          console.warn('[PDF] Failed to load local PDF libs, trying CDN fallback:', e);
-        }
-        try {
-          await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-          await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');
-          return !!(window.jspdf && window.jspdf.jsPDF);
-        } catch (e2) {
-          console.error('[PDF] Failed to load PDF libs from CDN:', e2);
-          return false;
-        }
-      })();
-      const res = await this._pdfLoadingPromise;
-      this._pdfLoadingPromise = null;
-      return res;
+      return await lazyLoadLibrary('pdf');
     },
     async setupArabicPDF() {
       await this.loadPdfLibs();
@@ -7807,8 +7862,12 @@ this.settings = {
 
       this._autoThemeCheck = setInterval(() => this.checkAutoTheme(), 10 * 60 * 1000);
 
-      // ⭐ v23.6.6: preload خطوط Cairo + الشعار (يحل مشكلة النقرة الأولى)
-      this.preloadFontsAndAssets();
+      // ⭐ v24.3.0: تأخير preload الخطوط والشعار برمجياً بعد اكتمال رسم الشاشة الأولى (Non-blocking)
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(() => this.preloadFontsAndAssets(), { timeout: 1500 });
+      } else {
+        setTimeout(() => this.preloadFontsAndAssets(), 800);
+      }
 
       // ⭐ v23.7: فحص Seed عند بدء التطبيق
       this.checkAndApplySeed();
