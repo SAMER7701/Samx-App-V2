@@ -43,20 +43,13 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v23.50: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=23.50.0" rel="stylesheet">
+<!-- ⭐ v23.51: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=23.51.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
 <script src="libs/chart.umd.min.js"></script>
-<!-- jsPDF -->
-<script src="libs/jspdf.umd.min.js"></script>
-<script src="libs/jspdf.plugin.autotable.min.js"></script>
-<!-- xlsx-js-style: يُحمَّل Lazy عند أول استخدام (انظر loadXlsxStyleLib) -->
-<!-- ⭐ v23.3: html2canvas محلي (لا CDN) -->
-<script src="libs/html2canvas.min.js"></script>
-<!-- ⭐ v23.6.5: html-to-image لدعم العربية في الصور المُصدَّرة -->
-<script src="libs/html-to-image.min.js"></script>
+<!-- مكتبات التصدير الثقيلة (jsPDF, autoTable, html2canvas, html-to-image, xlsx) تُحمّل Lazy عند الطلب فقط -->
 
 <!-- ⭐ v23.3: نظام الترجمة i18n — يجب أن يُحمَّل قبل app.js -->
 <script src="libs/i18n/ar.js"></script>
@@ -911,7 +904,19 @@
                ⭐ v23.2: بطاقة ملخص اليوم (Daily Summary Card)
                ============================================================ -->
           <div class="daily-summary-wrapper">
-            <div class="daily-summary-card" ref="dailySummaryCard">
+            <!-- شريط أزرار المشاركة والمعاينة (يظهر دائماً بشكل بارز وأنيق) -->
+            <div class="summary-actions" style="margin-bottom:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center;">
+              <button @click="showShareModal = true" class="btn-gold" style="padding:10px 24px;font-size:14px;font-weight:800;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(212,168,75,0.25);">
+                <span>📤</span>
+                <span>{{ currentLang === 'ar' ? 'مشاركة وتحميل بطاقة اليوم' : 'Share & Download Day Card' }}</span>
+              </button>
+              <button @click="showInlineSummaryCard = !showInlineSummaryCard" class="btn-ghost" style="padding:10px 18px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+                <span>👁️</span>
+                <span>{{ showInlineSummaryCard ? (currentLang === 'ar' ? 'إخفاء المعاينة' : 'Hide Preview') : (currentLang === 'ar' ? 'معاينة البطاقة' : 'Preview Card') }}</span>
+              </button>
+            </div>
+
+            <div class="daily-summary-card" ref="dailySummaryCard" v-show="showInlineSummaryCard">
 
               <!-- Header: Logo + Branch + Company -->
               <div class="summary-header">
@@ -1016,11 +1021,6 @@
                 <span>{{ t('summary.footer.poweredBy') }}</span>
               </div>
 
-            </div>
-
-            <!-- Share Button (خارج البطاقة حتى لا يظهر في الصورة) -->
-            <div class="summary-actions">
-              <button @click="showShareModal = true" class="btn-gold">{{ t('summary.shareBtn') }}</button>
             </div>
           </div>
         </template>
@@ -4040,7 +4040,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=23.50.0"></script>
+<script src="app.js?v=23.51.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

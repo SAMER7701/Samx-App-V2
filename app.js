@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.50.0 — app.js
+//  SAMX v23.51.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.50.0';
+const APP_VERSION = '23.51.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -520,6 +520,7 @@ createApp({
         mode: 'full',
       },
             showShareModal: false,
+      showInlineSummaryCard: false,
       shareGenerating: false,
       _cachedShareBlob: null,
       _cachedShareDataUrl: null,
@@ -1682,10 +1683,8 @@ createApp({
   watch: {
     branches: { handler() { this.schedulePersist(); }, deep: true },
     staff: { handler() { this.schedulePersist(); }, deep: true },
-    daily: { handler() { this.schedulePersist(); }, deep: true },
     monthlyTargets: { handler() { this.schedulePersist(); }, deep: true },
     monthlyHeroesTargets: { handler() { this.schedulePersist(); }, deep: true },
-    attendance: { handler() { this.schedulePersist(); }, deep: true },
     users: { handler() { this.persistUsers(); }, deep: true },
     selectedDate(val) {
       const norm = this.normalizeDateStr(val);
@@ -4150,6 +4149,8 @@ this.settings = {
           sd.heroesTarget = 0;
         }
       });
+      this.schedulePersist();
+      this.triggerCloudSyncDebounced();
       this.showToast(this.t('toast.attendance.distributed', '', { count: present.length }), 'success');
     },
     // ⭐ v23.17: قياس ارتفاع رأس التطبيق لتجنب قص عناوين النوافذ عند التمرير
@@ -4745,10 +4746,12 @@ this.settings = {
         rec.heroesTarget = Math.round(Number(d.heroes) || 0);
         count++;
       });
+      this.schedulePersist();
+      this.triggerCloudSyncDebounced();
       this.showToast(this.t('toast.distribution.saved', '', { count }), 'success');
-this.logActivity(this.t('log.distribution.manual'), `${count} يوم - ${this.branchName(this.distBranchId)}`);
-nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
-},
+      this.logActivity(this.t('log.distribution.manual'), `${count} يوم - ${this.branchName(this.distBranchId)}`);
+      nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
+    },
     clearDistribution() {
       if (!confirm(this.t('confirm.clearDistribution'))) return;
       const [y, m] = this.distMonth.split('-').map(Number);
@@ -4759,9 +4762,11 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
         if (this.daily[key]) { this.daily[key].baseTarget = 0; this.daily[key].heroesTarget = 0; }
       }
       this.initDistDays();
-this.showToast(this.t('toast.distribution.cleared'), 'success');
-nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
-},
+      this.schedulePersist();
+      this.triggerCloudSyncDebounced();
+      this.showToast(this.t('toast.distribution.cleared'), 'success');
+      nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
+    },
 
     // ================================================================
     //  استيراد التارجت الشهري من Excel
@@ -5451,10 +5456,7 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
         return null;
       }
 
-      // تحميل المكتبات إذا لزم الأمر
-      if (!window.htmlToImage) {
-        await this.loadHtmlToImage();
-      }
+      // تحميل مكتبة html2canvas للمحاولة رقم 1
       if (!window.html2canvas) {
         await this.loadHtml2Canvas();
       }
@@ -5472,6 +5474,7 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
 
       const clone = targetEl.cloneNode(true);
       clone.classList.add('is-export-card');
+      clone.style.display = 'block'; // ضمان الظهور حتى لو كانت البطاقة الأصلية مطوية بـ v-show
       clone.style.width = '600px';
       clone.style.maxWidth = '600px';
       clone.style.maxHeight = 'none';
@@ -5500,36 +5503,8 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
 
       let canvas = null;
       try {
-        // المحاولة 1 (الأساسية): html-to-image لدعم اللغة العربية وتوصيل الحروف بشكل أصلي وطبيعي
-        if (window.htmlToImage && typeof window.htmlToImage.toPng === 'function') {
-          try {
-            const dataUrl = await window.htmlToImage.toPng(clone, {
-              pixelRatio: 2,
-              backgroundColor: this.darkMode ? '#0e1628' : '#ffffff',
-              cacheBust: true,
-            });
-            if (dataUrl) {
-              canvas = await new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => {
-                  const cvs = document.createElement('canvas');
-                  cvs.width = img.naturalWidth || img.width;
-                  cvs.height = img.naturalHeight || img.height;
-                  const ctx = cvs.getContext('2d');
-                  ctx.drawImage(img, 0, 0);
-                  resolve(cvs);
-                };
-                img.onerror = reject;
-                img.src = dataUrl;
-              });
-            }
-          } catch (e) {
-            console.warn('[Share] html-to-image failed, trying html2canvas fallback:', e);
-          }
-        }
-
-        // المحاولة 2 (احتياطي فقط): html2canvas في حال تعذر html-to-image
-        if ((!canvas || !canvas.width || !canvas.height) && window.html2canvas) {
+        // المحاولة 1: استخدام html2canvas (موجودة وتعمل بالفعل)
+        if (window.html2canvas) {
           try {
             canvas = await window.html2canvas(clone, {
               scale: 2,
@@ -5541,8 +5516,45 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
               scrollY: 0,
               windowWidth: 640,
             });
+          } catch (e) {
+            console.warn('[Share] html2canvas failed, will try html-to-image fallback:', e);
+          }
+        }
+
+        // المحاولة 2 (احتياطي فقط - Fallback): تحميل واستخدام html-to-image فقط عند تعذر html2canvas
+        if (!canvas || !canvas.width || !canvas.height) {
+          try {
+            if (!window.htmlToImage) {
+              try {
+                await this.loadScript('./libs/html-to-image.min.js');
+              } catch (errLoad) {
+                await this.loadHtmlToImage();
+              }
+            }
+            if (window.htmlToImage && typeof window.htmlToImage.toPng === 'function') {
+              const dataUrl = await window.htmlToImage.toPng(clone, {
+                pixelRatio: 2,
+                backgroundColor: this.darkMode ? '#0e1628' : '#ffffff',
+                cacheBust: true,
+              });
+              if (dataUrl) {
+                canvas = await new Promise((resolve, reject) => {
+                  const img = new Image();
+                  img.onload = () => {
+                    const cvs = document.createElement('canvas');
+                    cvs.width = img.naturalWidth || img.width;
+                    cvs.height = img.naturalHeight || img.height;
+                    const ctx = cvs.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    resolve(cvs);
+                  };
+                  img.onerror = reject;
+                  img.src = dataUrl;
+                });
+              }
+            }
           } catch (e2) {
-            console.warn('[Share] html2canvas fallback failed:', e2);
+            console.warn('[Share] html-to-image fallback failed:', e2);
           }
         }
       } finally {
@@ -6306,7 +6318,36 @@ nextTick(() => this.renderMonthlyChart());   // ⭐ v23.9-FIX
     // ================================================================
     //  PDF Exports
     // ================================================================
+    async loadPdfLibs() {
+      if (window.jspdf && window.jspdf.jsPDF) return true;
+      if (this._pdfLoadingPromise) return this._pdfLoadingPromise;
+      this._pdfLoadingPromise = (async () => {
+        try {
+          await this.loadScript('./libs/jspdf.umd.min.js');
+          await this.loadScript('./libs/jspdf.plugin.autotable.min.js');
+          if (window.jspdf && window.jspdf.jsPDF) return true;
+        } catch (e) {
+          console.warn('[PDF] Failed to load local PDF libs, trying CDN fallback:', e);
+        }
+        try {
+          await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+          await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');
+          return !!(window.jspdf && window.jspdf.jsPDF);
+        } catch (e2) {
+          console.error('[PDF] Failed to load PDF libs from CDN:', e2);
+          return false;
+        }
+      })();
+      const res = await this._pdfLoadingPromise;
+      this._pdfLoadingPromise = null;
+      return res;
+    },
     async setupArabicPDF() {
+      await this.loadPdfLibs();
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        this.showToast(this.currentLang === 'ar' ? 'تعذر تحميل مكتبة PDF ⚠️' : 'Failed to load PDF library ⚠️', 'warning');
+        return null;
+      }
       const fontB64 = await loadArabicFont();
       if (!fontB64) return null;
       const { jsPDF } = window.jspdf;
