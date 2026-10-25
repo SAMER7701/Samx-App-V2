@@ -117,9 +117,81 @@ main, .main-container {
   }
 }
 
+html.light {
+  color-scheme: light;
+}
 html.light body {
   background: #f1f5f9;
   color: #0f172a;
+}
+html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6 {
+  color: #0f172a;
+}
+html.light p {
+  color: #334155;
+}
+html.light table th {
+  color: #475569 !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+}
+html.light table td {
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #1e293b;
+}
+html.light .staff-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+}
+html.light .staff-card p[style*="color:#fff"],
+html.light .staff-card [style*="color:#fff"] {
+  color: #0f172a !important;
+}
+html.light .staff-card.present {
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+html.light .staff-card.absent {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+html.light .daily-summary-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+}
+html.light .daily-summary-card .summary-header {
+  border-bottom-color: #e2e8f0;
+}
+html.light .daily-summary-card .summary-title-block h3,
+html.light .daily-summary-card .summary-main .summary-big-number {
+  color: #0f172a;
+}
+html.light .daily-summary-card .summary-target {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+html.light .daily-summary-card .target-value {
+  color: #0f172a;
+}
+html.light .daily-summary-card .summary-stat {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+html.light .daily-summary-card .summary-stat span:last-child {
+  color: #0f172a;
+}
+html.light .daily-summary-card .staff-row {
+  background: #f8fafc;
+  border-color: #f1f5f9;
+}
+html.light .daily-summary-card .staff-row .name {
+  color: #0f172a;
+}
+html.light .daily-summary-card .summary-footer {
+  border-top-color: #e2e8f0;
+  color: #64748b;
 }
 
 [v-cloak] { display: none !important; }
@@ -526,9 +598,10 @@ html.light .btn-ghost:hover { background: #e2e8f0; color: #0f172a; }
 }
 .sales-input:focus {
   outline: none;
-  border-color: #34d399;
-  box-shadow: 0 0 0 3px rgba(16,185,129,.25), 0 3px 12px rgba(16,185,129,.15);
-  background: #0e2a1d;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3.5px rgba(16, 185, 129, 0.35), 0 4px 14px rgba(16, 185, 129, 0.25) !important;
+  background: #092e1e !important;
+  color: #ffffff !important;
 }
 .sales-input:disabled {
   background: #0e1628;
@@ -547,8 +620,10 @@ html.light .sales-input {
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
 }
 html.light .sales-input:focus {
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(16,185,129,.2), 0 3px 10px rgba(16,185,129,.12);
+  background: #ffffff !important;
+  border-color: #059669 !important;
+  color: #064e3b !important;
+  box-shadow: 0 0 0 3.5px rgba(16, 185, 129, 0.35), 0 4px 14px rgba(16, 185, 129, 0.2) !important;
 }
 
 .target-input {
@@ -599,15 +674,21 @@ html.light .target-input:focus {
 }
 .target-input-base:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.22);
-  background: rgba(59, 130, 246, 0.15);
-  color: #ffffff;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3.5px rgba(59, 130, 246, 0.35), 0 4px 14px rgba(59, 130, 246, 0.22) !important;
+  background: rgba(59, 130, 246, 0.2) !important;
+  color: #ffffff !important;
 }
 html.light .target-input-base {
   background: #eff6ff;
   border-color: rgba(59, 130, 246, 0.5);
   color: #1d4ed8;
+}
+html.light .target-input-base:focus {
+  background: #ffffff !important;
+  border-color: #2563eb !important;
+  color: #1d4ed8 !important;
+  box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.3), 0 4px 14px rgba(37, 99, 235, 0.15) !important;
 }
 
 .target-input-heroes {
@@ -626,15 +707,21 @@ html.light .target-input-base {
 }
 .target-input-heroes:focus {
   outline: none;
-  border-color: #d4a84b;
-  box-shadow: 0 0 0 3px rgba(212, 168, 75, 0.22);
-  background: rgba(212, 168, 75, 0.15);
-  color: #ffffff;
+  border-color: #d4a84b !important;
+  box-shadow: 0 0 0 3.5px rgba(212, 168, 75, 0.35), 0 4px 14px rgba(212, 168, 75, 0.22) !important;
+  background: rgba(212, 168, 75, 0.2) !important;
+  color: #ffffff !important;
 }
 html.light .target-input-heroes {
   background: #fffbeb;
   border-color: rgba(212, 168, 75, 0.6);
   color: #b45309;
+}
+html.light .target-input-heroes:focus {
+  background: #ffffff !important;
+  border-color: #d97706 !important;
+  color: #92400e !important;
+  box-shadow: 0 0 0 3.5px rgba(217, 119, 6, 0.3), 0 4px 14px rgba(217, 119, 6, 0.15) !important;
 }
 
 .invoice-input {

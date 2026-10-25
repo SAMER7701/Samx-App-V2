@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v23.51.0 — app.js
+//  SAMX v23.45.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '23.51.0';
+const APP_VERSION = '23.45.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -2507,6 +2507,7 @@ createApp({
       this.showToast(this.t(key), 'success');
     },
     saveSettings() {
+      this.vibrate([10, 30, 10]);
       this.saveSettingsToStorage();
       this.applyAllSettings();
       this.showToast(this.t('toast.settings.saved'), 'success');
@@ -3587,39 +3588,77 @@ this.settings = {
         const cloud = resJson.data;
         const cloudUpdatedAt = resJson.updated_at || cloud.updated_at || 0;
 
-        // 1. ⭐ v23.28: تحديث وفرض قائمة المستخدمين والحسابات فوراً في الذاكرة و localStorage
+        // 1. ⭐ حماية وتحديث حسابات المستخدمين في المزامنة السحابية بأمان
         if (Array.isArray(cloud.users) && cloud.users.length > 0) {
-          const userMap = new Map();
-          cloud.users.forEach(u => {
+          const localUsers = Array.isArray(this.users) ? this.users : [];
+          const localUserMap = new Map();
+          localUsers.forEach(u => {
             if (u && u.username) {
-              const k = (u.username || '').trim().toLowerCase();
-              userMap.set(k, {
-                ...u,
-                username: (u.username || '').trim(),
+              localUserMap.set(u.username.trim().toLowerCase(), u);
+            }
+          });
+
+          const mergedMap = new Map();
+          cloud.users.forEach(cu => {
+            if (!cu || !cu.username) return;
+            const unameKey = cu.username.trim().toLowerCase();
+            const existingLocal = localUserMap.get(unameKey);
+
+            if (existingLocal) {
+              // الحفاظ على الصلاحيات المحلية وتجنب محوها عشوائياً
+              const mergedRole = cu.role || existingLocal.role || 'manager';
+              const defaultRolePerms = ROLE_PERMISSIONS[mergedRole] || DEFAULT_PERMISSIONS;
+              const mergedPermissions = {
+                ...defaultRolePerms,
+                ...(existingLocal.permissions || {}),
+                ...(cu.permissions || {})
+              };
+
+              mergedMap.set(unameKey, {
+                ...existingLocal,
+                ...cu,
+                username: cu.username.trim(),
+                role: mergedRole,
+                passwordHash: cu.passwordHash || existingLocal.passwordHash,
+                permissions: mergedPermissions,
+              });
+            } else {
+              const uRole = cu.role || 'manager';
+              mergedMap.set(unameKey, {
+                ...cu,
+                username: cu.username.trim(),
+                permissions: cu.permissions || { ...(ROLE_PERMISSIONS[uRole] || DEFAULT_PERMISSIONS) },
               });
             }
           });
-          (this.users || []).forEach(u => {
-            if (u && u.username) {
-              const k = (u.username || '').trim().toLowerCase();
-              if (!userMap.has(k)) {
-                userMap.set(k, {
-                  ...u,
-                  username: (u.username || '').trim(),
-                });
+
+          // الحفاظ على أي حسابات محلية غير موجودة بالسحابة
+          localUsers.forEach(lu => {
+            if (lu && lu.username) {
+              const unameKey = lu.username.trim().toLowerCase();
+              if (!mergedMap.has(unameKey)) {
+                mergedMap.set(unameKey, lu);
               }
             }
           });
-          const mergedUsers = Array.from(userMap.values());
-          mergedUsers.forEach(u => {
-            if (!u.permissions) {
-              u.permissions = { ...(ROLE_PERMISSIONS[u.role] || DEFAULT_PERMISSIONS) };
-            }
-          });
-          this.users = mergedUsers;
+
+          this.users = Array.from(mergedMap.values());
           try {
             localStorage.setItem('samx_users', JSON.stringify(this.users));
           } catch (e) {}
+
+          // الحفاظ على جلسة وصلاحيات المستخدم الحالي دون إرباك أو خروج
+          if (this.currentUser && this.currentUser.username) {
+            const activeKey = this.currentUser.username.trim().toLowerCase();
+            const updatedActive = mergedMap.get(activeKey);
+            if (updatedActive) {
+              this.currentUser.role = updatedActive.role;
+              this.currentUser.permissions = { ...(updatedActive.permissions || this.currentUser.permissions) };
+              try {
+                localStorage.setItem('samx_current_user', JSON.stringify(this.currentUser));
+              } catch (e) {}
+            }
+          }
         }
 
         // 2. مزامنة الفروع والموظفين
@@ -3967,6 +4006,7 @@ this.settings = {
         fullName: '', username: '', password: '', role: 'manager', branchId: '',
         permissions: { ...DEFAULT_PERMISSIONS },
       };
+      this.vibrate([10, 30, 10]);
       this.persistUsers();
       // ⭐ v23.25: رفع فوري مباشر لسحابة D1 مع انتظار الاكتمال
       await this.syncToCloud();
@@ -4627,6 +4667,7 @@ this.settings = {
         this.showToast(this.t('branches.toast.added'), 'success');
         this.logActivity(this.t('log.branch.add'), `${name} (${code})`);
       }
+      this.vibrate([10, 30, 10]);
       this.branchForm = { name: '', code: '' };
     },
     editBranch(b) {
@@ -4672,6 +4713,7 @@ this.settings = {
         this.showToast(this.t('staffView.toast.added'), 'success');
         this.logActivity(this.t('log.staff.add'), `${name} → ${this.branchName(branchId)}`);
       }
+      this.vibrate([10, 30, 10]);
       this.staffForm = { name: '', code: '', branchId: '', jobTitle: '' };
     },
     editStaff(s) {
