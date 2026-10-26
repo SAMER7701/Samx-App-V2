@@ -80,6 +80,20 @@ const SAMX_HELP_CENTER = Object.freeze({
             ar: '💡 لا يمكن إعادة فتح اليومية المغلقة إلا للمدير المصرح له مع توثيق سبب الفتح أمنياً.',
             en: '💡 Reopening a closed day requires supervisor permissions with mandatory audited rationale.'
           }
+        },
+        {
+          id: 'step-faq-offline',
+          badge: '⚡',
+          title: { ar: 'إرشادات الطوارئ والأسئلة الشائعة (Offline Mode & FAQ)', en: 'Emergency Guide & FAQ (Offline Mode)' },
+          tags: ['طوارئ', 'انقطاع', 'إنترنت', 'تعديل', 'تحديث', 'offline', 'faq', 'sync', 'internet'],
+          content: {
+            ar: '• العمل عند انقطاع الإنترنت: جميع المبيعات وسجلات الحضور تُحفظ فورياً في ذاكرة الجهاز الآمنة (IndexedDB)، وتتم المزامنة تلقائياً بمجرد عودة الاتصال دون فقدان أي بيانات.\n• نسيان إغلاق اليومية أو تعديل يوم سابق: يُظهر النظام تنبيهاً ذكياً في مركز الإشعارات؛ يمكن إغلاق اليومية السابقة بأثر رجعي، أو طلب إعادة فتحها من المشرف المصرح له مع توثيق السبب أمنياً في سجل العمليات.\n• تحديث النظام على الجوال: يجري التحديث في الخلفية تلقائياً دون مقاطعة العمل، وتظهر نقطة تنبيه على أيقونة الدليل 📘 للاطلاع على الميزات والتحسينات الجديدة فوراً.',
+            en: '• Working Offline: All sales and attendance records are stored instantly in secure local storage (IndexedDB) and sync automatically when connection restores.\n• Missed Register Close or Past Edits: Automatic alerts highlight pending unclosed registers. Reopening or past edits require supervisor permission and are audited in the Activity Log.\n• Mobile App Updates: PWA service worker updates run smoothly in the background; new feature notifications appear on the guide icon 📘.'
+          },
+          tips: {
+            ar: '💡 التطبيق مصمم للعمل في أصعب ظروف المعارض بدون إنترنت، فلا تقلق بشأن انقطاع الشبكة أثناء ذروة المبيعات.',
+            en: '💡 The app is engineered for zero-latency offline performance; peak sales traffic is never interrupted by network dropouts.'
+          }
         }
       ]
     },
@@ -3178,7 +3192,6 @@ createApp({
                     ${tip}
                   </div>
                 ` : ''}
-                ${tags ? `<div class="tags-container">${tags}</div>` : ''}
               </div>
             `;
           }).join('');
@@ -3208,7 +3221,7 @@ createApp({
   <style>
     @page {
       size: A4 portrait;
-      margin: 14mm 12mm 14mm 12mm;
+      margin: 12mm;
     }
     * {
       box-sizing: border-box;
