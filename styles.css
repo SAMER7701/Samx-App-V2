@@ -6482,4 +6482,16 @@ html.light .help-tag-pill {
   }
 }
 
+#samx-print-frame {
+  position: fixed;
+  right: -9999px;
+  bottom: -9999px;
+  width: 0;
+  height: 0;
+  border: none;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
 

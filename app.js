@@ -3136,13 +3136,341 @@ createApp({
 
     printHelpCenter() {
       const isAr = this.currentLang === 'ar';
+      const isAdminUser = this.currentUser && (this.currentUser.role === 'admin' || this.isManagement);
+      const companyName = this.activeCompanyName || 'SAMX';
+      const versionStr = APP_VERSION;
+      const printDate = new Date().toLocaleString(isAr ? 'ar-SA' : 'en-US', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+      const printedBy = this.currentUser ? (this.currentUser.fullName || this.currentUser.username) : 'SAMX User';
+
+      // 1. تجميع كافة الأقسام والمواضيع المصرح بها لدور المستخدم الحالي
+      const categoriesHtml = SAMX_HELP_CENTER.categories
+        .filter(cat => !(cat.roleRequired === 'admin' && !isAdminUser))
+        .map(cat => {
+          const catTitle = isAr ? cat.title.ar : cat.title.en;
+          const catDesc = isAr ? cat.desc.ar : cat.desc.en;
+          const topicsHtml = (cat.topics || []).map(t => {
+            const title = isAr ? t.title.ar : t.title.en;
+            const content = isAr ? t.content.ar : t.content.en;
+            const formula = t.formula || t.formulaAr ? (isAr ? (t.formulaAr || t.formula) : (t.formula || t.formulaAr)) : '';
+            const tip = t.tips ? (isAr ? t.tips.ar : t.tips.en) : '';
+            const tags = Array.isArray(t.tags) ? t.tags.map(tag => `<span class="tag">#${tag}</span>`).join(' ') : '';
+
+            return `
+              <div class="topic-card">
+                <div class="topic-header">
+                  <span class="topic-badge">${t.badge || '•'}</span>
+                  <h3 class="topic-title">${title}</h3>
+                </div>
+                <div class="topic-body">${content.replace(/\n/g, '<br>')}</div>
+                ${formula ? `
+                  <div class="formula-box">
+                    <span class="formula-icon">📐</span>
+                    <div>
+                      <strong class="formula-label">${isAr ? 'المعادلة الحسابية المعتمدة:' : 'Retail Formula:'}</strong>
+                      <span class="formula-code">${formula}</span>
+                    </div>
+                  </div>
+                ` : ''}
+                ${tip ? `
+                  <div class="tip-box">
+                    ${tip}
+                  </div>
+                ` : ''}
+                ${tags ? `<div class="tags-container">${tags}</div>` : ''}
+              </div>
+            `;
+          }).join('');
+
+          return `
+            <section class="guide-section">
+              <div class="section-header">
+                <div class="section-icon">${cat.icon}</div>
+                <div>
+                  <h2 class="section-title">${catTitle}</h2>
+                  <p class="section-desc">${catDesc}</p>
+                </div>
+              </div>
+              <div class="topics-grid">
+                ${topicsHtml}
+              </div>
+            </section>
+          `;
+        }).join('');
+
+      // 2. بناء وثيقة طباعة معزولة بمواصفات قياسية (A4 Portrait)
+      const fullDocHtml = `<!DOCTYPE html>
+<html lang="${isAr ? 'ar' : 'en'}" dir="${isAr ? 'rtl' : 'ltr'}">
+<head>
+  <meta charset="UTF-8">
+  <title>SAMX — ${isAr ? 'الدليل التشغيلي الشامل ومرجع مؤشرات التجزئة' : 'Comprehensive Operational Guide & Retail Metrics Reference'} (v${versionStr})</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 14mm 12mm 14mm 12mm;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+      background: #ffffff !important;
+      color: #0f172a !important;
+      font-size: 10.5pt;
+      line-height: 1.5;
+    }
+    .print-header {
+      border-bottom: 2.5px solid #d4a84b;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-branding {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-logo-badge {
+      background: #0b1220;
+      color: #d4a84b;
+      border: 1.5px solid #d4a84b;
+      border-radius: 8px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 900;
+    }
+    .header-titles h1 {
+      margin: 0;
+      font-size: 15pt;
+      color: #0b1220;
+      font-weight: 900;
+      letter-spacing: -0.3px;
+    }
+    .header-titles p {
+      margin: 2px 0 0;
+      font-size: 9pt;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .header-meta {
+      text-align: ${isAr ? 'left' : 'right'};
+      font-size: 8pt;
+      color: #64748b;
+      line-height: 1.45;
+    }
+    .header-meta strong {
+      color: #0f172a;
+    }
+    .guide-section {
+      margin-bottom: 20px;
+      page-break-inside: auto;
+    }
+    .section-header {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-${isAr ? 'right' : 'left'}: 4.5px solid #d4a84b;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      page-break-inside: avoid;
+      page-break-after: avoid;
+    }
+    .section-icon {
+      font-size: 16pt;
+    }
+    .section-title {
+      margin: 0;
+      font-size: 12pt;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .section-desc {
+      margin: 1px 0 0;
+      font-size: 8pt;
+      color: #64748b;
+    }
+    .topics-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .topic-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 14px;
+      page-break-inside: avoid;
+    }
+    .topic-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .topic-badge {
+      background: #f1f5f9;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 8pt;
+      font-weight: 800;
+      min-width: 22px;
+      text-align: center;
+    }
+    .topic-title {
+      margin: 0;
+      font-size: 10.5pt;
+      font-weight: 800;
+      color: #1e293b;
+    }
+    .topic-body {
+      font-size: 9pt;
+      color: #334155;
+      line-height: 1.55;
+    }
+    .formula-box {
+      background: #f0fdf4;
+      border: 1px dashed #86efac;
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 9pt;
+      color: #166534;
+    }
+    .formula-icon {
+      font-size: 12pt;
+    }
+    .formula-label {
+      font-size: 8pt;
+      color: #15803d;
+      display: block;
+    }
+    .formula-code {
+      font-family: Consolas, monospace;
+      font-weight: bold;
+    }
+    .tip-box {
+      background: #fffbeb;
+      border-${isAr ? 'right' : 'left'}: 3.5px solid #d4a84b;
+      border-radius: 4px;
+      padding: 6px 10px;
+      margin-top: 8px;
+      font-size: 8.5pt;
+      color: #92400e;
+      line-height: 1.45;
+    }
+    .tags-container {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .tag {
+      font-size: 7.5pt;
+      background: #f8fafc;
+      color: #64748b;
+      padding: 1px 6px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+    .print-footer {
+      border-top: 1px solid #cbd5e1;
+      margin-top: 24px;
+      padding-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8pt;
+      color: #64748b;
+      page-break-before: auto;
+    }
+  </style>
+</head>
+<body>
+  <header class="print-header">
+    <div class="header-branding">
+      <div class="header-logo-badge">SX</div>
+      <div class="header-titles">
+        <h1>${companyName} — SAMX</h1>
+        <p>${isAr ? 'الدليل التشغيلي الشامل ومرجع مؤشرات التجزئة' : 'Comprehensive Operational Guide & Retail Metrics Reference'}</p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div><strong>${isAr ? 'إصدار النظام:' : 'System Version:'}</strong> v${versionStr}</div>
+      <div><strong>${isAr ? 'تاريخ التصدير:' : 'Date:'}</strong> ${printDate}</div>
+      <div><strong>${isAr ? 'المستخدم:' : 'User:'}</strong> ${printedBy}</div>
+    </div>
+  </header>
+
+  <main>
+    ${categoriesHtml}
+  </main>
+
+  <footer class="print-footer">
+    <span>${companyName} • SAMX Intelligent Retail Management Platform</span>
+    <span>© ${new Date().getFullYear()} SAMX — ${isAr ? 'وثيقة تشغيلية معتمدة' : 'Official Operational Reference'}</span>
+  </footer>
+</body>
+</html>`;
+
+      // 3. الحقن في iframe مخفي ومعزول بالكامل
+      let iframe = document.getElementById('samx-print-frame');
+      if (iframe) {
+        try { iframe.remove(); } catch (e) {}
+      }
+
+      iframe = document.createElement('iframe');
+      iframe.id = 'samx-print-frame';
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      iframe.style.visibility = 'hidden';
+      document.body.appendChild(iframe);
+
+      const frameDoc = iframe.contentWindow || iframe.contentDocument;
+      const targetDoc = frameDoc.document || frameDoc;
+
+      targetDoc.open();
+      targetDoc.write(fullDocHtml);
+      targetDoc.close();
+
       this.showToast(
-        isAr ? '📄 جارٍ إعداد الدليل للطباعة أو الحفظ كـ PDF...' : '📄 Preparing guide for print / PDF...',
+        isAr ? '📄 جارٍ إعداد وثيقة الدليل الكاملة للطباعة / PDF...' : '📄 Preparing complete guide document for print / PDF...',
         'info'
       );
+
+      // استدعاء print من داخل الـ iframe بعد اكتمال التحميل
       setTimeout(() => {
-        window.print();
-      }, 300);
+        try {
+          if (iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+          }
+        } catch (err) {
+          console.warn('[Print] Iframe print exception, fallback to window.print():', err);
+          window.print();
+        }
+      }, 400);
     },
 
     // ================================================================
