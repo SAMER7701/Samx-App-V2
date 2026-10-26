@@ -1,16 +1,344 @@
 // ================================================================
-//  SAMX v25.0.0 — app.js
+//  SAMX v25.1.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '25.0.0';
+const APP_VERSION = '25.1.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
 const DEV_EMAIL = 'support@samx.app';
 const DEV_WHATSAPP = '0533642710';
 const COPYRIGHT = '© 2026 SAMX - جميع الحقوق محفوظة';
+
+// ================================================================
+//  ⭐ v25.1.0: مركز المساعدة والدليل الحي القابل للتحديث المستمر
+//  (In-App Interactive Living Documentation Schema)
+// ================================================================
+const SAMX_HELP_CENTER = Object.freeze({
+  version: '25.1.0',
+  categories: [
+    {
+      id: 'routine',
+      icon: '🚀',
+      title: { ar: 'الروتين اليومي السريع', en: 'Daily Quick Routine' },
+      desc: { ar: 'خطوات العمل اليومية الموصى بها لضمان دقة السجلات وسرعة الإدخال', en: 'Standard operating daily flow for managers & cashiers' },
+      topics: [
+        {
+          id: 'step-attendance',
+          badge: '1',
+          title: { ar: 'تثبيت حضور وغياب الفريق الصباحي', en: '1. Morning Attendance Check' },
+          tags: ['حضور', 'غياب', 'بائعين', 'موظف', 'attendance', 'staff'],
+          content: {
+            ar: 'قبل بدء تسجيل المبيعات، افتح لوحة المتابعة وتأكد من حالة الحضور لكافة البائعين عبر مفاتيح التبديل (حاضر / غائب). يؤثر الحضور مباشرة على مؤشرات القوة البيعية وحساب تفاوت الأداء في التشخيص الذكي.',
+            en: 'Before logging sales, toggle attendance switches for each seller. Staff presence directly impacts store operational capacity and the AI diagnostic evaluation.'
+          },
+          tips: {
+            ar: '💡 إذا كان موظف في إجازة، فقم بتعطيل الحضور حتى لا يتم احتسابه في توزيع تارجت اليومية.',
+            en: '💡 If an employee is on leave, keep them marked absent so target allocations adjust fairly.'
+          }
+        },
+        {
+          id: 'step-sales-entry',
+          badge: '2',
+          title: { ar: 'الإدخال السريع للمبيعات والفواتير والقطع', en: '2. Rapid Sales, Invoices & Pieces Entry' },
+          tags: ['مبيعات', 'فواتير', 'قطع', 'إدخال', 'sales', 'invoices', 'pieces'],
+          content: {
+            ar: 'أدخل المبيعات الفردية لكل بائع (أو استخدم مبيعات المعرض العامة). يمكنك الضغط على زر Enter للانتقال الفوري للبائع التالي دون لمس الشاشة. احرص على إدخال إجمالي الفواتير والقطع لاحتساب ATV و UPT فوراً.',
+            en: 'Input individual seller sales or extra store sales. Press Enter to jump to the next seller. Log total invoices and pieces to calculate ATV and UPT instantly.'
+          },
+          tips: {
+            ar: '💡 يدعم النظام الأرقام العربية (١٢٣) واللاتينية (123) تلقائياً.',
+            en: '💡 The input engine normalizes both Arabic and Western numerals seamlessly.'
+          }
+        },
+        {
+          id: 'step-review',
+          badge: '3',
+          title: { ar: 'المراجعة ومطابقة التارجت ونسب الإنجاز', en: '3. Real-Time Target & KPI Review' },
+          tags: ['تارجت', 'مراجعة', 'هيروز', 'نسبة', 'target', 'review'],
+          content: {
+            ar: 'راقب شريط التقدم الفوري ونسبة الإنجاز لتارجت الأساس وتارجت الأبطال (Heroes Target). تحقق من مؤشرات الخريطة الحرارية (🟢 ممتاز 90%+، 🟡 جيد 70-89%، 🔴 يحتاج تسريع <70%).',
+            en: 'Monitor real-time progress bars for Base and Heroes targets. Check branch heatmap badges (🟢 >=90%, 🟡 70-89%, 🔴 <70%).'
+          },
+          tips: {
+            ar: '💡 استخدم تبويب "توقعات المبيعات" لمعرفة المبيعات المتوقعة لنهاية الشهر والمعدل اليومي المطلوب.',
+            en: '💡 Use the Sales Forecast tab to see projected month-end sales and required daily pace.'
+          }
+        },
+        {
+          id: 'step-close-day',
+          badge: '4',
+          title: { ar: 'إغلاق اليومية والترحيل النهائي', en: '4. Daily Register Close & Seal' },
+          tags: ['إغلاق', 'ترحيل', 'قفل', 'أمان', 'close', 'lock'],
+          content: {
+            ar: 'في نهاية ساعات العمل، اضغط على زر "🔒 إغلاق اليومية" لتأكيد المبيعات وتجميد السجل. يسجل النظام اسم المستخدم ووقت الإغلاق في سجل العمليات (Audit Trail) لمنع التعديل غير المصرح به.',
+            en: 'At shift end, tap "🔒 Close Day" to seal the daily register. The system stamps the timestamp and user identity in the indelible Audit Trail.'
+          },
+          tips: {
+            ar: '💡 لا يمكن إعادة فتح اليومية المغلقة إلا للمدير المصرح له مع توثيق سبب الفتح أمنياً.',
+            en: '💡 Reopening a closed day requires supervisor permissions with mandatory audited rationale.'
+          }
+        }
+      ]
+    },
+    {
+      id: 'metrics',
+      icon: '📊',
+      title: { ar: 'قاموس ومؤشرات التجزئة', en: 'Retail KPIs Dictionary' },
+      desc: { ar: 'المعادلات الرياضية والمفاهيم القياسية المعتمدة في إدارة المتاجر والمعارض', en: 'Core retail metrics formulas, definitions, and operational interpretations' },
+      topics: [
+        {
+          id: 'kpi-atv',
+          badge: 'ATV',
+          title: { ar: 'متوسط قيمة الفاتورة (Average Transaction Value)', en: 'Average Transaction Value (ATV)' },
+          formula: 'ATV = Total Sales ÷ Invoices Count',
+          formulaAr: 'إجمالي المبيعات (ر.س) ÷ عدد الفواتير',
+          tags: ['atv', 'متوسط', 'فاتورة', 'سلة', 'average', 'basket'],
+          content: {
+            ar: 'يقيس متوسط المبلغ الذي يدفعه العميل في كل زيارة شرائية. ارتفاع هذا المؤشر يعكس قدرة البائعين على ترقية الشراء (Upselling) أو تقديم أصناف ذات قيمة أعلى.',
+            en: 'Measures the average amount spent per customer transaction. Higher ATV reflects successful upselling or premium item positioning.'
+          },
+          tips: {
+            ar: '💡 مثال: مبيعات 12,000 ر.س على 60 فاتورة تعطي ATV = 200 ر.س لكل عميل.',
+            en: '💡 Example: 12,000 SAR sales across 60 invoices yields ATV = 200 SAR.'
+          }
+        },
+        {
+          id: 'kpi-upt',
+          badge: 'UPT',
+          title: { ar: 'معدل القطع لكل فاتورة (Units Per Transaction)', en: 'Units Per Transaction (UPT)' },
+          formula: 'UPT = Total Pieces Sold ÷ Invoices Count',
+          formulaAr: 'إجمالي القطع المباعة ÷ عدد الفواتير',
+          tags: ['upt', 'قطع', 'سلة', 'تكميلي', 'units', 'cross-selling'],
+          content: {
+            ar: 'يعبر عن عمق السلة الشرائية ومتوسط عدد المنتجات في كل فاتورة. إذا كان UPT أقل من 1.35، فذلك يشير إلى انتشار الفواتير أحادية السلعة وضعف عروض البيع المتقاطع (Cross-selling).',
+            en: 'Reflects basket depth and multi-item purchase frequency. UPT below 1.35 indicates single-item dominance and missed add-on selling opportunities.'
+          },
+          tips: {
+            ar: '💡 مثال: بيع 150 قطعة في 75 فاتورة يعني UPT = 2.0 قطعة لكل عميل (أداء ممتاز).',
+            en: '💡 Example: 150 pieces sold in 75 invoices yields UPT = 2.0 units per customer.'
+          }
+        },
+        {
+          id: 'kpi-achievement',
+          badge: '%',
+          title: { ar: 'نسبة الإنجاز والتارجت (Achievement Rate)', en: 'Achievement Rate (Base & Heroes %)' },
+          formula: 'Base Pct = (Actual Sales ÷ Target) × 100',
+          formulaAr: '(المبيعات الفعلية ÷ التارجت المستهدف) × 100',
+          tags: ['إنجاز', 'تارجت', 'أبطال', 'percentage', 'achievement'],
+          content: {
+            ar: 'النسبة المئوية لما تم تحقيقه فعلياً مقارنة بالتارجت الأساسي (Base Target)، وتارجت الأبطال (Heroes Target) الذي يمثل +15% لتشجيع التفوق وتحفيز مكافآت التميز.',
+            en: 'Percentage of actual sales against the planned Base Target and the aspirational Heroes Target (+15% stretch goal for bonus incentives).'
+          },
+          tips: {
+            ar: '💡 تحقيق 100% من الأساسي يؤهل الفرع للمكافأة الأساسية، وتحقيق تارجت الأبطال يمنح أعلى درجات التقييم.',
+            en: '💡 Hitting 100% Base achieves baseline bonus; reaching Heroes unlocks top tier recognition.'
+          }
+        },
+        {
+          id: 'kpi-run-rate',
+          badge: '⚡',
+          title: { ar: 'المعدل اليومي المطلوب (Required Daily Run-Rate)', en: 'Required Daily Run-Rate' },
+          formula: 'Required Rate = (Month Target - Actual Sales) ÷ Remaining Days',
+          formulaAr: '(تارجت الشهر - المبيعات المحققة) ÷ الأيام المتبقية',
+          tags: ['معدل', 'رن ريت', 'عجز', 'أيام', 'run-rate', 'pace'],
+          content: {
+            ar: 'القيمة المالية التي يجب على الفرع تحقيقها يومياً فيما تبقى من أيام الشهر لضمان إغلاق الشهر عند 100% تارجت. مقارنة هذا الرقم بالمتوسط اليومي الفعلي توضح ما إذا كان الفرع متقدماً أو بحاجة لتدخل.',
+            en: 'The average sales volume needed per remaining day in the month to reach 100% target. Comparing this against current average highlights pacing gaps.'
+          },
+          tips: {
+            ar: '💡 إذا كان المعدل المطلوب أعلى من المتوسط الفعلي، استهدف ساعات الذروة في عطلة نهاية الأسبوع لتعويض الفارق.',
+            en: '💡 If required rate exceeds current average, run tactical weekend promotions to bridge the gap.'
+          }
+        }
+      ]
+    },
+    {
+      id: 'intelligence',
+      icon: '🧠',
+      title: { ar: 'الذكاء الإحصائي والخريطة الحرارية', en: 'Statistical AI & Heatmap' },
+      desc: { ar: 'شرح مؤشرات التنبؤ الذاتي، بطاقة التشخيص، ومصفوفة تصنيف البائعين', en: 'AI predictive modeling, operational diagnostics, and staff categorization' },
+      topics: [
+        {
+          id: 'intel-heatmap',
+          badge: '🚦',
+          title: { ar: 'دلالات ألوان الخريطة الحرارية (Branch Heatmap)', en: 'Heatmap Status Indicators' },
+          tags: ['خريطة', 'حرارية', 'ألوان', 'heatmap', 'status'],
+          content: {
+            ar: 'مؤشرات لونية فورية تعكس صحة أداء كل فرع:\n• 🟢 ممتاز (نسبة إنجاز 90% فأعلى): الفرع في مسار سليم ومستقر.\n• 🟡 جيد (نسبة إنجاز 70% إلى 89%): الفرع قريب من الهدف وبحاجة إلى دفعة خفيفة.\n• 🔴 يحتاج تدخل سريع (نسبة إنجاز أقل من 70%): عجز بيعي ملحوظ يستوجب مراجعة المعرض فوراً.',
+            en: 'Visual health indicators for branches:\n• 🟢 Excellent (>=90%): Branch is solidly on track.\n• 🟡 Good (70% - 89%): Branch needs modest momentum.\n• 🔴 Needs Action (<70%): Performance deficit requires quick operational intervention.'
+          },
+          tips: {
+            ar: '💡 يمكنك النقر على بطاقة أي فرع في الشريط الحراري العلوي للانتقال الفوري إليه ومراجعته.',
+            en: '💡 Click any branch chip in the executive heatmap strip to inspect its details immediately.'
+          }
+        },
+        {
+          id: 'intel-forecasting',
+          badge: '📈',
+          title: { ar: 'محرك التوقعات الموزون (Sales Forecasting)', en: 'Weighted Sales Forecasting' },
+          tags: ['توقعات', 'نهاية الشهر', 'سعودية', 'forecasting', 'weekend'],
+          content: {
+            ar: 'لا يعتمد SAMX على المتوسط الحسابي البسيط، بل يطبق مصفوفة أوزان دورة التجزئة السعودية:\n• الخميس: وزن 1.35x\n• الجمعة: وزن 1.45x\n• السبت: وزن 1.30x\n• الأحد إلى الأربعاء: وزن 0.85x\nهذا يمنح الإدارة تنبؤاً دقيقاً للغاية بالمبيعات المتوقعة بنهاية الشهر بناءً على أيام العطلات المتبقية.',
+            en: 'Instead of linear averages, SAMX weights remaining days based on Saudi retail traffic patterns:\n• Thursday: 1.35x\n• Friday: 1.45x\n• Saturday: 1.30x\n• Sunday - Wednesday: 0.85x\nThis produces high-accuracy month-end revenue forecasts.'
+          },
+          tips: {
+            ar: '💡 يوضح المؤشر نسبة احتمالية تحقيق التارجت (مثلاً 85% على المسار الصحيح، أو 95% متفوق).',
+            en: '💡 The probability gauge highlights target confidence (e.g. 85% On Track, 95% Exceeding).'
+          }
+        },
+        {
+          id: 'intel-diagnostics',
+          badge: '🔍',
+          title: { ar: 'المساعد التشخيصي الذكي (AI Diagnostics)', en: 'Automated AI Diagnostics' },
+          tags: ['تشخيص', 'مساعد', 'ذكاء', 'توصيات', 'diagnostics', 'recommendations'],
+          content: {
+            ar: 'يقوم المحرك الإحصائي بفحص ثلاث ركائز تشغيلية فوراً:\n1. القوة العاملة: أثر غياب أي بائع على التغطية التشغيلية للمعرض.\n2. عمق السلة: مقارنة ATV و UPT لكشف ضعف البيع الإضافي.\n3. تفاوت الفريق: التنبيه عند تركز أكثر من 50% من مبيعات المعرض على بائع واحد (Disparity Risk).\nويختم التشخيص بتوصيات إدارية عملية قابلة للتطبيق الفوري.',
+            en: 'Instantly audits 3 core operational pillars:\n1. Workforce: Impact of absenteeism on floor coverage.\n2. Basket Dynamics: ATV & UPT comparison identifying cross-selling gaps.\n3. Team Disparity: Alerts when one seller accounts for >50% of volume.\nConcludes with direct managerial recommendations.'
+          },
+          tips: {
+            ar: '💡 استخدم التوصيات في الاجتماع الصباحي (Briefing) مع فريق المعرض لتحسين النتائج فوراً.',
+            en: '💡 Reference the recommendations during morning team huddles to align sales focus.'
+          }
+        },
+        {
+          id: 'intel-matrix',
+          badge: '👥',
+          title: { ar: 'مصفوفة أداء البائعين العادلة (Staff Matrix)', en: 'Staff Performance Matrix' },
+          tags: ['مصفوفة', 'بائعين', 'تصنيف', 'تقييم', 'matrix', 'sellers'],
+          content: {
+            ar: 'تصنيف عادل للبائعين يعتمد على نسبة الإنجاز والنشاط للشهر واليوم:\n• 🏆 المتصدرون (90%+): قادة المبيعات والقدوة في الأداء.\n• 📈 الأكثر تطوراً (70-89%): بائعون واعدون في مسار تصاعدي.\n• ⚠️ بحاجة لتوجيه (<70%): يحتاجون إلى توجيه وتدريب في مهارات الإقناع وإنهاء الصفقات.',
+            en: 'Fair staff categorization based on monthly & daily metrics:\n• 🏆 Top Performers (>=90%): Sales drivers and pace setters.\n• 📈 Most Improved (70-89%): Rising talent with strong potential.\n• ⚠️ Needs Coaching (<70%): Team members needing closing & objection mentorship.'
+          },
+          tips: {
+            ar: '💡 شارك مهارات وتقنيات المتصدر مع البائعين الأقل أداءً لتقليص فجوة الفريق.',
+            en: '💡 Pair coaching candidates with top sellers to mentor objection handling.'
+          }
+        }
+      ]
+    },
+    {
+      id: 'admin',
+      icon: '🛡️',
+      title: { ar: 'دليل المشرفين والإدارة', en: 'Supervisors & Admin Guide' },
+      roleRequired: 'admin',
+      desc: { ar: 'أدوات الإدارة المتقدمة، توزيع التارجت، حوكمة الصلاحيات، والنسخ الاحتياطي', en: 'Advanced management tools, smart target distribution, RBAC, and backups' },
+      topics: [
+        {
+          id: 'admin-smart-targets',
+          badge: '🎯',
+          title: { ar: 'مولد وتوزيع التارجت الذكي (Smart Target Generator)', en: 'Smart Target Generator & Distributor' },
+          tags: ['تارجت', 'توزيع', 'نمو', 'أساس', 'smart targets', 'allocation'],
+          content: {
+            ar: 'تتيح هذه الميزة للإدارة اختيار شهر أساس تاريخي وتحديد نسبة النمو المطلوبة (مثلاً +10%). يقوم المحرك باحتساب الوزن النسبي التاريخي لمبيعات كل فرع، وتوزيع التارجت المقترح بعدالة تامة، مع إمكانية التعديل اليدوي قبل الاعتماد.',
+            en: 'Selects a baseline historical month and a target growth percentage (e.g. +10%). Proportional weights are calculated per branch to suggest equitable targets, allowing manual overrides before final commitment.'
+          },
+          tips: {
+            ar: '💡 يقوم النظام تلقائياً باحتساب تارجت الأبطال بزيادة +15% عن الأساسي فور اعتماده.',
+            en: '💡 Heroes targets are automatically established at +15% above base target.'
+          }
+        },
+        {
+          id: 'admin-branches-staff',
+          badge: '🏬',
+          title: { ar: 'إدارة الفروع والموظفين والمستخدمين', en: 'Branch, Staff & User Management' },
+          tags: ['فروع', 'موظفين', 'مستخدمين', 'صلاحيات', 'branches', 'staff', 'users'],
+          content: {
+            ar: 'يمكن للمدير العام إضافة وتعديل الفروع وربط الموظفين بها. كما يتيح قسم المستخدمين تخصيص الأدوار بدقة (مدير عام، مشرف، مدير فرع، كاشير، مشاهد) مع تحكم كامل في الصلاحيات الحساسة مثل تعديل التارجت أو رؤية التقارير المالية.',
+            en: 'Manage physical branches and assign team members. The User Management console configures granular RBAC permissions (Admin, Manager, Branch Manager, Cashier, Viewer) protecting sensitive operations.'
+          },
+          tips: {
+            ar: '💡 ينصح بتعيين مدراء الفروع بصلاحية إدخال المبيعات وإدارة موظفي فرعهم فقط.',
+            en: '💡 Best practice: Grant store managers access limited to daily sales and local staff.'
+          }
+        },
+        {
+          id: 'admin-backups',
+          badge: '💾',
+          title: { ar: 'النسخ الاحتياطي السحابي والمحلي (Backups & Data Protection)', en: 'Cloud & Local Backups' },
+          tags: ['نسخ', 'احتياطي', 'سحابي', 'تصدير', 'استرجاع', 'backups', 'sync'],
+          content: {
+            ar: 'يعمل SAMX بدون إنترنت (Offline-First) ويحفظ كافة البيانات محلياً في IndexedDB مع تشفير الجلسة. كما يتيح التطبيق المزامنة السحابية الخلفية والتصدير اليدوي لملفات JSON الآمنة لتوفير نسخ احتياطية خارجية دائمة.',
+            en: 'SAMX is offline-first, persisting state in IndexedDB. It offers automatic background cloud sync and manual encrypted JSON export for off-site backups.'
+          },
+          tips: {
+            ar: '💡 قم بتحميل نسخة احتياطية محلية (JSON) مرة أسبوعياً لحفظ سجلات الشركة للأرشفة.',
+            en: '💡 Download a local JSON backup weekly for archival redundancy.'
+          }
+        },
+        {
+          id: 'admin-audit',
+          badge: '📜',
+          title: { ar: 'سجل العمليات والتدقيق الأمني (Audit Trail)', en: 'Security & Activity Audit Trail' },
+          tags: ['سجل', 'تدقيق', 'أمان', 'تعديلات', 'audit', 'activity log'],
+          content: {
+            ar: 'يتم تسجيل وتوثيق كل عملية حساسة داخل النظام مع الطابع الزمني واسم المستخدم ورقم العملية (مثل: تعديل المبيعات، إغلاق اليومية، إعادة فتح اليومية، تغيير التارجت، ومحاولات الدخول).',
+            en: 'Every sensitive operation is permanently logged with timestamp, user ID, action type, and branch reference (e.g. sales edits, register closes, reopenings, target updates).'
+          },
+          tips: {
+            ar: '💡 يمكن تصدير سجل العمليات بصيغة CSV في أي وقت للمراجعة الداخلية والتدقيق.',
+            en: '💡 Export the audit trail to CSV anytime for internal compliance review.'
+          }
+        }
+      ]
+    },
+    {
+      id: 'changelog',
+      icon: '✨',
+      title: { ar: 'ما الجديد في هذا الإصدار؟', en: "What's New (Changelog)" },
+      desc: { ar: 'سجل التحديثات والإصدارات والميزات المضافة تباعاً في نظام SAMX', en: 'Release history, milestones, and new feature changelogs' },
+      topics: [
+        {
+          id: 'ver-25-1',
+          badge: 'v25.1.0',
+          badgeType: 'latest',
+          title: { ar: 'إصدار v25.1.0 — مركز المساعدة والدليل الحي التفاعلي', en: 'v25.1.0 — In-App Living Help Center' },
+          tags: ['25.1.0', 'دليل', 'مساعدة', 'طباعة', 'help', 'print'],
+          content: {
+            ar: '• إطلاق مركز المساعدة والدليل التشغيلي الحي التفاعلي (In-App Interactive Help Center).\n• قاموس مؤشرات التجزئة المعتمدة (ATV, UPT, Run-Rate) مع الأمثلة الحسابية.\n• شريط بحث فوري لتصفية الشروحات بالكلمات المفتاحية.\n• جاهزية الطباعة وتصدير الدليل PDF (Print / PDF Ready).\n• نظام شارات التنبيه (Unread Update Badge) للإصدارات الجديدة.',
+            en: '• In-App Interactive Living Help Center with modular architecture.\n• Retail KPIs operational dictionary (ATV, UPT, Achievement, Run-Rate).\n• Real-time keyword search across all guide sections.\n• Print / PDF export ready formatting.\n• Unread version badge indicator.'
+          }
+        },
+        {
+          id: 'ver-25-0',
+          badge: 'v25.0.0',
+          badgeType: 'major',
+          title: { ar: 'إصدار v25.0.0 — مركز الرؤى ومحرك الذكاء الإحصائي', en: 'v25.0.0 — Smart Insights & AI Diagnostics' },
+          tags: ['25.0.0', 'توقعات', 'ذكاء', 'تشخيص', 'مصفوفة', 'insights', 'forecasting'],
+          content: {
+            ar: '• محرك توقع المبيعات بنهاية الشهر المبني على أوزان التجزئة السعودية الأسبوعية.\n• المساعد التشخيصي الذكي لتحليل السلة والقوى العاملة وتفاوت البائعين وتوصيات الإدارة.\n• مصفوفة تصنيف أداء البائعين العادلة (المتصدرون 🏆، الأكثر تطوراً 📈، بحاجة لتوجيه ⚠️).\n• مولد وتوزيع التارجت الذكي للنمو المقترح بنسب مبيعات الأساس.',
+            en: '• Weighted Month-End sales forecasting engine.\n• Built-in operational AI diagnostic assistant with basket & staffing insights.\n• Fair Staff Performance Matrix categorization.\n• Proportional Smart Target Generator with baseline growth rates.'
+          }
+        },
+        {
+          id: 'ver-24-5',
+          badge: 'v24.5.0',
+          badgeType: 'feature',
+          title: { ar: 'إصدار v24.5.0 — لوحة التحكم التنفيذية والخريطة الحرارية', en: 'v24.5.0 — Executive Dashboard & Heatmaps' },
+          tags: ['24.5.0', 'لوحة', 'تنفيذية', 'حرارية', 'executive', 'heatmap'],
+          content: {
+            ar: '• لوحة التحكم التنفيذية الشاملة للمنشأة (Executive Dashboard Summary).\n• شريط الخريطة الحرارية الفوري للفروع (🟢 ممتاز، 🟡 جيد، 🔴 يحتاج تدخل).\n• مؤشرات مقارنة الفرع الأعلى والفرع الأقل أداءً.\n• مركز التنبيهات الإدارية الذكية لانخفاض المبيعات وغياب الحضور.',
+            en: '• Company-wide Executive Dashboard Summary.\n• Branch heatmap color indicators (🟢 >=90%, 🟡 70-89%, 🔴 <70%).\n• Top vs Lowest branch comparative metrics.\n• Executive alert center for sales drop and attendance warnings.'
+          }
+        },
+        {
+          id: 'ver-24-0',
+          badge: 'v24.0.0',
+          badgeType: 'security',
+          title: { ar: 'إصدار v24.0.0 — الأمان والتحميل الكسول', en: 'v24.0.0 — Security Hardening & Lazy Loading' },
+          tags: ['24.0.0', 'أمان', 'تشفير', 'تحميل كسول', 'security', 'lazy'],
+          content: {
+            ar: '• تشفير كلمات المرور باستخدام SHA-256 مع Salt ديناميكي وتطبيع الأرقام.\n• حوكمة الصلاحيات وإدارة الجلسات عبر IndexedDB.\n• فصل وتحميل المكتبات الثقيلة (jsPDF, XLSX, html2canvas) بأسلوب Lazy Loading لتحقيق سرعة إقلاع فائقة.',
+            en: '• Secure SHA-256 password hashing with per-user salt and digit normalization.\n• Role-based session security via IndexedDB.\n• Dynamic Lazy Loading for heavy libraries (PDF, Excel, Canvas) boosting startup speed.'
+          }
+        }
+      ]
+    }
+  ]
+});
+
 // ⭐ v23.3: مجمّدة (frozen) لتجنب reactivity — لا تتغير أبداً
 const JOB_TITLES = Object.freeze(['مدير معرض','نائب مدير معرض','مشرف منطقة','بائع']);
 
@@ -496,6 +824,12 @@ createApp({
         totalCompanyTargetInput: '',
         branchProposals: []
       },
+
+      // ⭐ v25.1.0: مركز المساعدة والدليل الحي التفاعلي
+      showHelpCenter: false,
+      helpCenterTab: 'routine',
+      helpCenterSearch: '',
+      lastReadHelpVersion: (typeof localStorage !== 'undefined' && localStorage.getItem('samx_last_read_help_version')) || '',
 
       // ============ Drawer ============
       drawerOpen: false,
@@ -1988,6 +2322,75 @@ createApp({
       };
     },
 
+    // ================================================================
+    //  ⭐ v25.1.0: مركز المساعدة والدليل الحي التفاعلي (Computed Properties)
+    // ================================================================
+    hasUnreadHelpUpdate() {
+      return !this.lastReadHelpVersion || this.lastReadHelpVersion !== APP_VERSION;
+    },
+
+    helpCenterCategories() {
+      const isAr = this.currentLang === 'ar';
+      const isAdminUser = this.currentUser && (this.currentUser.role === 'admin' || this.isManagement);
+      return SAMX_HELP_CENTER.categories.filter(cat => {
+        if (cat.roleRequired === 'admin' && !isAdminUser) return false;
+        return true;
+      }).map(cat => ({
+        id: cat.id,
+        icon: cat.icon,
+        title: isAr ? cat.title.ar : cat.title.en,
+        desc: isAr ? cat.desc.ar : cat.desc.en,
+        topicsCount: (cat.topics || []).length
+      }));
+    },
+
+    activeHelpCategory() {
+      return SAMX_HELP_CENTER.categories.find(c => c.id === this.helpCenterTab) || SAMX_HELP_CENTER.categories[0];
+    },
+
+    filteredHelpTopics() {
+      const isAr = this.currentLang === 'ar';
+      const q = (this.helpCenterSearch || '').trim().toLowerCase();
+      const isAdminUser = this.currentUser && (this.currentUser.role === 'admin' || this.isManagement);
+
+      if (!q) {
+        const cat = this.activeHelpCategory;
+        if (!cat || (cat.roleRequired === 'admin' && !isAdminUser)) return [];
+        return (cat.topics || []).map(t => ({
+          ...t,
+          categoryTitle: isAr ? cat.title.ar : cat.title.en,
+          categoryIcon: cat.icon,
+          displayTitle: isAr ? t.title.ar : t.title.en,
+          displayContent: isAr ? t.content.ar : t.content.en,
+          displayFormula: isAr ? (t.formulaAr || t.formula) : (t.formula || t.formulaAr),
+          displayTip: t.tips ? (isAr ? t.tips.ar : t.tips.en) : ''
+        }));
+      }
+
+      const results = [];
+      SAMX_HELP_CENTER.categories.forEach(cat => {
+        if (cat.roleRequired === 'admin' && !isAdminUser) return;
+        (cat.topics || []).forEach(t => {
+          const title = isAr ? t.title.ar : t.title.en;
+          const content = isAr ? t.content.ar : t.content.en;
+          const tags = Array.isArray(t.tags) ? t.tags.join(' ') : '';
+          const fullSearchText = `${title} ${content} ${tags} ${t.badge || ''}`.toLowerCase();
+          if (fullSearchText.includes(q)) {
+            results.push({
+              ...t,
+              categoryTitle: isAr ? cat.title.ar : cat.title.en,
+              categoryIcon: cat.icon,
+              displayTitle: title,
+              displayContent: content,
+              displayFormula: isAr ? (t.formulaAr || t.formula) : (t.formula || t.formulaAr),
+              displayTip: t.tips ? (isAr ? t.tips.ar : t.tips.en) : ''
+            });
+          }
+        });
+      });
+      return results;
+    },
+
     monthlyTargetKeyBase() { return this.monthlyBranchId ? `${this.monthlyMonth}|${this.monthlyBranchId}` : null; },
     monthlyBaseTarget: {
       get() {
@@ -2709,6 +3112,37 @@ createApp({
         this.currentLang === 'ar' ? `✅ تم تطبيق الأهداف الذكية بنجاح على ${appliedCount} فرع` : `✅ Smart targets applied to ${appliedCount} branches`,
         'success'
       );
+    },
+
+    // ================================================================
+    //  ⭐ v25.1.0: مركز المساعدة والدليل الحي التفاعلي (Methods)
+    // ================================================================
+    openHelpCenter(tab = null) {
+      if (tab && typeof tab === 'string') {
+        this.helpCenterTab = tab;
+      }
+      this.showHelpCenter = true;
+      this.helpCenterSearch = '';
+      this.lastReadHelpVersion = APP_VERSION;
+      try {
+        localStorage.setItem('samx_last_read_help_version', APP_VERSION);
+      } catch (e) {}
+    },
+
+    closeHelpCenter() {
+      this.showHelpCenter = false;
+      this.helpCenterSearch = '';
+    },
+
+    printHelpCenter() {
+      const isAr = this.currentLang === 'ar';
+      this.showToast(
+        isAr ? '📄 جارٍ إعداد الدليل للطباعة أو الحفظ كـ PDF...' : '📄 Preparing guide for print / PDF...',
+        'info'
+      );
+      setTimeout(() => {
+        window.print();
+      }, 300);
     },
 
     // ================================================================

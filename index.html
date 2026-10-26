@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v25.0: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=25.0.0" rel="stylesheet">
+<!-- ⭐ v25.1: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=25.1.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -287,6 +287,13 @@
               </div>
 
               <div class="user-menu-actions">
+                <button @click="openHelpCenter(); showUserMenu = false" class="user-menu-item">
+                  <span class="user-menu-icon" style="position:relative;">
+                    📘
+                    <span v-if="hasUnreadHelpUpdate" style="position:absolute;top:-2px;right:-2px;background:#ef4444;width:6px;height:6px;border-radius:50%;display:inline-block;"></span>
+                  </span>
+                  <span>{{ currentLang === 'ar' ? 'دليل النظام والمساعدة' : 'Help & Guide' }}</span>
+                </button>
                 <button @click="showSettings = true; showUserMenu = false" class="user-menu-item">
                   <span class="user-menu-icon">⚙️</span>
                   <span>{{ t('settings.title').replace('⚙️ ', '') }}</span>
@@ -304,6 +311,14 @@
           </transition>
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
+
+          <!-- Help Guide Button -->
+          <div class="tooltip-container" :data-tooltip="currentLang === 'ar' ? 'دليل النظام والمساعدة (v' + appVersion + ')' : 'System Guide & Help (v' + appVersion + ')'">
+            <button @click="openHelpCenter()" class="btn-ghost header-icon-btn" style="position:relative;" aria-label="Help Guide">
+              📘
+              <span v-if="hasUnreadHelpUpdate" class="badge" style="position:absolute;top:-2px;right:-2px;background:#ef4444;width:8px;height:8px;padding:0;min-width:unset;border-radius:50%;border:1px solid #111a2e;" title="تحديث جديد"></span>
+            </button>
+          </div>
 
           <!-- Search -->
           <div class="tooltip-container" :data-tooltip="t('header.tooltips.search')">
@@ -2720,6 +2735,16 @@
               <span class="mobile-more-sub">{{ currentLang === 'ar' ? 'تاريخ التعديلات والأمان' : 'Security & Audit Log' }}</span>
             </button>
 
+            <!-- Help Center -->
+            <button @click="openHelpCenter(); showMoreMenu = false" class="mobile-more-item">
+              <span class="mobile-more-icon" style="position:relative;">
+                📘
+                <span v-if="hasUnreadHelpUpdate" class="badge" style="position:absolute;top:-2px;right:-2px;background:#ef4444;width:8px;height:8px;padding:0;min-width:unset;border-radius:50%;border:1px solid #111a2e;"></span>
+              </span>
+              <span class="mobile-more-title">{{ currentLang === 'ar' ? 'دليل النظام والمساعدة' : 'Help & Guide' }}</span>
+              <span class="mobile-more-sub">{{ currentLang === 'ar' ? 'شروحات تشغيلية وقاموس التجزئة' : 'Operational Guide & Dictionary' }}</span>
+            </button>
+
             <!-- Settings -->
             <button @click="showSettings = true; showMoreMenu = false" class="mobile-more-item">
               <span class="mobile-more-icon">⚙️</span>
@@ -3129,6 +3154,146 @@
             <button @click="applySmartTargets" class="btn-gold btn-md" style="font-weight:800;gap:6px;">
               <span>✅</span>
               <span>{{ currentLang === 'ar' ? 'اعتماد وتطبيق التارجت المقترح' : 'Apply Proposed Targets' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ============================================================
+         ⭐ v25.1.0: IN-APP INTERACTIVE HELP CENTER & LIVING DOCUMENTATION
+         ============================================================ -->
+    <transition name="fade">
+      <div v-if="showHelpCenter" class="bottom-sheet-overlay" @click.self="closeHelpCenter">
+        <div class="bottom-sheet help-center-modal">
+          <div class="bottom-sheet-handle"></div>
+
+          <!-- Header -->
+          <div class="modal-header-pro">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">📘</span>
+              <div>
+                <h3 class="modal-title-pro" style="margin:0;display:flex;align-items:center;gap:8px;">
+                  <span>{{ currentLang === 'ar' ? 'مركز المساعدة والدليل التشغيلي الحي' : 'System Guide & Help Center' }}</span>
+                  <span class="version-badge-large" style="display:inline-block;padding:2px 8px;font-size:11px;">v{{ appVersion }}</span>
+                </h3>
+                <p style="margin:2px 0 0;font-size:11px;color:#94a3b8;">
+                  {{ currentLang === 'ar' ? 'دليل إرشادي تفاعلي وقاموس مؤشرات التجزئة لتطبيق SAMX' : 'Interactive operational workflows & retail dictionary' }}
+                </p>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button @click="printHelpCenter" class="btn-ghost btn-sm" :title="currentLang === 'ar' ? 'طباعة أو حفظ كـ PDF' : 'Print or Save as PDF'" style="display:flex;align-items:center;gap:4px;font-size:12px;padding:6px 10px;">
+                <span>🖨️</span>
+                <span class="hide-mobile">{{ currentLang === 'ar' ? 'طباعة / PDF' : 'Print / PDF' }}</span>
+              </button>
+              <button @click="closeHelpCenter" class="modal-close-btn" aria-label="Close">✕</button>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body-pro help-center-print-area">
+            <!-- Search Bar -->
+            <div class="help-search-container">
+              <span class="help-search-icon">🔍</span>
+              <input type="text"
+                     v-model="helpCenterSearch"
+                     :placeholder="currentLang === 'ar' ? 'ابحث في الشروحات، المعادلات، والمصطلحات (مثال: ATV, UPT, إغلاق, تارجت)...' : 'Search topics, formulas, or keywords (e.g. ATV, UPT, close, target)...'"
+                     class="help-search-input">
+              <button v-if="helpCenterSearch"
+                      @click="helpCenterSearch = ''"
+                      style="position:absolute;top:50%;background:none;border:none;color:#94a3b8;font-size:14px;cursor:pointer;"
+                      :style="{ right: currentLang === 'ar' ? 'auto' : '14px', left: currentLang === 'ar' ? '14px' : 'auto', transform: 'translateY(-50%)' }">
+                ✕
+              </button>
+            </div>
+
+            <!-- Tab Navigation (hidden when searching) -->
+            <div v-if="!helpCenterSearch.trim()" class="help-tabs-nav">
+              <button v-for="cat in helpCenterCategories"
+                      :key="cat.id"
+                      @click="helpCenterTab = cat.id"
+                      class="help-tab-btn"
+                      :class="{ active: helpCenterTab === cat.id }">
+                <span>{{ cat.icon }}</span>
+                <span>{{ cat.title }}</span>
+                <span style="font-size:10px;opacity:0.8;padding:1px 6px;background:rgba(255,255,255,0.1);border-radius:10px;">{{ cat.topicsCount }}</span>
+              </button>
+            </div>
+
+            <!-- Search Mode Header -->
+            <div v-else style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:8px 12px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);border-radius:8px;font-size:12px;color:#93c5fd;">
+              <span>
+                {{ currentLang === 'ar' ? 'نتائج البحث عن:' : 'Search results for:' }} "<strong>{{ helpCenterSearch }}</strong>"
+              </span>
+              <span>{{ filteredHelpTopics.length }} {{ currentLang === 'ar' ? 'موضوع مطابق' : 'topics found' }}</span>
+            </div>
+
+            <!-- Topics List -->
+            <div v-if="filteredHelpTopics.length > 0" class="help-topics-list">
+              <div v-for="topic in filteredHelpTopics" :key="topic.id" class="help-topic-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="help-topic-badge" :class="'badge-' + (topic.badgeType || 'default')">
+                      {{ topic.badge }}
+                    </span>
+                    <h4 style="margin:0;font-size:14px;font-weight:800;color:#fff;">
+                      {{ topic.displayTitle }}
+                    </h4>
+                  </div>
+                  <span v-if="helpCenterSearch" style="font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(212,168,75,0.15);color:#f5cf7a;font-weight:700;white-space:nowrap;">
+                    {{ topic.categoryIcon }} {{ topic.categoryTitle }}
+                  </span>
+                </div>
+
+                <!-- Topic Content -->
+                <p style="margin:0;font-size:12px;color:#cbd5e1;line-height:1.6;white-space:pre-line;">
+                  {{ topic.displayContent }}
+                </p>
+
+                <!-- Formula Highlight Box (for Retail KPIs) -->
+                <div v-if="topic.displayFormula" class="help-formula-box">
+                  <span style="font-size:16px;">📐</span>
+                  <div style="flex:1;">
+                    <strong style="color:#e2e8f0;display:block;font-size:11px;margin-bottom:2px;">{{ currentLang === 'ar' ? 'المعادلة الحسابية:' : 'Formula:' }}</strong>
+                    <span>{{ topic.displayFormula }}</span>
+                  </div>
+                </div>
+
+                <!-- Practical Tip Callout -->
+                <div v-if="topic.displayTip" class="help-tip-box">
+                  {{ topic.displayTip }}
+                </div>
+
+                <!-- Keyword Tags -->
+                <div v-if="topic.tags && topic.tags.length > 0" class="help-tags-row">
+                  <span v-for="(tag, tagIdx) in topic.tags" :key="tagIdx" class="help-tag-pill">
+                    #{{ tag }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty Search State -->
+            <div v-else style="text-align:center;padding:40px 20px;color:#94a3b8;">
+              <span style="font-size:36px;display:block;margin-bottom:8px;">🔍</span>
+              <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#fff;">
+                {{ currentLang === 'ar' ? 'لم يتم العثور على نتائج مطابقة' : 'No matching guide topics found' }}
+              </p>
+              <p style="margin:0;font-size:12px;">
+                {{ currentLang === 'ar' ? 'جرّب البحث بكلمات أخرى أو تصفح التبويبات المباشرة.' : 'Try different keywords or browse the guide tabs directly.' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer-pro">
+            <button @click="printHelpCenter" class="btn-ghost btn-md btn-print-only" style="gap:6px;display:flex;align-items:center;">
+              <span>🖨️</span>
+              <span>{{ currentLang === 'ar' ? 'طباعة / حفظ الدليل (PDF)' : 'Print / Save PDF' }}</span>
+            </button>
+            <button @click="closeHelpCenter" class="btn-gold btn-md" style="font-weight:700;">
+              {{ t('common.close') || (currentLang === 'ar' ? 'إغلاق' : 'Close') }}
             </button>
           </div>
         </div>
@@ -4208,6 +4373,23 @@
                   <span>{{ t('settings.data.storage.staff') }}: <strong style="color:#fff;">{{ staff.length }}</strong></span>
                   <span>{{ t('settings.data.storage.days') }}: <strong style="color:#fff;">{{ Object.keys(daily).length }}</strong></span>
                 </div>
+              <!-- Help Center Card -->
+              <div class="settings-card" style="background:linear-gradient(135deg,rgba(212,168,75,0.12),rgba(59,130,246,0.1));border-color:rgba(212,168,75,0.4);">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                  <div>
+                    <h4 style="font-size:13px;font-weight:800;color:#f5cf7a;margin:0 0 2px;display:flex;align-items:center;gap:6px;">
+                      <span>📘</span>
+                      <span>{{ currentLang === 'ar' ? 'مركز المساعدة والدليل التشغيلي الحي' : 'Interactive System Guide & Help' }}</span>
+                      <span v-if="hasUnreadHelpUpdate" class="badge" style="background:#ef4444;font-size:9px;padding:1px 5px;">جديد</span>
+                    </h4>
+                    <p style="font-size:11px;color:#cbd5e1;margin:0;">
+                      {{ currentLang === 'ar' ? 'شروحات الروتين اليومي، قاموس مؤشرات التجزئة، ودليل المشرفين والطباعة' : 'Operational workflows, retail metrics dictionary, & PDF print' }}
+                    </p>
+                  </div>
+                  <button @click="openHelpCenter(); showSettings=false" class="btn-gold btn-sm" style="font-weight:700;">
+                    📘 {{ currentLang === 'ar' ? 'فتح الدليل' : 'Open Guide' }}
+                  </button>
+                </div>
               </div>
 
               <!-- About & Contact Support -->
@@ -4543,7 +4725,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=25.0.0"></script>
+<script src="app.js?v=25.1.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {
