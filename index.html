@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v24.5: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=24.5.0" rel="stylesheet">
+<!-- ⭐ v25.0: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=25.0.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -619,6 +619,232 @@
                   {{ getBranchHeatmap(b.id).badgeText }}
                 </span>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================
+             ⭐ v25.0.0: مركز الرؤى والذكاء الإحصائي والتوقعات (Smart Insights Hub)
+             ============================================================ -->
+        <div class="smart-insights-hub">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:20px;">🧠</span>
+              <div>
+                <h3 style="margin:0;font-size:14px;font-weight:900;color:#f5cf7a;display:flex;align-items:center;gap:6px;">
+                  <span>{{ currentLang === 'ar' ? 'مركز الرؤى والذكاء الإحصائي' : 'Smart Insights Hub' }}</span>
+                  <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(59,130,246,0.2);color:#93c5fd;font-weight:700;">v25.0</span>
+                </h3>
+                <p style="margin:2px 0 0;font-size:11px;color:#94a3b8;">
+                  {{ currentLang === 'ar' ? 'توقعات فورية، تشخيص بيعي ذكي، ومصفوفة الأداء العادلة' : 'Real-time forecasting, AI diagnostics, & staff matrix' }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Tab Switcher -->
+            <div class="smart-insights-nav" style="margin-bottom:0;padding-bottom:0;border-bottom:none;">
+              <button @click="smartInsightsTab = 'forecast'" class="smart-tab-btn" :class="{ active: smartInsightsTab === 'forecast' }">
+                <span>📈</span>
+                <span>{{ currentLang === 'ar' ? 'توقعات المبيعات' : 'Sales Forecast' }}</span>
+              </button>
+              <button @click="smartInsightsTab = 'diagnostics'" class="smart-tab-btn" :class="{ active: smartInsightsTab === 'diagnostics' }">
+                <span>🔍</span>
+                <span>{{ currentLang === 'ar' ? 'المساعد التشخيصي' : 'AI Diagnostics' }}</span>
+              </button>
+              <button @click="smartInsightsTab = 'matrix'" class="smart-tab-btn" :class="{ active: smartInsightsTab === 'matrix' }">
+                <span>👥</span>
+                <span>{{ currentLang === 'ar' ? 'مصفوفة البائعين' : 'Staff Matrix' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- TAB 1: SALES FORECASTING ENGINE -->
+          <div v-show="smartInsightsTab === 'forecast'">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:8px;">
+              <div style="font-size:12px;color:#cbd5e1;">
+                <span>🎯 {{ currentLang === 'ar' ? 'نطاق التوقع:' : 'Forecast Scope:' }} </span>
+                <strong style="color:#e6c074;">{{ smartSalesForecast.scopeName }}</strong>
+                <span style="color:#94a3b8;font-size:11px;margin:0 4px;">• {{ smartSalesForecast.monthName }} ({{ smartSalesForecast.currentDay }} من أصل {{ smartSalesForecast.daysInMonth }} يوماً)</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:11px;color:#94a3b8;">{{ currentLang === 'ar' ? 'احتمالية التحقيق:' : 'Target Probability:' }}</span>
+                <span class="heatmap-badge" :class="smartSalesForecast.statusClass" style="font-size:11px;padding:3px 8px;font-weight:800;">
+                  {{ smartSalesForecast.statusIcon }} {{ smartSalesForecast.probability }}% — {{ smartSalesForecast.statusText }}
+                </span>
+              </div>
+            </div>
+
+            <div class="forecast-kpi-grid">
+              <!-- Projected Month-End Sales -->
+              <div class="forecast-kpi-card">
+                <p style="font-size:11px;color:#94a3b8;margin:0 0 4px;font-weight:700;">🚀 {{ currentLang === 'ar' ? 'المبيعات المتوقعة بنهاية الشهر' : 'Projected Month-End Sales' }}</p>
+                <p style="font-size:22px;font-weight:900;color:#fff;margin:2px 0 6px;">{{ formatSAR(smartSalesForecast.projectedMonthEnd) }}</p>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#cbd5e1;padding-top:6px;border-top:1px dashed rgba(255,255,255,0.08);">
+                  <span>{{ currentLang === 'ar' ? 'نسبة الإنجاز المتوقعة:' : 'Projected Achievement:' }}</span>
+                  <strong :style="{ color: smartSalesForecast.projectedPct >= 95 ? '#34d399' : (smartSalesForecast.projectedPct >= 80 ? '#fbbf24' : '#fb7185') }">
+                    {{ smartSalesForecast.projectedPct }}%
+                  </strong>
+                </div>
+              </div>
+
+              <!-- Actual Sales Achieved -->
+              <div class="forecast-kpi-card">
+                <p style="font-size:11px;color:#94a3b8;margin:0 0 4px;font-weight:700;">💰 {{ currentLang === 'ar' ? 'المتحقق الفعلي حتى اليوم' : 'Actual Sales Elapsed' }}</p>
+                <p style="font-size:22px;font-weight:900;color:#34d399;margin:2px 0 6px;">{{ formatSAR(smartSalesForecast.actual) }}</p>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#cbd5e1;padding-top:6px;border-top:1px dashed rgba(255,255,255,0.08);">
+                  <span>{{ currentLang === 'ar' ? 'من أصل التارجت:' : 'Of Base Target:' }}</span>
+                  <strong style="color:#e6c074;">{{ formatSAR(smartSalesForecast.target) }}</strong>
+                </div>
+              </div>
+
+              <!-- Required Daily Run-Rate -->
+              <div class="forecast-kpi-card">
+                <p style="font-size:11px;color:#94a3b8;margin:0 0 4px;font-weight:700;">⚡ {{ currentLang === 'ar' ? 'المعدل اليومي المطلوب' : 'Required Daily Run-Rate' }}</p>
+                <p style="font-size:22px;font-weight:900;color:#f5cf7a;margin:2px 0 6px;">{{ formatSAR(smartSalesForecast.requiredDailyRate) }} <span style="font-size:12px;font-weight:normal;color:#94a3b8;">/ {{ currentLang === 'ar' ? 'يوم' : 'day' }}</span></p>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#cbd5e1;padding-top:6px;border-top:1px dashed rgba(255,255,255,0.08);">
+                  <span>{{ currentLang === 'ar' ? 'الأيام المتبقية:' : 'Remaining Days:' }}</span>
+                  <strong style="color:#93c5fd;">{{ smartSalesForecast.remainingDays }} {{ currentLang === 'ar' ? 'يوم' : 'days' }}</strong>
+                </div>
+              </div>
+
+              <!-- Current Daily Avg & Gap -->
+              <div class="forecast-kpi-card">
+                <p style="font-size:11px;color:#94a3b8;margin:0 0 4px;font-weight:700;">📅 {{ currentLang === 'ar' ? 'المتوسط اليومي الفعلي' : 'Current Daily Average' }}</p>
+                <p style="font-size:22px;font-weight:900;color:#60a5fa;margin:2px 0 6px;">{{ formatSAR(smartSalesForecast.currentDailyAvg) }} <span style="font-size:12px;font-weight:normal;color:#94a3b8;">/ {{ currentLang === 'ar' ? 'يوم' : 'day' }}</span></p>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding-top:6px;border-top:1px dashed rgba(255,255,255,0.08);">
+                  <span style="color:#cbd5e1;">{{ currentLang === 'ar' ? 'فارق الرن ريت:' : 'Run-rate Gap:' }}</span>
+                  <strong :style="{ color: smartSalesForecast.runRateGap <= 0 ? '#34d399' : '#fb7185' }">
+                    {{ smartSalesForecast.runRateGap <= 0 ? '✓ ' + (currentLang === 'ar' ? 'فائض بيعي' : 'Ahead') : '▲ ' + formatSAR(smartSalesForecast.runRateGap) }}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:10px;padding:8px 12px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px;font-size:11px;color:#93c5fd;display:flex;align-items:center;gap:6px;">
+              <span>ℹ️</span>
+              <span>{{ currentLang === 'ar' ? 'الحسابات مبنية على أوزان التجزئة السعودية الأسبوعية (الخميس 1.35x، الجمعة 1.45x، السبت 1.30x، الأحد-الأربعاء 0.85x) لضمان أعلى دقة تنبؤية.' : 'Weighted by Saudi retail cycle footfall (Thu 1.35x, Fri 1.45x, Sat 1.30x, Sun-Wed 0.85x).' }}</span>
+            </div>
+          </div>
+
+          <!-- TAB 2: INSTANT AI DIAGNOSTICS ASSISTANT -->
+          <div v-show="smartInsightsTab === 'diagnostics'">
+            <div style="background:rgba(212,168,75,0.1);border:1px solid rgba(212,168,75,0.3);border-radius:10px;padding:12px 14px;margin-bottom:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
+                <span style="font-size:13px;font-weight:800;color:#f5cf7a;">🧠 {{ smartAIDiagnostics.headline }}</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="heatmap-badge heatmap-badge-good" style="font-size:11px;">
+                    💳 ATV: {{ formatSAR(smartAIDiagnostics.atv) }}
+                  </span>
+                  <span class="heatmap-badge heatmap-badge-excellent" style="font-size:11px;">
+                    🛍️ UPT: {{ smartAIDiagnostics.upt }}
+                  </span>
+                </div>
+              </div>
+              <p style="margin:0;font-size:11px;color:#cbd5e1;">
+                {{ currentLang === 'ar' ? 'تشخيص إحصائي فوري بناءً على مؤشرات اليومية، حضور الفريق، وتوزيع السلة الشرائية لـ ' + smartAIDiagnostics.branchName : 'Instant automated operational diagnostic based on attendance, ticket size, and team distribution for ' + smartAIDiagnostics.branchName }}
+              </p>
+            </div>
+
+            <!-- Observations Grid -->
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+              <div v-for="(obs, idx) in smartAIDiagnostics.observations" :key="idx"
+                   class="diagnostic-box"
+                   :style="{ borderColor: obs.type === 'warning' ? 'rgba(245,158,11,0.35)' : (obs.type === 'success' ? 'rgba(16,185,129,0.35)' : 'rgba(59,130,246,0.35)') }">
+                <div style="display:flex;align-items:flex-start;gap:10px;">
+                  <span style="font-size:18px;">{{ obs.icon }}</span>
+                  <div style="flex:1;">
+                    <p style="margin:0 0 2px;font-size:12px;font-weight:800;" :style="{ color: obs.type === 'warning' ? '#fbbf24' : (obs.type === 'success' ? '#34d399' : '#93c5fd') }">
+                      {{ obs.title }}
+                    </p>
+                    <p style="margin:0;font-size:11px;color:#cbd5e1;line-height:1.4;">{{ obs.text }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Practical Recommendations Box -->
+            <div class="diagnostic-recommendation-box">
+              <div style="font-weight:800;font-size:12px;margin-bottom:6px;color:#f5cf7a;display:flex;align-items:center;gap:6px;">
+                <span>💡</span>
+                <span>{{ currentLang === 'ar' ? 'توصيات إدارية عملية قابلة للتطبيق الفوري:' : 'Actionable Management Recommendations:' }}</span>
+              </div>
+              <ul style="margin:0;padding-right:20px;padding-left:20px;font-size:12px;line-height:1.5;">
+                <li v-for="(rec, rIdx) in smartAIDiagnostics.recommendations" :key="rIdx" style="margin-bottom:4px;">
+                  {{ rec }}
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- TAB 3: FAIR STAFF PERFORMANCE MATRIX -->
+          <div v-show="smartInsightsTab === 'matrix'">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+              <span style="font-size:12px;color:#cbd5e1;font-weight:700;">
+                👥 {{ currentLang === 'ar' ? 'تصنيف الكفاءة والإنتاجية:' : 'Staff Performance Buckets:' }}
+              </span>
+              <!-- Category Filter Chips -->
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button @click="staffMatrixCategory = 'all'" class="smart-tab-btn" :class="{ active: staffMatrixCategory === 'all' }" style="font-size:11px;padding:3px 8px;">
+                  {{ currentLang === 'ar' ? 'الكل' : 'All' }} ({{ staffPerformanceMatrix.counts.all }})
+                </button>
+                <button @click="staffMatrixCategory = 'top'" class="smart-tab-btn" :class="{ active: staffMatrixCategory === 'top' }" style="font-size:11px;padding:3px 8px;">
+                  🏆 {{ currentLang === 'ar' ? 'المتصدرون' : 'Top' }} ({{ staffPerformanceMatrix.counts.top }})
+                </button>
+                <button @click="staffMatrixCategory = 'improved'" class="smart-tab-btn" :class="{ active: staffMatrixCategory === 'improved' }" style="font-size:11px;padding:3px 8px;">
+                  📈 {{ currentLang === 'ar' ? 'الأكثر تطوراً' : 'Most Improved' }} ({{ staffPerformanceMatrix.counts.improved }})
+                </button>
+                <button @click="staffMatrixCategory = 'coaching'" class="smart-tab-btn" :class="{ active: staffMatrixCategory === 'coaching' }" style="font-size:11px;padding:3px 8px;">
+                  ⚠️ {{ currentLang === 'ar' ? 'بحاجة لتوجيه' : 'Coaching' }} ({{ staffPerformanceMatrix.counts.coaching }})
+                </button>
+              </div>
+            </div>
+
+            <div class="matrix-grid">
+              <div v-for="m in staffPerformanceMatrix.filteredItems" :key="m.id" class="matrix-card">
+                <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;margin-bottom:8px;">
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                    <div class="staff-avatar small" style="width:32px;height:32px;font-size:13px;flex-shrink:0;">
+                      <img v-if="getStaffPhoto(m.id)" :src="getStaffPhoto(m.id)" :alt="m.name">
+                      <span v-else>{{ m.name.charAt(0) }}</span>
+                    </div>
+                    <div style="min-width:0;">
+                      <p style="margin:0;font-size:12px;font-weight:800;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.name }}</p>
+                      <p style="margin:2px 0 0;font-size:10px;color:#94a3b8;">{{ m.code }} • {{ m.jobTitle }}</p>
+                    </div>
+                  </div>
+                  <span class="matrix-badge" :class="m.badgeClass">
+                    {{ m.badge }}
+                  </span>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;background:rgba(0,0,0,0.2);padding:6px 8px;border-radius:6px;font-size:11px;margin-bottom:6px;">
+                  <div>
+                    <span style="color:#94a3b8;font-size:10px;">{{ currentLang === 'ar' ? 'مبيعات اليوم:' : 'Today Sales:' }}</span>
+                    <strong style="display:block;color:#34d399;">{{ formatSAR(m.daySales) }}</strong>
+                  </div>
+                  <div>
+                    <span style="color:#94a3b8;font-size:10px;">{{ currentLang === 'ar' ? 'مبيعات الشهر:' : 'Month Sales:' }}</span>
+                    <strong style="display:block;color:#60a5fa;">{{ formatSAR(m.monthSales) }}</strong>
+                  </div>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#cbd5e1;margin-bottom:4px;">
+                  <span>{{ currentLang === 'ar' ? 'نسبة الإنجاز:' : 'Achievement:' }}</span>
+                  <strong :style="{ color: m.effectivePct >= 90 ? '#34d399' : (m.effectivePct >= 70 ? '#fbbf24' : '#fb7185') }">
+                    {{ m.effectivePct }}%
+                  </strong>
+                </div>
+                <div class="executive-progress-container" style="height:4px;">
+                  <div class="executive-progress-bar" :style="{
+                    width: Math.min(m.effectivePct, 100) + '%',
+                    background: m.effectivePct >= 90 ? '#10b981' : (m.effectivePct >= 70 ? '#f59e0b' : '#ef4444')
+                  }"></div>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="staffPerformanceMatrix.filteredItems.length === 0" style="text-align:center;padding:24px;color:#94a3b8;font-size:12px;">
+              {{ currentLang === 'ar' ? 'لا يوجد موظفون في هذا التصنيف حالياً' : 'No staff in this bucket currently' }}
             </div>
           </div>
         </div>
@@ -1499,6 +1725,7 @@
           </div>
           <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
             <button @click="showImportModal=true" :disabled="!canEditTarget" class="btn-gold" style="border:none;border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;">{{ t('monthly.actions.import') }}</button>
+            <button @click="openSmartTargetModal" :disabled="!canEditTarget" class="btn-ghost" style="border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;background:linear-gradient(135deg,rgba(212,168,75,0.22),rgba(59,130,246,0.18));border-color:#d4a84b;color:#f5cf7a;font-weight:bold;">🎯 {{ currentLang === 'ar' ? 'اقتراح وتوزيع التارجت الذكي' : 'Smart Target Generator' }}</button>
             <button @click="openDrawer" :disabled="!monthlyBranchId || !canEditTarget" class="btn-ghost" style="border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;">{{ t('monthly.actions.distribute') }}</button>
             <button @click="exportMonthlyPDF" :disabled="!monthlyBranchId || !canExport" class="btn-ghost" style="border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;">{{ t('monthly.actions.pdf') }}</button>
             <button @click="exportMonthlyExcel" :disabled="!monthlyBranchId || !canExport" class="btn-ghost" style="border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;background:linear-gradient(135deg,rgba(16,185,129,.15),transparent);border-color:rgba(16,185,129,.5);color:#6ee7b7;">{{ t('monthly.actions.excel') }}</button>
@@ -2802,6 +3029,112 @@
         </div>
       </div>
     </transition>
+
+    <!-- ============================================================
+         ⭐ v25.0.0: SMART TARGET GENERATOR MODAL (مولد وتوزيع الأهداف الذكية)
+         ============================================================ -->
+    <transition name="fade">
+      <div v-if="showSmartTargetModal" class="bottom-sheet-overlay" @click.self="showSmartTargetModal=false">
+        <div class="bottom-sheet" style="max-width:820px;">
+          <div class="bottom-sheet-handle"></div>
+
+          <!-- Header -->
+          <div class="modal-header-pro">
+            <h3 class="modal-title-pro">
+              <span>🎯</span>
+              <span>{{ currentLang === 'ar' ? 'مولد وتوزيع الأهداف الذكية (Smart Target Generator)' : 'Smart Target Generator & Distributor' }}</span>
+            </h3>
+            <button @click="showSmartTargetModal=false" class="modal-close-btn" aria-label="Close">✕</button>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body-pro">
+            <div style="background:rgba(212,168,75,0.1);border:1px solid rgba(212,168,75,0.3);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:#f5cf7a;line-height:1.5;">
+              <span>💡 {{ currentLang === 'ar' ? 'يقوم المحرك الذكي بحساب الوزن النسبي التاريخي لمبيعات كل فرع في شهر الأساس، وتوزيع التارجت المستهدف مع تطبيق نسبة النمو المطلوبة وتعديلها يدوياً بدقة.' : 'Calculates historical sales weights per branch and generates balanced target proposals based on your desired growth rate.' }}</span>
+            </div>
+
+            <!-- Configuration Controls -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;background:rgba(15,23,42,0.6);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);margin-bottom:14px;align-items:end;">
+              <div>
+                <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:700;">
+                  📅 {{ currentLang === 'ar' ? 'شهر الأساس التاريخي (المقارنة):' : 'Baseline Month:' }}
+                </label>
+                <input type="month" v-model="smartTargetForm.baselineMonth" @change="calculateSmartTargetProposals" class="input" style="width:100%;border-radius:8px;padding:8px 10px;font-size:13px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:700;">
+                  🎯 {{ currentLang === 'ar' ? 'شهر تطبيق الهدف الجديد:' : 'Target Month:' }}
+                </label>
+                <input type="month" v-model="smartTargetForm.targetMonth" @change="calculateSmartTargetProposals" class="input" style="width:100%;border-radius:8px;padding:8px 10px;font-size:13px;">
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                  <label style="font-size:11px;color:#34d399;font-weight:700;">
+                    📈 {{ currentLang === 'ar' ? 'معدل النمو المطلوب:' : 'Growth Rate:' }}
+                  </label>
+                  <strong style="font-size:12px;color:#34d399;font-weight:900;">
+                    {{ smartTargetForm.growthRate > 0 ? '+' : '' }}{{ smartTargetForm.growthRate }}%
+                  </strong>
+                </div>
+                <input type="range" min="-20" max="50" step="1" v-model.number="smartTargetForm.growthRate" @input="calculateSmartTargetProposals" style="width:100%;cursor:pointer;accent-color:#10b981;">
+              </div>
+              <div>
+                <label style="display:block;font-size:11px;color:#e6c074;margin-bottom:4px;font-weight:700;">
+                  💰 {{ currentLang === 'ar' ? 'إجمالي تارجت المنشأة المقترح:' : 'Proposed Total Target:' }}
+                </label>
+                <input type="number" min="0" v-model.number="smartTargetForm.totalCompanyTargetInput" @input="onSmartCompanyTargetInput" class="sales-input" style="width:100%;height:38px;padding:6px 10px;font-size:14px;">
+              </div>
+            </div>
+
+            <!-- Proposals Breakdown Table -->
+            <div class="table-responsive" style="max-height:340px;overflow-y:auto;border-radius:10px;border:1px solid rgba(255,255,255,0.08);">
+              <table class="smart-target-table" style="width:100%;font-size:12px;border-collapse:collapse;">
+                <thead style="position:sticky;top:0;background:#0f172a;z-index:2;">
+                  <tr style="color:#94a3b8;border-bottom:1px solid rgba(255,255,255,0.12);text-align:right;">
+                    <th style="padding:10px;">{{ currentLang === 'ar' ? 'الفرع' : 'Branch' }}</th>
+                    <th style="padding:10px;">{{ currentLang === 'ar' ? 'مبيعات الأساس' : 'Baseline' }}</th>
+                    <th style="padding:10px;">{{ currentLang === 'ar' ? 'الوزن النسبي' : 'Weight %' }}</th>
+                    <th style="padding:10px;min-width:140px;">{{ currentLang === 'ar' ? 'التارجت المقترح (قابل للتعديل)' : 'Proposed (Editable)' }}</th>
+                    <th style="padding:10px;">{{ currentLang === 'ar' ? 'التارجت الحالي' : 'Current Target' }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="prop in smartTargetForm.branchProposals" :key="prop.branchId" style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <td style="padding:10px;font-weight:700;color:#fff;">
+                      <span>🏬 {{ prop.branchName }}</span>
+                    </td>
+                    <td style="padding:10px;color:#94a3b8;">
+                      {{ formatSAR(prop.historicalSales) }}
+                    </td>
+                    <td style="padding:10px;">
+                      <span class="heatmap-badge heatmap-badge-good" style="font-size:10px;padding:2px 6px;">
+                        {{ prop.weightPct }}%
+                      </span>
+                    </td>
+                    <td style="padding:8px 10px;">
+                      <input type="number" min="0" v-model.number="prop.proposedTarget" class="sales-input" style="width:100%;padding:4px 8px;font-size:13px;font-weight:bold;color:#f5cf7a;background:rgba(0,0,0,0.3);border:1px solid rgba(212,168,75,0.4);border-radius:6px;">
+                    </td>
+                    <td style="padding:10px;color:#60a5fa;">
+                      {{ prop.currentTarget > 0 ? formatSAR(prop.currentTarget) : '—' }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer-pro">
+            <button @click="showSmartTargetModal=false" class="btn-ghost btn-md">{{ t('common.cancel') }}</button>
+            <button @click="applySmartTargets" class="btn-gold btn-md" style="font-weight:800;gap:6px;">
+              <span>✅</span>
+              <span>{{ currentLang === 'ar' ? 'اعتماد وتطبيق التارجت المقترح' : 'Apply Proposed Targets' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- ============================================================
          ⭐ v23.2: Modal مشاركة بطاقة اليوم
          ============================================================ -->
@@ -4210,7 +4543,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=24.5.0"></script>
+<script src="app.js?v=25.0.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v24.5.0 — app.js
+//  SAMX v25.0.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '24.5.0';
+const APP_VERSION = '25.0.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -483,6 +483,19 @@ createApp({
       yoyBranchId: '',
       analyticsBranchId: '',
       analyticsRange: 7,
+
+      // ⭐ v25.0.0: مركز الرؤى والذكاء الإحصائي والأهداف الذكية
+      smartInsightsTab: 'forecast',
+      showSmartInsightsHub: true,
+      staffMatrixCategory: 'all',
+      showSmartTargetModal: false,
+      smartTargetForm: {
+        targetMonth: '',
+        baselineMonth: '',
+        growthRate: 10,
+        totalCompanyTargetInput: '',
+        branchProposals: []
+      },
 
       // ============ Drawer ============
       drawerOpen: false,
@@ -1551,6 +1564,430 @@ createApp({
       return alerts;
     },
 
+    // ================================================================
+    //  ⭐ v25.0.0: محرك توقع المبيعات الذكي (Sales Forecasting Engine)
+    // ================================================================
+    smartSalesForecast() {
+      const isAr = this.currentLang === 'ar';
+      const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : normalizeDateStr(this.selectedDate)) || this.selectedDate;
+      const parts = normDate.split('-');
+      const y = Number(parts[0]) || new Date().getFullYear();
+      const m = Number(parts[1]) || (new Date().getMonth() + 1);
+      const currentDay = Number(parts[2]) || new Date().getDate();
+      const monthStr = `${y}-${String(m).padStart(2, '0')}`;
+      const daysInMonth = new Date(y, m, 0).getDate();
+
+      const branch = this.selectedBranch;
+      const isSingleBranch = !!this.selectedBranchId;
+      const branchesToEvaluate = isSingleBranch && branch ? [branch] : (this.allowedBranches || []);
+
+      let monthTarget = 0;
+      let monthActual = 0;
+
+      branchesToEvaluate.forEach(b => {
+        const key = `${monthStr}|${b.id}`;
+        let tVal = Number(this.monthlyTargets?.[key]) || 0;
+        if (tVal <= 0) {
+          for (let d = 1; d <= daysInMonth; d++) {
+            const dateKey = `${monthStr}-${String(d).padStart(2, '0')}|${b.id}`;
+            const rec = this.daily?.[dateKey];
+            if (rec?.baseTarget) tVal += Number(rec.baseTarget);
+          }
+        }
+        monthTarget += tVal;
+
+        const staffIds = (this.staff || []).filter(s => s.branchId === b.id).map(s => s.id);
+        for (let d = 1; d <= currentDay; d++) {
+          const dateStr = `${monthStr}-${String(d).padStart(2, '0')}`;
+          let rec = null;
+          if (typeof this.getDayRecord === 'function') {
+            rec = this.getDayRecord(dateStr, b.id, false);
+          } else if (this.daily) {
+            rec = this.daily[`${dateStr}|${b.id}`];
+          }
+          if (rec) {
+            let daySales = 0;
+            if (rec.staffData) {
+              staffIds.forEach(id => {
+                daySales += (Number(rec.staffData[id]?.sales) || 0);
+              });
+            }
+            daySales += (Number(rec.manualExtra) || 0);
+            if (d === currentDay && this.selectedBranchId === b.id && typeof this.branchSales === 'number' && this.branchSales > 0) {
+              daySales = Math.max(daySales, this.branchSales);
+            }
+            monthActual += daySales;
+          }
+        }
+      });
+
+      // أوزان التجزئة السعودية: الخميس 1.35x، الجمعة 1.45x، السبت 1.30x، بقية الأيام 0.85x
+      const getSaudiDayWeight = (dateObj) => {
+        const dayOfWeek = dateObj.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+        if (dayOfWeek === 4) return 1.35;
+        if (dayOfWeek === 5) return 1.45;
+        if (dayOfWeek === 6) return 1.30;
+        return 0.85;
+      };
+
+      let elapsedWeightSum = 0;
+      for (let d = 1; d <= currentDay; d++) {
+        const dObj = new Date(y, m - 1, d, 12, 0, 0);
+        elapsedWeightSum += getSaudiDayWeight(dObj);
+      }
+
+      let remainingWeightSum = 0;
+      for (let d = currentDay + 1; d <= daysInMonth; d++) {
+        const dObj = new Date(y, m - 1, d, 12, 0, 0);
+        remainingWeightSum += getSaudiDayWeight(dObj);
+      }
+
+      const remainingDays = Math.max(0, daysInMonth - currentDay);
+      let baseRatePerWeight = 0;
+      if (elapsedWeightSum > 0 && monthActual > 0) {
+        baseRatePerWeight = monthActual / elapsedWeightSum;
+      } else if (monthTarget > 0) {
+        const totalMonthWeight = elapsedWeightSum + remainingWeightSum;
+        baseRatePerWeight = totalMonthWeight > 0 ? (monthTarget / totalMonthWeight) : 0;
+      }
+
+      let projectedRemainingSales = baseRatePerWeight * remainingWeightSum;
+      let projectedMonthEnd = monthActual + projectedRemainingSales;
+      if (currentDay >= daysInMonth) {
+        projectedMonthEnd = monthActual;
+      }
+
+      const projectedPct = monthTarget > 0 ? (projectedMonthEnd / monthTarget) * 100 : (monthActual > 0 ? 100 : 0);
+
+      let status = 'ontrack';
+      let statusText = isAr ? 'على المسار الصحيح' : 'On Track';
+      let statusIcon = '✅';
+      let probability = 85;
+      let statusClass = 'status-ontrack';
+
+      if (projectedPct >= 105) {
+        status = 'exceeding';
+        statusText = isAr ? 'متفوق / تجاوز التارجت' : 'Exceeding Target';
+        statusIcon = '🚀';
+        probability = 95;
+        statusClass = 'status-exceeding';
+      } else if (projectedPct >= 95) {
+        status = 'ontrack';
+        statusText = isAr ? 'على المسار الصحيح' : 'On Track';
+        statusIcon = '✅';
+        probability = 85;
+        statusClass = 'status-ontrack';
+      } else if (projectedPct >= 80) {
+        status = 'needspush';
+        statusText = isAr ? 'يحتاج تكثيف جهود' : 'Needs Push';
+        statusIcon = '⚡';
+        probability = 62;
+        statusClass = 'status-needspush';
+      } else {
+        status = 'atrisk';
+        statusText = isAr ? 'خطر تعثر التارجت' : 'At Risk';
+        statusIcon = '⚠️';
+        probability = 35;
+        statusClass = 'status-atrisk';
+      }
+
+      const remainingDeficit = Math.max(0, monthTarget - monthActual);
+      const requiredDailyRate = remainingDays > 0 ? (remainingDeficit / remainingDays) : 0;
+      const currentDailyAvg = currentDay > 0 ? (monthActual / currentDay) : 0;
+      const runRateGap = requiredDailyRate - currentDailyAvg;
+
+      return {
+        scopeName: isSingleBranch && branch ? branch.name : (isAr ? 'كافة الفروع' : 'All Branches'),
+        monthName: monthStr,
+        currentDay,
+        daysInMonth,
+        remainingDays,
+        target: monthTarget,
+        actual: monthActual,
+        projectedMonthEnd: Math.round(projectedMonthEnd),
+        projectedPct: Number(projectedPct.toFixed(1)),
+        status,
+        statusText,
+        statusIcon,
+        statusClass,
+        probability,
+        currentDailyAvg: Math.round(currentDailyAvg),
+        requiredDailyRate: Math.round(requiredDailyRate),
+        runRateGap: Math.round(runRateGap),
+        remainingDeficit: Math.round(remainingDeficit),
+        elapsedWeightSum: Number(elapsedWeightSum.toFixed(2)),
+        remainingWeightSum: Number(remainingWeightSum.toFixed(2))
+      };
+    },
+
+    // ================================================================
+    //  ⭐ v25.0.0: المساعد التشخيصي الذكي (Instant AI Diagnostics Assistant)
+    // ================================================================
+    smartAIDiagnostics() {
+      const isAr = this.currentLang === 'ar';
+      const branch = this.selectedBranch;
+      const branchName = branch ? branch.name : (isAr ? 'المنشأة بشكل عام' : 'Entire Company');
+      const forecast = this.smartSalesForecast;
+
+      const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : normalizeDateStr(this.selectedDate)) || this.selectedDate;
+      const curData = this.dayData || {};
+      const staffRows = this.staffRowsComputed || [];
+      const presentStaff = staffRows.filter(s => s.present);
+      const absentStaff = staffRows.filter(s => !s.present);
+      const totalStaff = staffRows.length;
+
+      const todaySales = this.branchSales || 0;
+      const todayTarget = Number(curData.baseTarget) || 0;
+      const todayPct = todayTarget > 0 ? (todaySales / todayTarget) * 100 : 0;
+
+      const invoices = Number(curData.invoices) || this.branchInvoices || 0;
+      const pieces = Number(curData.pieces) || this.branchPieces || 0;
+      const atv = invoices > 0 ? Math.round(todaySales / invoices) : 0;
+      const upt = invoices > 0 ? Number((pieces / invoices).toFixed(2)) : 0;
+
+      const observations = [];
+      const recommendations = [];
+
+      // 1. تحليل الحضور والقوى العاملة
+      if (totalStaff > 0 && absentStaff.length > 0) {
+        const absPct = Math.round((absentStaff.length / totalStaff) * 100);
+        observations.push({
+          icon: '👥',
+          type: 'warning',
+          title: isAr ? 'تأثير الغياب والقوة العاملة' : 'Staff Attendance Impact',
+          text: isAr
+            ? `غياب ${absentStaff.length} من أصل ${totalStaff} بائعين (${absPct}% نقص بالقوة البيعية) أثر مباشرة على الطاقة التشغيلية وتغطية المعرض.`
+            : `Absence of ${absentStaff.length} of ${totalStaff} sellers (${absPct}% staff gap) constrained store operational coverage.`
+        });
+        recommendations.push(isAr
+          ? 'إعادة جدولة ورديات البدلاء أو توزيع ساعات الذروة لتعويض نقص البائعين.'
+          : 'Reschedule shift coverage to protect peak traffic hours.');
+      } else if (totalStaff > 0 && presentStaff.length === totalStaff) {
+        observations.push({
+          icon: '✅',
+          type: 'success',
+          title: isAr ? 'انضباط الحضور مكتمل' : 'Full Staff Attendance',
+          text: isAr
+            ? `حضور كامل الفريق بنسبة 100% (${presentStaff.length} بائعين) مما يتيح التغطية الكاملة لخدمة العملاء.`
+            : `100% staff attendance (${presentStaff.length} sellers) provides maximum floor coverage.`
+        });
+      }
+
+      // 2. تحليل ديناميكية السلة (Invoices, ATV, UPT)
+      if (invoices > 0) {
+        if (upt < 1.35) {
+          observations.push({
+            icon: '🛍️',
+            type: 'warning',
+            title: isAr ? 'انخفاض معدل القطع لكل فاتورة (UPT)' : 'Low Basket Size (UPT)',
+            text: isAr
+              ? `معدل القطع يبلغ (${upt}) قطعة لكل فاتورة، ما يشير لغلبة الفواتير أحادية السلعة وضعف عروض البيع التكميلي.`
+              : `UPT is at (${upt}) units/invoice, indicating high single-item purchases and missed cross-selling.`
+          });
+          recommendations.push(isAr
+            ? 'توجيه البائعين لتفعيل استراتيجيات البيع المتقاطع (Cross-selling / Add-on items) لرفع UPT إلى 1.8+.'
+            : 'Train sales staff on cross-selling bundles to boost UPT above 1.8.');
+        } else if (upt >= 1.7) {
+          observations.push({
+            icon: '🌟',
+            type: 'success',
+            title: isAr ? 'عمق سلة شرائية متميز' : 'Strong Basket Depth (UPT)',
+            text: isAr
+              ? `معدل القطع (${upt}) يعكس كفاءة عالية للبائعين في تقديم منتجات إضافية مكملة.`
+              : `UPT of (${upt}) demonstrates strong staff effectiveness in complementary add-on selling.`
+          });
+        }
+
+        if (atv > 0) {
+          observations.push({
+            icon: '💳',
+            type: 'info',
+            title: isAr ? 'متوسط قيمة الفاتورة (ATV)' : 'Average Transaction Value (ATV)',
+            text: isAr
+              ? `متوسط قيمة الفاتورة اليوم هو (${this.formatSAR(atv)}) بمجموع ${invoices} فاتورة مسجلة.`
+              : `Today's ATV stands at (${this.formatSAR(atv)}) across ${invoices} recorded transactions.`
+          });
+        }
+      } else if (todaySales === 0 && todayTarget > 0) {
+        observations.push({
+          icon: '⏳',
+          type: 'warning',
+          title: isAr ? 'لم تسجل فواتير بعد' : 'No Transactions Yet',
+          text: isAr
+            ? `لم يتم رصد أي فواتير مبيعات مسجلة حتى الآن لتاريخ (${normDate}).`
+            : `No sales transactions have been logged yet for (${normDate}).`
+        });
+      }
+
+      // 3. تحليل تفاوت الفريق (Staff Disparity)
+      if (presentStaff.length > 1) {
+        const sorted = [...presentStaff].sort((a, b) => b.sales - a.sales);
+        const top = sorted[0];
+        const topSales = top.sales;
+        const totalStaffSales = sorted.reduce((sum, s) => sum + s.sales, 0);
+
+        if (totalStaffSales > 0 && (topSales / totalStaffSales) >= 0.5) {
+          const sharePct = Math.round((topSales / totalStaffSales) * 100);
+          observations.push({
+            icon: '⚖️',
+            type: 'warning',
+            title: isAr ? 'اعتماد حرج على بائع فردي' : 'High Sales Concentration',
+            text: isAr
+              ? `البائع (${top.name}) حقق ${sharePct}% من إجمالي المبيعات، ما يعكس فجوة أداء مع باقي الفريق.`
+              : `Top seller (${top.name}) generated ${sharePct}% of total sales, revealing a team performance disparity.`
+          });
+          recommendations.push(isAr
+            ? 'مشاركة تقنيات الإقناع والإغلاق المتبعة من المتصدر مع باقي الفريق لرفع مساهمة البائعين الآخرين.'
+            : 'Pair lower-volume sellers with top performer to transfer objection handling and closing techniques.');
+        } else if (totalStaffSales > 0) {
+          observations.push({
+            icon: '🤝',
+            type: 'success',
+            title: isAr ? 'توزيع متوازن ومجهود جماعي' : 'Healthy Team Balance',
+            text: isAr
+              ? `المبيعات موزعة بتوازن صحي بين أعضاء الفريق الحاضرين دون احتكار أو تركز عالي.`
+              : `Sales distribution is well-balanced across all on-duty team members.`
+          });
+        }
+      }
+
+      // 4. توصية تكميلية للرن ريت (Run Rate)
+      if (forecast && forecast.remainingDays > 0 && forecast.requiredDailyRate > 0) {
+        if (forecast.runRateGap > 0) {
+          recommendations.push(isAr
+            ? `المعدل اليومي المطلوب (${this.formatSAR(forecast.requiredDailyRate)}) أعلى من المتوسط الفعلي (${this.formatSAR(forecast.currentDailyAvg)}). يجب استهداف أيام نهاية الأسبوع (الخميس والجمعة والسبت) بعروض تنشيطية.`
+            : `Required daily pace (${this.formatSAR(forecast.requiredDailyRate)}) exceeds current average. Target peak weekend footfall with active promotions.`);
+        } else {
+          recommendations.push(isAr
+            ? `الأداء يسير بوتيرة ممتازة تتجاوز المطلوب. يوصى بالحفاظ على معنويات الفريق لتحقيق تارجت الهيروز.`
+            : `Current pace comfortably exceeds the required target. Keep staff momentum to achieve Heroes Target.`);
+        }
+      }
+
+      let summaryHeadline = '';
+      if (todayPct >= 100) {
+        summaryHeadline = isAr
+          ? `أداء استثنائي اليوم لـ ${branchName}: تم تجاوز التارجت بنسبة ${todayPct.toFixed(1)}%.`
+          : `Exceptional performance today for ${branchName}: Target exceeded at ${todayPct.toFixed(1)}%.`;
+      } else if (todayPct >= 75) {
+        summaryHeadline = isAr
+          ? `أداء جيد ومتقارب لـ ${branchName}: تحقيق ${todayPct.toFixed(1)}% من التارجت اليومي.`
+          : `Solid progress for ${branchName}: Achieved ${todayPct.toFixed(1)}% of daily target.`;
+      } else {
+        summaryHeadline = isAr
+          ? `تحديات بيعية في ${branchName}: تحقيق ${todayPct.toFixed(1)}% من التارجت، يحتاج تحفيزاً فورياً.`
+          : `Performance lag in ${branchName}: Achieved ${todayPct.toFixed(1)}% of target, immediate focus needed.`;
+      }
+
+      return {
+        branchName,
+        headline: summaryHeadline,
+        observations,
+        recommendations,
+        todayPct: Number(todayPct.toFixed(1)),
+        atv,
+        upt
+      };
+    },
+
+    // ================================================================
+    //  ⭐ v25.0.0: مصفوفة أداء البائعين العادلة (Staff Performance Matrix)
+    // ================================================================
+    staffPerformanceMatrix() {
+      const isAr = this.currentLang === 'ar';
+      const staffList = this.branchStaff && this.branchStaff.length > 0 ? this.branchStaff : (this.staff || []);
+      const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : normalizeDateStr(this.selectedDate)) || this.selectedDate;
+
+      const topList = [];
+      const improvedList = [];
+      const coachingList = [];
+
+      staffList.forEach(s => {
+        const dayRec = this.dayData?.staffData?.[s.id] || {};
+        const daySales = Number(dayRec.sales) || 0;
+        const dayTarget = Number(dayRec.target) || 0;
+        const dayPct = dayTarget > 0 ? (daySales / dayTarget) * 100 : (daySales > 0 ? 100 : 0);
+        const isPresent = this.attendance[`${normDate}|${s.id}`] !== false;
+
+        const [y, m] = normDate.split('-');
+        const monthKey = `${y}-${m}`;
+        const daysInMonth = new Date(Number(y), Number(m), 0).getDate();
+        let monthSales = 0;
+        let monthTarget = 0;
+        let activeDays = 0;
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dStr = `${monthKey}-${String(d).padStart(2, '0')}`;
+          const r = this.daily?.[`${dStr}|${s.branchId}`]?.staffData?.[s.id];
+          if (r) {
+            const sVal = Number(r.sales) || 0;
+            const tVal = Number(r.target) || 0;
+            if (sVal > 0) activeDays++;
+            monthSales += sVal;
+            monthTarget += tVal;
+          }
+        }
+        const monthPct = monthTarget > 0 ? (monthSales / monthTarget) * 100 : (monthSales > 0 ? 100 : 0);
+        const effectivePct = monthTarget > 0 ? monthPct : dayPct;
+
+        const member = {
+          id: s.id,
+          name: s.name,
+          code: s.code || '',
+          branchId: s.branchId,
+          jobTitle: s.jobTitle || (isAr ? 'بائع' : 'Seller'),
+          isPresent,
+          daySales,
+          dayTarget,
+          dayPct: Number(dayPct.toFixed(1)),
+          monthSales,
+          monthTarget,
+          monthPct: Number(monthPct.toFixed(1)),
+          effectivePct: Number(effectivePct.toFixed(1)),
+        };
+
+        if (effectivePct >= 90) {
+          member.bucket = 'top';
+          member.badge = isAr ? '🏆 المتصدرون' : '🏆 Top Performers';
+          member.badgeClass = 'matrix-badge-top';
+          topList.push(member);
+        } else if (effectivePct >= 70) {
+          member.bucket = 'improved';
+          member.badge = isAr ? '📈 الأكثر تطوراً' : '📈 Most Improved';
+          member.badgeClass = 'matrix-badge-improved';
+          improvedList.push(member);
+        } else {
+          member.bucket = 'coaching';
+          member.badge = isAr ? '⚠️ بحاجة لتوجيه' : '⚠️ Needs Coaching';
+          member.badgeClass = 'matrix-badge-coaching';
+          coachingList.push(member);
+        }
+      });
+
+      topList.sort((a, b) => b.effectivePct - a.effectivePct || b.monthSales - a.monthSales);
+      improvedList.sort((a, b) => b.effectivePct - a.effectivePct || b.monthSales - a.monthSales);
+      coachingList.sort((a, b) => a.effectivePct - b.effectivePct || a.monthSales - b.monthSales);
+
+      let filteredItems = [];
+      if (this.staffMatrixCategory === 'top') filteredItems = topList;
+      else if (this.staffMatrixCategory === 'improved') filteredItems = improvedList;
+      else if (this.staffMatrixCategory === 'coaching') filteredItems = coachingList;
+      else filteredItems = [...topList, ...improvedList, ...coachingList];
+
+      return {
+        topList,
+        improvedList,
+        coachingList,
+        filteredItems,
+        counts: {
+          all: staffList.length,
+          top: topList.length,
+          improved: improvedList.length,
+          coaching: coachingList.length
+        }
+      };
+    },
+
     monthlyTargetKeyBase() { return this.monthlyBranchId ? `${this.monthlyMonth}|${this.monthlyBranchId}` : null; },
     monthlyBaseTarget: {
       get() {
@@ -2154,6 +2591,124 @@ createApp({
         sales: 0,
         target: 0
       };
+    },
+
+    // ================================================================
+    //  ⭐ v25.0.0: مولد وتوزيع الأهداف الذكية (Smart Target Generator)
+    // ================================================================
+    openSmartTargetModal() {
+      if (!this.can('editTarget')) {
+        this.showToast(this.currentLang === 'ar' ? '⚠️ ليس لديك صلاحية تعديل التارجت' : '⚠️ Permission denied', 'error');
+        return;
+      }
+      const curMonth = this.monthlyMonth || localMonthStr();
+      const [y, m] = curMonth.split('-').map(Number);
+      const prevDate = new Date(y, m - 2, 1);
+      const prevMonthStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+
+      this.smartTargetForm.targetMonth = curMonth;
+      this.smartTargetForm.baselineMonth = prevMonthStr;
+      this.smartTargetForm.growthRate = 10;
+      this.calculateSmartTargetProposals();
+      this.showSmartTargetModal = true;
+    },
+
+    calculateSmartTargetProposals() {
+      const baseMonth = this.smartTargetForm.baselineMonth;
+      const targetMonth = this.smartTargetForm.targetMonth;
+      const growthMultiplier = 1 + (Number(this.smartTargetForm.growthRate) || 0) / 100;
+      const branches = this.allowedBranches || [];
+
+      const [by, bm] = baseMonth.split('-').map(Number);
+      const bDays = new Date(by, bm, 0).getDate();
+
+      let totalBaselineSales = 0;
+      const branchBaseMap = {};
+
+      branches.forEach(b => {
+        let bSales = 0;
+        const staffIds = (this.staff || []).filter(s => s.branchId === b.id).map(s => s.id);
+        for (let d = 1; d <= bDays; d++) {
+          const dStr = `${baseMonth}-${String(d).padStart(2, '0')}`;
+          const rec = this.daily?.[`${dStr}|${b.id}`];
+          if (rec) {
+            if (rec.staffData) {
+              staffIds.forEach(id => {
+                bSales += (Number(rec.staffData[id]?.sales) || 0);
+              });
+            }
+            bSales += (Number(rec.manualExtra) || 0);
+          }
+        }
+        if (bSales <= 0) {
+          bSales = Number(this.monthlyTargets?.[`${baseMonth}|${b.id}`]) || 0;
+        }
+        branchBaseMap[b.id] = bSales;
+        totalBaselineSales += bSales;
+      });
+
+      const proposedTotal = Math.round(totalBaselineSales * growthMultiplier);
+      this.smartTargetForm.totalCompanyTargetInput = proposedTotal > 0 ? proposedTotal : (branches.length * 50000);
+
+      const proposals = branches.map(b => {
+        const histSales = branchBaseMap[b.id] || 0;
+        const weightPct = totalBaselineSales > 0 ? (histSales / totalBaselineSales) * 100 : (100 / (branches.length || 1));
+        const proposedBase = Math.round(histSales * growthMultiplier) || Math.round((Number(this.smartTargetForm.totalCompanyTargetInput) || 0) * (weightPct / 100));
+        const currentTarget = Number(this.monthlyTargets?.[`${targetMonth}|${b.id}`]) || 0;
+
+        return {
+          branchId: b.id,
+          branchName: b.name,
+          historicalSales: Math.round(histSales),
+          weightPct: Number(weightPct.toFixed(1)),
+          proposedTarget: proposedBase,
+          currentTarget
+        };
+      });
+
+      this.smartTargetForm.branchProposals = proposals;
+    },
+
+    onSmartCompanyTargetInput() {
+      const totalInput = Number(this.smartTargetForm.totalCompanyTargetInput) || 0;
+      if (totalInput <= 0 || !this.smartTargetForm.branchProposals.length) return;
+      this.smartTargetForm.branchProposals.forEach(p => {
+        p.proposedTarget = Math.round(totalInput * (p.weightPct / 100));
+      });
+    },
+
+    applySmartTargets() {
+      if (!this.can('editTarget')) {
+        this.showToast(this.currentLang === 'ar' ? '⚠️ ليس لديك صلاحية تعديل التارجت' : '⚠️ Permission denied', 'error');
+        return;
+      }
+      const targetMonth = this.smartTargetForm.targetMonth;
+      let appliedCount = 0;
+
+      this.smartTargetForm.branchProposals.forEach(p => {
+        const val = Math.round(Number(p.proposedTarget) || 0);
+        if (val > 0) {
+          const key = `${targetMonth}|${p.branchId}`;
+          this.monthlyTargets[key] = val;
+          this.monthlyHeroesTargets[key] = Math.round(val * 1.15);
+          appliedCount++;
+        }
+      });
+
+      this.persist();
+      this.logActivity(
+        this.currentLang === 'ar' ? '🎯 تطبيق التوزيع الذكي للأهداف' : '🎯 Smart Target Applied',
+        this.currentLang === 'ar'
+          ? `تم اعتماد وتوزيع الأهداف الذكية لشهر (${targetMonth}) بنمو ${this.smartTargetForm.growthRate}% على ${appliedCount} فرع`
+          : `Smart targets applied for (${targetMonth}) with ${this.smartTargetForm.growthRate}% growth across ${appliedCount} branches`,
+        { category: 'target', level: 'success' }
+      );
+
+      this.showSmartTargetModal = false;
+      this.showToast(
+        this.currentLang === 'ar' ? `✅ تم تطبيق الأهداف الذكية بنجاح على ${appliedCount} فرع` : `✅ Smart targets applied to ${appliedCount} branches`,
+        'success'
+      );
     },
 
     // ================================================================
