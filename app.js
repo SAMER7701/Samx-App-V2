@@ -1,10 +1,10 @@
 // ================================================================
-//  SAMX v24.3.0 — app.js
+//  SAMX v24.5.0 — app.js
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '24.3.0';
+const APP_VERSION = '24.5.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -1228,6 +1228,32 @@ createApp({
           borderColor = 'rgba(245,158,11,.5)';
         }
 
+        // ⭐ v24.5.0: الخريطة الحرارية للفروع (Branch Heatmap Indicators)
+        // 🟢 ممتاز (>= 90%) | 🟡 جيد (70% - 89%) | 🔴 يحتاج تدخل سريع (< 70%)
+        let heatmapStatus, heatmapLabel, heatmapIcon, heatmapColor, heatmapBg, heatmapBorder;
+        if (basePct >= 90) {
+          heatmapStatus = 'excellent';
+          heatmapLabel = this.currentLang === 'ar' ? 'ممتاز' : 'Excellent';
+          heatmapIcon = '🟢';
+          heatmapColor = '#10b981';
+          heatmapBg = 'rgba(16,185,129,.16)';
+          heatmapBorder = 'rgba(16,185,129,.4)';
+        } else if (basePct >= 70) {
+          heatmapStatus = 'good';
+          heatmapLabel = this.currentLang === 'ar' ? 'جيد' : 'Good';
+          heatmapIcon = '🟡';
+          heatmapColor = '#f59e0b';
+          heatmapBg = 'rgba(245,158,11,.16)';
+          heatmapBorder = 'rgba(245,158,11,.4)';
+        } else {
+          heatmapStatus = 'critical';
+          heatmapLabel = this.currentLang === 'ar' ? 'يحتاج تدخل سريع' : 'Needs Action';
+          heatmapIcon = '🔴';
+          heatmapColor = '#ef4444';
+          heatmapBg = 'rgba(239,68,68,.16)';
+          heatmapBorder = 'rgba(239,68,68,.4)';
+        }
+
         return {
           id: b.id,
           name: b.name,
@@ -1245,6 +1271,12 @@ createApp({
           statusColor,
           statusBg,
           borderColor,
+          heatmapStatus,
+          heatmapLabel,
+          heatmapIcon,
+          heatmapColor,
+          heatmapBg,
+          heatmapBorder,
         };
       });
     },
@@ -1254,6 +1286,234 @@ createApp({
     branchesWithTarget() { return this.adminBranchStatus.filter(b => b.baseTarget > 0).length; },
     branchesAchieved() { return this.adminBranchStatus.filter(b => b.baseTarget > 0 && b.basePct >= 100).length; },
     branchesLagging() { return this.branchesLate; },
+
+    // ================================================================
+    //  ⭐ v24.5.0: لوحة التحكم التنفيذية (Executive Dashboard Summary)
+    // ================================================================
+    executiveKpis() {
+      const branches = this.adminBranchStatus || [];
+      const totalSales = branches.reduce((sum, b) => sum + (Number(b.sales) || 0), 0);
+      const totalBaseTarget = branches.reduce((sum, b) => sum + (Number(b.baseTarget) || 0), 0);
+      const totalHeroesTarget = branches.reduce((sum, b) => sum + (Number(b.heroesTarget) || 0), 0);
+      const overallPct = totalBaseTarget > 0 ? (totalSales / totalBaseTarget) * 100 : 0;
+      const overallHeroesPct = totalHeroesTarget > 0 ? (totalSales / totalHeroesTarget) * 100 : 0;
+
+      // ترتيب الفروع النشطة
+      const activeBranches = branches.filter(b => (b.baseTarget > 0 || b.sales > 0 || b.staffCount > 0));
+
+      let topBranch = null;
+      let lowestBranch = null;
+
+      if (activeBranches.length > 0) {
+        const sorted = [...activeBranches].sort((a, b) => {
+          if (b.basePct !== a.basePct) return b.basePct - a.basePct;
+          return b.sales - a.sales;
+        });
+        topBranch = sorted[0];
+        if (sorted.length > 1) {
+          lowestBranch = sorted[sorted.length - 1];
+        }
+      }
+
+      const excellentCount = branches.filter(b => (b.basePct || 0) >= 90).length;
+      const goodCount = branches.filter(b => (b.basePct || 0) >= 70 && (b.basePct || 0) < 90).length;
+      const criticalCount = branches.filter(b => (b.basePct || 0) < 70).length;
+
+      return {
+        totalSales,
+        totalBaseTarget,
+        totalHeroesTarget,
+        overallPct,
+        overallHeroesPct,
+        topBranch,
+        lowestBranch,
+        branchesCount: branches.length,
+        recordedBranchesCount: branches.filter(b => b.isRecorded).length,
+        excellentCount,
+        goodCount,
+        criticalCount,
+      };
+    },
+
+    // ================================================================
+    //  ⭐ v24.5.0: خريطة حرارية محسوبة لجميع الفروع (Branch Heatmap Map)
+    // ================================================================
+    branchHeatmapMap() {
+      const map = {};
+      const isAr = this.currentLang === 'ar';
+      (this.adminBranchStatus || []).forEach(b => {
+        const pct = Number(b.basePct) || 0;
+        const sales = Number(b.sales) || 0;
+        const target = Number(b.baseTarget) || 0;
+        if (pct >= 90) {
+          map[b.id] = {
+            status: 'excellent',
+            badgeText: isAr ? 'ممتاز' : 'Excellent',
+            icon: '🟢',
+            dotColor: '#10b981',
+            textColor: '#34d399',
+            bg: 'rgba(16,185,129,0.16)',
+            border: 'rgba(16,185,129,0.4)',
+            pct,
+            sales,
+            target
+          };
+        } else if (pct >= 70) {
+          map[b.id] = {
+            status: 'good',
+            badgeText: isAr ? 'جيد' : 'Good',
+            icon: '🟡',
+            dotColor: '#f59e0b',
+            textColor: '#fbbf24',
+            bg: 'rgba(245,158,11,0.16)',
+            border: 'rgba(245,158,11,0.4)',
+            pct,
+            sales,
+            target
+          };
+        } else {
+          map[b.id] = {
+            status: 'critical',
+            badgeText: isAr ? 'يحتاج تدخل سريع' : 'Needs Action',
+            icon: '🔴',
+            dotColor: '#ef4444',
+            textColor: '#f87171',
+            bg: 'rgba(239,68,68,0.16)',
+            border: 'rgba(239,68,68,0.4)',
+            pct,
+            sales,
+            target
+          };
+        }
+      });
+      return map;
+    },
+
+    // ================================================================
+    //  ⭐ v24.5.0: مركز الإشعارات والتنبيهات الذكية (Notification Center)
+    // ================================================================
+    smartExecutiveAlerts() {
+      const alerts = [];
+      const isAr = this.currentLang === 'ar';
+      const branches = this.allowedBranches || [];
+      const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : normalizeDateStr(this.selectedDate)) || this.selectedDate;
+
+      const dObj = new Date(normDate + 'T12:00:00');
+      dObj.setDate(dObj.getDate() - 1);
+      const prevDate = localDateStr(dObj);
+
+      branches.forEach(b => {
+        let curData = null;
+        if (typeof this.getDayRecord === 'function') {
+          curData = this.getDayRecord(normDate, b.id, false);
+        } else if (this.daily) {
+          curData = this.daily[`${normDate}|${b.id}`];
+        }
+        if (!curData) curData = { baseTarget: 0, heroesTarget: 0, staffData: {}, manualExtra: 0 };
+
+        const staffIds = (this.staff || []).filter(s => s.branchId === b.id).map(s => s.id);
+        let curStaffSales = 0;
+        if (curData.staffData && typeof curData.staffData === 'object') {
+          Object.values(curData.staffData).forEach(item => {
+            curStaffSales += (Number(item?.sales) || 0);
+          });
+        }
+        let curSales = curStaffSales + (Number(curData.manualExtra) || 0);
+        if (this.selectedBranchId === b.id && typeof this.branchSales === 'number' && this.branchSales > 0) {
+          curSales = Math.max(curSales, this.branchSales);
+        }
+        const curTarget = Number(curData.baseTarget) || 0;
+        const curPct = curTarget > 0 ? (curSales / curTarget) * 100 : 0;
+
+        let prevData = null;
+        if (typeof this.getDayRecord === 'function') {
+          prevData = this.getDayRecord(prevDate, b.id, false);
+        } else if (this.daily) {
+          prevData = this.daily[`${prevDate}|${b.id}`];
+        }
+        if (!prevData) prevData = { staffData: {}, manualExtra: 0 };
+        let prevStaffSales = 0;
+        if (prevData.staffData && typeof prevData.staffData === 'object') {
+          Object.values(prevData.staffData).forEach(item => {
+            prevStaffSales += (Number(item?.sales) || 0);
+          });
+        }
+        const prevSales = prevStaffSales + (Number(prevData.manualExtra) || 0);
+
+        // 1. انخفاض مبيعات فرع معين بشكل ملحوظ مقارنة باليوم السابق
+        if (prevSales > 500 && curSales < (prevSales * 0.7)) {
+          const dropPct = Math.round(((prevSales - curSales) / prevSales) * 100);
+          alerts.push({
+            id: `drop_${b.id}_${normDate}`,
+            branchId: b.id,
+            branchName: b.name,
+            type: 'warning',
+            category: 'sales_drop',
+            icon: '📉',
+            title: isAr ? `انخفاض مبيعات ${b.name}` : `Sales Drop in ${b.name}`,
+            text: isAr
+              ? `انخفضت المبيعات بنسبة ${dropPct}% مقارنة بأمس (${this.formatSAR(curSales)} مقابل ${this.formatSAR(prevSales)}).`
+              : `Sales dropped by ${dropPct}% vs yesterday (${this.formatSAR(curSales)} vs ${this.formatSAR(prevSales)}).`,
+            actionLabel: isAr ? 'معاينة الفرع' : 'View Branch',
+          });
+        }
+
+        // 2. فروع لم تقم بتسجيل الحضور
+        const presentCount = staffIds.filter(id => this.attendance[`${normDate}|${id}`] !== false).length;
+        if (staffIds.length > 0 && presentCount === 0 && (normDate === this.todayStr || normDate < this.todayStr)) {
+          alerts.push({
+            id: `att_${b.id}_${normDate}`,
+            branchId: b.id,
+            branchName: b.name,
+            type: 'danger',
+            category: 'missing_attendance',
+            icon: '👥',
+            title: isAr ? `غياب تسجيل الحضور في ${b.name}` : `No Attendance Logged in ${b.name}`,
+            text: isAr
+              ? `يوجد ${staffIds.length} موظف مسجل ولم يتم رصد حضور أي موظف حتى الآن.`
+              : `${staffIds.length} employees registered but no attendance logged.`,
+            actionLabel: isAr ? 'تسجيل الحضور' : 'Log Attendance',
+          });
+        }
+
+        // 3. عدم إغلاق اليومية للأيام السابقة
+        const isClosed = curData.closed === true;
+        if (normDate < this.todayStr && !isClosed && (curSales > 0 || curTarget > 0)) {
+          alerts.push({
+            id: `close_${b.id}_${normDate}`,
+            branchId: b.id,
+            branchName: b.name,
+            type: 'info',
+            category: 'unclosed_day',
+            icon: '🔒',
+            title: isAr ? `اليومية لم تُغلق في ${b.name}` : `Day Register Not Closed in ${b.name}`,
+            text: isAr
+              ? `يومية تاريخ (${normDate}) لفرع ${b.name} لم يتم إغلاقها واعتمادها حتى الآن.`
+              : `Daily register (${normDate}) is still unclosed and pending seal.`,
+            actionLabel: isAr ? 'إغلاق اليومية' : 'Close Day',
+          });
+        }
+
+        // 4. تعثر تحقيق التارجت المخطط
+        if (curTarget > 0 && curPct < 50 && (curSales > 0 || (new Date().getHours() >= 16 && normDate === this.todayStr) || normDate < this.todayStr)) {
+          alerts.push({
+            id: `lag_${b.id}_${normDate}`,
+            branchId: b.id,
+            branchName: b.name,
+            type: 'critical',
+            category: 'target_lag',
+            icon: '🎯',
+            title: isAr ? `تعثر تارجت فرع ${b.name}` : `Target Behind in ${b.name}`,
+            text: isAr
+              ? `نسبة الإنجاز ${curPct.toFixed(1)}% فقط (${this.formatSAR(curSales)} من ${this.formatSAR(curTarget)}).`
+              : `Achievement is only ${curPct.toFixed(1)}% (${this.formatSAR(curSales)} of ${this.formatSAR(curTarget)}).`,
+            actionLabel: isAr ? 'متابعة الفرع' : 'Inspect',
+          });
+        }
+      });
+
+      return alerts;
+    },
 
     smartAlerts() {
       const alerts = [];
@@ -1874,6 +2134,28 @@ createApp({
   },
 
   methods: {
+    // ================================================================
+    //  ⭐ v24.5.0: الخريطة الحرارية للفرع (Branch Heatmap Helper)
+    // ================================================================
+    getBranchHeatmap(branchId) {
+      if (this.branchHeatmapMap && this.branchHeatmapMap[branchId]) {
+        return this.branchHeatmapMap[branchId];
+      }
+      const isAr = this.currentLang === 'ar';
+      return {
+        status: 'critical',
+        badgeText: isAr ? 'يحتاج تدخل سريع' : 'Needs Action',
+        icon: '🔴',
+        dotColor: '#ef4444',
+        textColor: '#f87171',
+        bg: 'rgba(239,68,68,0.16)',
+        border: 'rgba(239,68,68,0.4)',
+        pct: 0,
+        sales: 0,
+        target: 0
+      };
+    },
+
     // ================================================================
     //  ⭐ v23.3: i18n — دوال الترجمة
     // ================================================================
@@ -3104,6 +3386,29 @@ this.settings = {
           type: 'warning',
         });
       }
+
+      // ⭐ v24.5.0: تغذية مركز الإشعارات تلقائياً بتنبيهات الفروع الحرجة
+      if (Array.isArray(this.smartExecutiveAlerts)) {
+        this.smartExecutiveAlerts.forEach(alt => {
+          if (alt.type === 'danger' || alt.type === 'critical' || alt.type === 'warning') {
+            this.addNotification({
+              title: alt.title,
+              body: alt.text,
+              type: (alt.type === 'danger' || alt.type === 'critical') ? 'error' : 'warning',
+            });
+          }
+        });
+      }
+    },
+    selectBranchAndFocus(branchId) {
+      if (!branchId) return;
+      this.selectedBranchId = branchId;
+      this.vibrate(10);
+      this.showToast(this.currentLang === 'ar' ? `تم الانتقال إلى فرع: ${this.branchName(branchId)}` : `Selected ${this.branchName(branchId)}`, 'info');
+      nextTick(() => {
+        const el = document.querySelector('.card-elevated') || document.querySelector('.target-input-base');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
     },
     addNotification(notif) {
       const exists = this.notifications.some(n => n.title === notif.title && (Date.now() - n.timestamp) < 60 * 60 * 1000);

@@ -1,15 +1,15 @@
 // ================================================================
-//  SAMX — Service Worker v24.3.0
+//  SAMX — Service Worker v24.5.0
 //  المالك: Smeer.S.A | المطور: SAMX Team
 //  © 2026 SAMX - جميع الحقوق محفوظة
 //  يعمل: Network-First للتنقل مع Fallback للكاش، Offline-First للأصول
 // ================================================================
 
-const CACHE_VERSION = 'samx-v24.3.0';
+const CACHE_VERSION = 'samx-v24.5.0';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
-// ⭐ v24.3.0: الأصول الأساسية فقط تُخزَّن مسبقاً عند التثبيت
+// ⭐ v24.5.0: الأصول الأساسية فقط تُخزَّن مسبقاً عند التثبيت
 // المكتبات الثقيلة (PDF, Excel, Canvas) تُحمَّل Lazy ديناميكياً وتُخزَّن في الكاش عند الطلب
 const STATIC_ASSETS = [
   '/',

@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v24.3: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=24.3.0" rel="stylesheet">
+<!-- ⭐ v24.5: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=24.5.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -490,7 +490,160 @@
           </div>
         </div>
 
-        <div v-if="smartAlerts.length > 0" style="display:flex;flex-direction:column;gap:8px;">
+        <!-- ============================================================
+             ⭐ v24.5.0: لوحة التحكم التنفيذية الجديدة (Executive Dashboard Summary)
+             ============================================================ -->
+        <div class="executive-dashboard-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.08);">
+            <div>
+              <h3 style="margin:0 0 2px;font-size:14px;font-weight:900;color:#f5cf7a;display:flex;align-items:center;gap:6px;">
+                <span>👑</span>
+                <span>{{ currentLang === 'ar' ? 'لوحة التحكم التنفيذية للمنشأة' : 'Executive Company Overview' }}</span>
+              </h3>
+              <p style="margin:0;font-size:11px;color:#94a3b8;">
+                {{ currentLang === 'ar' ? 'متابعة فورية وشاملة لأداء كافة الفروع' : 'Real-time multi-branch executive performance' }} • {{ selectedDate }}
+              </p>
+            </div>
+            <!-- Heatmap Distribution Counters -->
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <span class="heatmap-badge heatmap-badge-excellent" :title="currentLang === 'ar' ? 'فروع بنسبة إنجاز 90% فأكثر' : 'Branches >= 90%'">
+                🟢 {{ executiveKpis.excellentCount }} {{ currentLang === 'ar' ? 'ممتاز' : 'Excellent' }}
+              </span>
+              <span class="heatmap-badge heatmap-badge-good" :title="currentLang === 'ar' ? 'فروع بنسبة إنجاز بين 70% و 89%' : 'Branches 70% - 89%'">
+                🟡 {{ executiveKpis.goodCount }} {{ currentLang === 'ar' ? 'جيد' : 'Good' }}
+              </span>
+              <span class="heatmap-badge heatmap-badge-critical" :title="currentLang === 'ar' ? 'فروع بنسبة إنجاز أقل من 70%' : 'Branches < 70%'">
+                🔴 {{ executiveKpis.criticalCount }} {{ currentLang === 'ar' ? 'يحتاج تدخل' : 'Needs Action' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- KPI Cards Grid -->
+          <div class="executive-kpi-grid">
+            <!-- 1. إجمالي المبيعات العامة مقارنة بالتارجت المستهدف -->
+            <div class="executive-kpi-box">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:11px;color:#94a3b8;font-weight:700;">💰 {{ currentLang === 'ar' ? 'إجمالي مبيعات المنشأة' : 'Total Company Sales' }}</span>
+                <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(212,168,75,0.15);color:#f5cf7a;font-weight:800;">
+                  {{ executiveKpis.recordedBranchesCount }}/{{ executiveKpis.branchesCount }} {{ currentLang === 'ar' ? 'فروع' : 'Branches' }}
+                </span>
+              </div>
+              <p style="font-size:24px;font-weight:900;color:#fff;margin:2px 0 6px;font-family:system-ui,sans-serif;letter-spacing:-0.5px;">
+                {{ formatSAR(executiveKpis.totalSales) }}
+              </p>
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:#cbd5e1;padding-top:6px;border-top:1px dashed rgba(255,255,255,0.08);">
+                <span>🎯 {{ currentLang === 'ar' ? 'التارجت المطلوب:' : 'Target:' }}</span>
+                <strong style="color:#e6c074;">{{ formatSAR(executiveKpis.totalBaseTarget) }}</strong>
+              </div>
+            </div>
+
+            <!-- 2. نسبة الإنجاز الكلية للمنشأة (مع شريط تقدم ديناميكي) -->
+            <div class="executive-kpi-box">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-size:11px;color:#94a3b8;font-weight:700;">📈 {{ currentLang === 'ar' ? 'نسبة الإنجاز الكلية' : 'Overall Achievement' }}</span>
+                <span class="heatmap-badge" :class="executiveKpis.overallPct >= 90 ? 'heatmap-badge-excellent' : (executiveKpis.overallPct >= 70 ? 'heatmap-badge-good' : 'heatmap-badge-critical')">
+                  {{ executiveKpis.overallPct >= 90 ? '🟢 ممتاز' : (executiveKpis.overallPct >= 70 ? '🟡 جيد' : '🔴 يحتاج تسريع') }}
+                </span>
+              </div>
+              <p style="font-size:26px;font-weight:900;margin:2px 0;font-family:system-ui,sans-serif;" :style="{color: executiveKpis.overallPct >= 90 ? '#34d399' : (executiveKpis.overallPct >= 70 ? '#fbbf24' : '#fb7185')}">
+                {{ executiveKpis.overallPct.toFixed(1) }}%
+              </p>
+              <!-- Dynamic Progress Bar -->
+              <div class="executive-progress-container">
+                <div class="executive-progress-bar" :style="{
+                  width: Math.min(executiveKpis.overallPct, 100) + '%',
+                  background: executiveKpis.overallPct >= 90 ? '#10b981' : (executiveKpis.overallPct >= 70 ? '#f59e0b' : '#ef4444')
+                }"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-top:4px;">
+                <span>{{ currentLang === 'ar' ? 'تارجت الأبطال:' : 'Heroes Target:' }} {{ formatSAR(executiveKpis.totalHeroesTarget) }}</span>
+                <strong style="color:#f5cf7a;">{{ executiveKpis.overallHeroesPct.toFixed(1) }}%</strong>
+              </div>
+            </div>
+
+            <!-- 3. مؤشر أداء الفروع (الأعلى مبيعاً وإنجازاً VS الأقل أداءً) -->
+            <div class="executive-kpi-box">
+              <p style="font-size:11px;color:#94a3b8;font-weight:700;margin:0 0 6px;">⚡ {{ currentLang === 'ar' ? 'مؤشر أداء الفروع' : 'Branch Performance' }}</p>
+              
+              <!-- الفرع الأعلى -->
+              <div v-if="executiveKpis.topBranch" @click="selectBranchAndFocus(executiveKpis.topBranch.id)" style="cursor:pointer;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:8px;padding:6px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:background 0.15s;" title="انقر لمعاينة الفرع">
+                <div style="display:flex;align-items:center;gap:6px;min-width:0;">
+                  <span style="font-size:14px;">👑</span>
+                  <span style="font-size:12px;font-weight:800;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ executiveKpis.topBranch.name }}</span>
+                </div>
+                <div style="text-align:left;flex-shrink:0;">
+                  <span style="font-size:12px;font-weight:900;color:#34d399;">{{ executiveKpis.topBranch.basePct.toFixed(0) }}%</span>
+                  <span style="display:block;font-size:9px;color:#94a3b8;">{{ formatSAR(executiveKpis.topBranch.sales) }}</span>
+                </div>
+              </div>
+
+              <!-- الفرع الأقل أداءً -->
+              <div v-if="executiveKpis.lowestBranch" @click="selectBranchAndFocus(executiveKpis.lowestBranch.id)" style="cursor:pointer;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;transition:background 0.15s;" title="انقر لمتابعة الفرع">
+                <div style="display:flex;align-items:center;gap:6px;min-width:0;">
+                  <span style="font-size:14px;">⚠️</span>
+                  <span style="font-size:12px;font-weight:800;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ executiveKpis.lowestBranch.name }}</span>
+                </div>
+                <div style="text-align:left;flex-shrink:0;">
+                  <span style="font-size:12px;font-weight:900;color:#fb7185;">{{ executiveKpis.lowestBranch.basePct.toFixed(0) }}%</span>
+                  <span style="display:block;font-size:9px;color:#94a3b8;">{{ formatSAR(executiveKpis.lowestBranch.sales) }}</span>
+                </div>
+              </div>
+
+              <div v-if="!executiveKpis.topBranch" style="color:#64748b;font-size:11px;text-align:center;padding:12px 0;">
+                {{ currentLang === 'ar' ? 'لا توجد بيانات فروع مسجلة لهذا اليوم' : 'No branch data recorded yet' }}
+              </div>
+            </div>
+          </div>
+
+          <!-- شريط الخريطة الحرارية الأفقي للفروع (Branch Heatmap Strip) -->
+          <div style="margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:11px;color:#e6c074;font-weight:bold;">🗺️ {{ currentLang === 'ar' ? 'الخريطة الحرارية للفروع (اختر فرعاً للمعاينة السريعة):' : 'Branch Heatmap Quick Selector:' }}</span>
+              <span style="font-size:10px;color:#94a3b8;">{{ allowedBranches.length }} {{ currentLang === 'ar' ? 'فرع' : 'Branches' }}</span>
+            </div>
+            <div class="branch-heatmap-strip">
+              <div v-for="b in allowedBranches" :key="b.id"
+                   @click="selectBranchAndFocus(b.id)"
+                   class="branch-heatmap-chip"
+                   :class="{ active: selectedBranchId === b.id }"
+                   :style="{ borderColor: selectedBranchId === b.id ? '#d4a84b' : getBranchHeatmap(b.id).border }">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">
+                  <span style="font-size:12px;font-weight:800;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ b.name }}</span>
+                  <span style="font-size:11px;">{{ getBranchHeatmap(b.id).icon }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:4px;font-size:11px;">
+                  <span :style="{color: getBranchHeatmap(b.id).textColor, fontWeight: 900}">{{ getBranchHeatmap(b.id).pct.toFixed(0) }}%</span>
+                  <span style="color:#94a3b8;font-size:10px;">{{ formatSAR(getBranchHeatmap(b.id).sales) }}</span>
+                </div>
+                <span class="heatmap-badge" :class="'heatmap-badge-' + getBranchHeatmap(b.id).status" style="font-size:9px;padding:1px 4px;margin-top:2px;align-self:flex-start;">
+                  {{ getBranchHeatmap(b.id).badgeText }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================
+             ⭐ v24.5.0: مركز الإشعارات والتنبيهات الذكية (Smart Alert Center)
+             ============================================================ -->
+        <div v-if="smartExecutiveAlerts.length > 0" class="executive-alerts-container">
+          <div v-for="alt in smartExecutiveAlerts" :key="alt.id"
+               class="executive-alert-card"
+               :class="'alert-' + alt.type">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+              <span style="font-size:18px;">{{ alt.icon }}</span>
+              <div style="min-width:0;">
+                <p style="margin:0 0 2px;font-weight:800;font-size:12px;">{{ alt.title }}</p>
+                <p style="margin:0;font-size:11px;opacity:0.9;line-height:1.3;">{{ alt.text }}</p>
+              </div>
+            </div>
+            <button @click="selectBranchAndFocus(alt.branchId)" class="executive-alert-btn">
+              {{ alt.actionLabel }} →
+            </button>
+          </div>
+        </div>
+
+        <div v-if="smartAlerts.length > 0" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
           <div v-for="(a, i) in smartAlerts" :key="i" :style="{background:a.bg,border:'1px solid '+a.border,borderRadius:'12px',padding:'12px 16px',fontSize:'13px',color:a.color,display:'flex',alignItems:'center',gap:'10px'}">
             <span style="font-size:18px;">{{ a.icon }}</span>
             <span style="flex:1;">{{ a.text }}</span>
@@ -498,7 +651,7 @@
         </div>
 
         <div class="card" style="border-radius:14px;padding:12px 14px;">
-          <!-- شبكة مدمجة لحقلي التاريخ والفرع جنباً إلى جنب -->
+          <!-- شبكة مدمجة لحقلي التاريخ والفرع جنباً إلى جنب مع الخريطة الحرارية -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end;margin-bottom:10px;">
             <div>
               <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:700;">{{ t('dashboard.filter.date') }}</label>
@@ -508,7 +661,9 @@
               <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:700;">{{ t('dashboard.filter.branch') }}</label>
               <select v-model="selectedBranchId" class="input" style="width:100%;height:40px;min-height:40px;padding:6px 10px;font-size:14px;border-radius:8px;">
                 <option value="">{{ t('common.chooseBranch') }}</option>
-                <option v-for="b in allowedBranches" :key="b.id" :value="b.id">{{ b.name }} ({{ b.code }})</option>
+                <option v-for="b in allowedBranches" :key="b.id" :value="b.id">
+                  {{ getBranchHeatmap(b.id).icon }} {{ b.name }} ({{ b.code }}) — {{ getBranchHeatmap(b.id).pct.toFixed(0) }}% [{{ getBranchHeatmap(b.id).badgeText }}]
+                </option>
               </select>
             </div>
           </div>
@@ -542,9 +697,19 @@
           </div>
         </div>
 
-        <div v-if="!selectedBranch" class="card" style="border-radius:16px;padding:40px;text-align:center;color:#94a3b8;">
-          <div style="font-size:40px;margin-bottom:8px;">📊</div>
-          {{ t('dashboard.empty.selectBranch') }}
+        <div v-if="!selectedBranch" class="card" style="border-radius:16px;padding:36px 20px;text-align:center;color:#94a3b8;">
+          <div style="font-size:42px;margin-bottom:10px;">📊</div>
+          <h3 style="font-size:16px;font-weight:800;color:#fff;margin:0 0 6px;">{{ t('dashboard.empty.selectBranch') }}</h3>
+          <p style="font-size:12px;color:#94a3b8;margin:0 0 16px;">{{ currentLang === 'ar' ? 'اختر فرعاً من القائمة أعلاه أو اضغط على أي فرع في شريط الخريطة الحرارية' : 'Select a branch from the list or tap any branch chip on the heatmap' }}</p>
+          <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;max-width:600px;margin:0 auto;">
+            <button v-for="b in allowedBranches" :key="b.id"
+                    @click="selectBranchAndFocus(b.id)"
+                    class="btn-ghost"
+                    style="padding:6px 12px;font-size:12px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;border-color:rgba(212,168,75,0.3);color:#e6c074;">
+              <span>{{ getBranchHeatmap(b.id).icon }}</span>
+              <span>{{ b.name }}</span>
+            </button>
+          </div>
         </div>
 
         <template v-else>
@@ -1281,7 +1446,12 @@
                   <p style="font-weight:700;color:#fff;margin:0;font-size:14px;">{{ b.name }}</p>
                   <p style="font-size:11px;color:#94a3b8;margin:2px 0 0;">{{ b.code }} • {{ t('admin.branch.staffCount', '', { count: b.staffCount }) }} • {{ t('admin.branch.presentCount', '', { count: b.presentCount }) }}</p>
                 </div>
-                <span :style="{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',fontWeight:'bold', background:b.statusBg, color:b.statusColor, flexShrink:0}">{{ b.statusLabel }}</span>
+                <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;">
+                  <span class="heatmap-badge" :class="'heatmap-badge-' + b.heatmapStatus" style="font-size:10px;padding:2px 6px;">
+                    {{ b.heatmapIcon }} {{ b.heatmapLabel }}
+                  </span>
+                  <span :style="{fontSize:'10px',padding:'2px 6px',borderRadius:'6px',fontWeight:'bold', background:b.statusBg, color:b.statusColor}">{{ b.statusLabel }}</span>
+                </div>
               </div>
               <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                 <div><p style="font-size:10px;color:#60a5fa;margin:0;">{{ t('admin.branch.base') }}</p><p style="font-size:15px;font-weight:900;margin:2px 0 0;" :style="{color: b.basePct>=100 ? '#34d399' : b.sales>0 ? '#fbbf24' : '#64748b'}">{{ b.basePct.toFixed(0) }}%</p></div>
@@ -4040,7 +4210,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=24.3.0"></script>
+<script src="app.js?v=24.5.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {
