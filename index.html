@@ -270,6 +270,7 @@
                   :title="currentLang === 'ar' ? 'اضغط للمس البصمة' : 'Tap to scan biometric'"
                   aria-label="Biometric Sign-in">
             <span class="floating-biometric-pulse-ring" v-if="isBiometricActive"></span>
+            <span class="floating-biometric-pulse-ring ring-delay" v-if="isBiometricActive"></span>
             <!-- Professional SVG Fingerprint Icon -->
             <svg class="biometric-glass-svg" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 3" />
