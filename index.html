@@ -195,55 +195,6 @@
 
   <!-- ============ LOGIN SCREEN ============ -->
   <div v-if="!currentUser" class="auth-bg" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;position:relative;">
-    <!-- ============ ⭐ v25.3.0: Biometric Floating Prompt Overlay (Dismissible) ============ -->
-    <transition name="fade">
-      <div v-if="showBiometricOverlay && biometricBinding && biometricsSupported"
-           class="biometric-overlay-backdrop"
-           @click.self="dismissBiometricOverlay">
-        <div class="biometric-prompt-card" role="dialog" aria-modal="true">
-          <!-- Close Button / Dismiss -->
-          <button type="button" @click="dismissBiometricOverlay" class="biometric-close-btn" :title="currentLang === 'ar' ? 'إغلاق / الدخول بكلمة المرور' : 'Dismiss / Enter password'">
-            ✕
-          </button>
-
-          <!-- Pulsing Biometric Icon -->
-          <div class="biometric-icon-wrapper" @click="triggerBiometricAuth()">
-            <div class="biometric-pulse-ring"></div>
-            <div class="biometric-pulse-ring delay"></div>
-            <div class="biometric-icon-inner">
-              <span style="font-size:36px;line-height:1;display:inline-block;filter:drop-shadow(0 2px 8px rgba(16,185,129,0.5));">👆</span>
-            </div>
-          </div>
-
-          <!-- User Title & Name -->
-          <h3 style="font-size:18px;font-weight:900;color:#fff;margin:0 0 6px;text-align:center;">
-            {{ currentLang === 'ar' ? 'الدخول السريع بالبصمة' : 'Biometric Quick Sign-in' }}
-          </h3>
-          <div class="biometric-user-badge">
-            <span>👤</span>
-            <span>{{ biometricBinding.userName || biometricBinding.username }}</span>
-          </div>
-
-          <!-- Status / Instruction -->
-          <p class="biometric-status-msg">
-            {{ biometricStatusText || (currentLang === 'ar' ? 'يرجى لمس حساس البصمة أو مطابقة الوجه للفتح الفوري...' : 'Touch fingerprint sensor or verify face...') }}
-          </p>
-
-          <!-- Actions -->
-          <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
-            <button type="button" @click="triggerBiometricAuth()" :disabled="loggingIn" class="btn-biometric-action">
-              <span>👆</span>
-              <span>{{ loggingIn ? (currentLang === 'ar' ? 'جارٍ التحقق...' : 'Verifying...') : (currentLang === 'ar' ? 'لمس الحساس الآن / إعادة المحاولة' : 'Touch Sensor / Retry') }}</span>
-            </button>
-            <button type="button" @click="dismissBiometricOverlay" class="btn-biometric-dismiss">
-              <span>🔑</span>
-              <span>{{ currentLang === 'ar' ? 'الدخول بكلمة المرور / ✕' : 'Enter Password / ✕' }}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </transition>
-
     <div style="width:100%;max-width:440px;">
       <div class="logo-animate" style="text-align:center;margin-bottom:24px;padding-top:8px;">
         <div class="logo-badge" style="width:88px;height:88px;border-radius:22px;padding:12px;margin:0 auto 16px;">
@@ -289,15 +240,11 @@
         </label>
         <p v-if="loginError" class="shake" style="color:#fda4af;font-size:12px;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:10px;padding:10px 14px;margin:0 0 16px;">⚠️ {{ loginError }}</p>
 
-        <!-- Login Buttons Row: Main Gold Button + Small Biometric Call Button if bound -->
-        <div style="display:flex;gap:10px;align-items:center;">
-          <button @click="doLogin" :disabled="loggingIn" class="btn-gold" style="flex:1;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;min-height:50px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(var(--theme-primary-rgb, 212,168,75), .3);">
-            {{ loggingIn ? t('auth.loggingBtn') : t('auth.loginBtn') }}
-          </button>
-          <button v-if="biometricBinding && biometricsSupported" type="button" @click="openBiometricOverlay(true)" class="btn-biometric-icon-btn" :title="currentLang === 'ar' ? `الدخول بالبصمة (${biometricBinding.userName || biometricBinding.username})` : `Biometric Sign-in (${biometricBinding.userName || biometricBinding.username})`" style="width:50px;height:50px;flex-shrink:0;border-radius:12px;border:1.5px solid rgba(16,185,129,0.5);background:rgba(16,185,129,0.14);color:#34d399;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;">
-            <span>👆</span>
-          </button>
-        </div>
+        <!-- Login Button -->
+        <button @click="doLogin" :disabled="loggingIn" class="btn-gold" style="width:100%;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;min-height:50px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(var(--theme-primary-rgb, 212,168,75), .3);">
+          {{ loggingIn ? t('auth.loggingBtn') : t('auth.loginBtn') }}
+        </button>
+
         <!-- ⭐ v23.23: زر يدوي لتحديث وسحب البيانات من السحابة قبل الدخول -->
         <div style="margin-top:14px;text-align:center;">
           <button type="button" @click="syncFromCloud(true)" :disabled="cloudSyncStatus==='syncing'" class="btn-ghost" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:7px 15px;border-radius:20px;border:1px solid rgba(212,168,75,0.35);color:#e6c074;background:rgba(212,168,75,0.08);cursor:pointer;transition:all 0.2s;">
@@ -311,6 +258,41 @@
           </transition>
         </div>
       </div>
+
+      <!-- ⭐ v25.3.0: زر عائم صغير وأنيق بأسلوب الزجاج للبصمة السريعة (Floating Glass Biometric Dock) -->
+      <transition name="fade">
+        <div v-if="biometricBinding && biometricsSupported"
+             class="floating-biometric-dock"
+             @click="triggerBiometricAuth()">
+          <button type="button"
+                  class="floating-biometric-btn"
+                  :class="{ 'pulsing': isBiometricActive }"
+                  :title="currentLang === 'ar' ? 'اضغط للمس البصمة' : 'Tap to scan biometric'"
+                  aria-label="Biometric Sign-in">
+            <span class="floating-biometric-pulse-ring" v-if="isBiometricActive"></span>
+            <!-- Professional SVG Fingerprint Icon -->
+            <svg class="biometric-glass-svg" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 3" />
+              <path d="M14 13.12c0 2.38 0 6.38-1 8.88" />
+              <path d="M2 16h.01" />
+              <path d="M21.8 16c.2-2 .131-5.354 0-6" />
+              <path d="M9 6.8a6 6 0 0 1 9 5.2v2" />
+              <path d="M5 10.8A10 10 0 0 1 19 6" />
+              <path d="M12 2A10 10 0 0 0 2 12c0 2.44.88 4.67 2.33 6.4" />
+              <path d="M17 19.5a10.9 10.9 0 0 0 2.87-3.5" />
+            </svg>
+          </button>
+          <div class="floating-biometric-info">
+            <div class="floating-biometric-label">
+              <span class="floating-biometric-dot" :class="{ 'active': isBiometricActive }"></span>
+              <span>{{ currentLang === 'ar' ? 'بصمة الدخول السريع' : 'Quick Biometric Sign-in' }}</span>
+              <span class="floating-biometric-user">({{ biometricBinding.userName || biometricBinding.username }})</span>
+            </div>
+            <p v-if="biometricHint" class="floating-biometric-subhint">{{ biometricHint }}</p>
+          </div>
+        </div>
+      </transition>
+
       <p style="text-align:center;font-size:11px;color:#64748b;margin-top:20px;">{{ activeCopyright }} — {{ t('meta.copyright') }}</p>
     </div>
   </div>

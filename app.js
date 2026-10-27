@@ -878,6 +878,8 @@ createApp({
       biometricsSupported: false,
       biometricBinding: null,
       isBiometricLoading: false,
+      isBiometricActive: false,
+      biometricHint: '',
       showBiometricOverlay: false,
       biometricStatusText: '',
 
@@ -6169,6 +6171,16 @@ this.settings = {
         }
       }).catch(() => {});
       this.currentView = 'welcome';
+      // ⭐ v25.3.0: تحفيز فحص البصمة بعد تسجيل الخروج تلقائياً في الخلفية دون حجب الواجهة
+      this.$nextTick(() => {
+        if (this.biometricBinding && this.biometricsSupported && !this.currentUser) {
+          setTimeout(() => {
+            if (!this.currentUser) {
+              this.triggerBiometricAuth(true);
+            }
+          }, 350);
+        }
+      });
     },
     async restoreSession() {
       try {
@@ -9738,40 +9750,21 @@ this.settings = {
 
     openBiometricOverlay(autoTrigger = true) {
       if (!this.biometricBinding || !this.biometricsSupported) return;
-      this.showBiometricOverlay = true;
-      this.biometricStatusText = this.currentLang === 'ar'
-        ? 'يرجى لمس حساس البصمة أو مطابقة الوجه للفتح الفوري...'
-        : 'Touch fingerprint sensor or verify face...';
-      if (autoTrigger) {
-        setTimeout(() => {
-          if (this.showBiometricOverlay && !this.currentUser) {
-            this.triggerBiometricAuth();
-          }
-        }, 150);
-      }
+      this.triggerBiometricAuth();
     },
 
     dismissBiometricOverlay() {
-      this.showBiometricOverlay = false;
       if (this._biometricAbortController) {
-        try {
-          this._biometricAbortController.abort();
-        } catch (e) {}
+        try { this._biometricAbortController.abort(); } catch (e) {}
         this._biometricAbortController = null;
       }
+      this.isBiometricActive = false;
       this.loggingIn = false;
-      this.loginError = '';
-      this.$nextTick(() => {
-        const uInput = document.querySelector('input[autocomplete="username"]') || document.querySelector('input.input-with-icon');
-        if (uInput && typeof uInput.focus === 'function') {
-          uInput.focus();
-        }
-      });
     },
 
-    async triggerBiometricAuth() {
+    async triggerBiometricAuth(isAutoPrompt = false) {
       if (!this.biometricBinding || !this.biometricBinding.credentialId) return;
-      if (this.loggingIn) return;
+      if (this.currentUser || this.loggingIn) return;
 
       // Cleanly abort any prior pending authentication
       if (this._biometricAbortController) {
@@ -9780,11 +9773,10 @@ this.settings = {
       this._biometricAbortController = new AbortController();
       const signal = this._biometricAbortController.signal;
 
-      this.loggingIn = true;
-      this.loginError = '';
-      this.biometricStatusText = this.currentLang === 'ar'
-        ? 'يرجى لمس حساس البصمة أو مطابقة الوجه للفتح الفوري...'
-        : 'Touch fingerprint sensor or verify face...';
+      this.isBiometricActive = true;
+      this.biometricHint = this.currentLang === 'ar'
+        ? 'يرجى لمس حساس البصمة للفتح الفوري...'
+        : 'Touch fingerprint sensor...';
 
       try {
         let rpId = window.location.hostname;
@@ -9805,7 +9797,7 @@ this.settings = {
 
         const assertion = await navigator.credentials.get({ publicKey, signal });
         if (!assertion) {
-          throw new Error('Biometric assertion cancelled or failed');
+          throw new Error('Biometric assertion cancelled');
         }
 
         // Credentials verified by device hardware! Now authenticate user session
@@ -9824,7 +9816,8 @@ this.settings = {
         }
 
         if (!targetUser) {
-          throw new Error(this.currentLang === 'ar' ? 'تعذر العثور على الحساب المربوط محلياً' : 'Bound account not found locally');
+          this.biometricHint = this.currentLang === 'ar' ? 'تعذر العثور على الحساب المربوط محلياً' : 'Bound account not found';
+          return;
         }
 
         this.currentUser = {
@@ -9846,7 +9839,8 @@ this.settings = {
           }
         }).catch(() => {});
 
-        this.showBiometricOverlay = false;
+        this.isBiometricActive = false;
+        this.biometricHint = '';
         this.load();
         this.setDefaultSelections();
         this.currentView = 'welcome';
@@ -9861,26 +9855,23 @@ this.settings = {
           role: targetUser.role
         });
       } catch (err) {
-        if (err.name === 'AbortError') {
-          // User dismissed overlay or canceled — clean abort, no error toast
+        if (err && err.name === 'AbortError') {
           return;
         }
-        console.warn('[Biometrics] Auth error:', err);
-        if (err.name === 'NotAllowedError') {
-          this.biometricStatusText = this.currentLang === 'ar'
-            ? 'تم إلغاء المسح. اضغط على الدائرة للمحاولة مجدداً أو اختر كلمة المرور.'
-            : 'Scan cancelled. Tap to retry or use password.';
-        } else {
-          this.biometricStatusText = err.message || (this.currentLang === 'ar' ? 'تعذر التحقق من البصمة' : 'Biometric verification failed');
-        }
+        console.warn('[Biometrics] Auth handled quietly:', err?.name || err);
+        // Suppress all raw technical English errors (HTTPS, RP ID, NotAllowed, SecurityError)
+        this.isBiometricActive = false;
+        this.biometricHint = this.currentLang === 'ar'
+          ? 'يمكنك الدخول بكلمة المرور أو لمس البصمة'
+          : 'You can sign in with password or touch biometric';
       } finally {
-        this.loggingIn = false;
+        this.isBiometricActive = false;
         this._biometricAbortController = null;
       }
     },
 
     async loginWithBiometrics() {
-      this.openBiometricOverlay(true);
+      this.triggerBiometricAuth();
     },
 
     async unlockWithBiometrics() {
@@ -9943,8 +9934,12 @@ this.settings = {
       this.checkBiometricsSupport().then(supported => {
         const binding = this.loadBiometricBinding();
         if (supported && binding && !this.currentUser) {
-          // Open biometric prompt overlay smoothly when visiting login screen
-          this.openBiometricOverlay(true);
+          // Seamless background prompt without modal or backdrop
+          setTimeout(() => {
+            if (!this.currentUser) {
+              this.triggerBiometricAuth(true);
+            }
+          }, 350);
         }
       });
 
