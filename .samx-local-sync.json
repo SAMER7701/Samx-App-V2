@@ -2,9 +2,109 @@
   "payload": {
     "branches": [
       {
-        "id": "id_u4lw74lv50k4",
-        "name": "فرع النخيل مول",
-        "code": "NKH"
+        "id": "b1",
+        "name": "فرع 1"
+      },
+      {
+        "id": "b2",
+        "name": "فرع 2"
+      },
+      {
+        "id": "b3",
+        "name": "فرع 3"
+      }
+    ],
+    "activityLog": [
+      {
+        "id": "log_test_123",
+        "action": "تعديل مبيعات تجريبي",
+        "timestamp": 1793131050000
+      },
+      {
+        "id": "act_1792885304554_nht9p",
+        "action": "تسجيل دخول",
+        "details": "المدير العام (sam)",
+        "category": "security",
+        "level": "info",
+        "user": "المدير العام",
+        "username": "sam",
+        "role": "admin",
+        "roleLabel": "مدير عام",
+        "branchName": "فرع النخيل مول",
+        "time": "2026-10-25 02:41 ص",
+        "timestamp": 1792885304554,
+        "oldVal": null,
+        "newVal": null,
+        "diff": null
+      },
+      {
+        "id": "act_1792640622096_o5khy",
+        "action": "👥 تسجيل حضور",
+        "details": "محمد بوهيا: حاضر ✅ (Al Nakheel Mall • 2026-10-22)",
+        "category": "users",
+        "level": "info",
+        "user": "المدير العام",
+        "username": "sam",
+        "role": "admin",
+        "roleLabel": "مدير عام",
+        "branchName": "Al Nakheel Mall",
+        "time": "٢٢‏/١٠‏/٢٠٢٦، ٦:٤٣:٤٢ ص",
+        "timestamp": 1792640622096,
+        "oldVal": null,
+        "newVal": null,
+        "diff": null
+      },
+      {
+        "id": "act_1792640621514_dbhyd",
+        "action": "👥 تسجيل حضور",
+        "details": "محمد بوهيا: غائب ❌ (Al Nakheel Mall • 2026-10-22)",
+        "category": "users",
+        "level": "info",
+        "user": "المدير العام",
+        "username": "sam",
+        "role": "admin",
+        "roleLabel": "مدير عام",
+        "branchName": "Al Nakheel Mall",
+        "time": "٢٢‏/١٠‏/٢٠٢٦، ٦:٤٣:٤١ ص",
+        "timestamp": 1792640621514,
+        "oldVal": null,
+        "newVal": null,
+        "diff": null
+      },
+      {
+        "action": "تعديل الإعدادات",
+        "details": "تم تحديث الإعدادات العامة",
+        "time": "١٨‏/١٠‏/٢٠٢٦، ٣:١٧:٤٩ ص",
+        "timestamp": 1792282669542,
+        "user": "المدير العام"
+      },
+      {
+        "action": "تسجيل دخول",
+        "details": "المدير العام (sam)",
+        "time": "١٨‏/١٠‏/٢٠٢٦، ٣:١٦:٢٠ ص",
+        "timestamp": 1792282580994,
+        "user": "المدير العام"
+      },
+      {
+        "action": "تسجيل دخول",
+        "details": "المدير العام (sam)",
+        "time": "١٥‏/١٠‏/٢٠٢٦، ٤:٣١:٥٣ ص",
+        "timestamp": 1792027913475,
+        "user": "المدير العام"
+      },
+      {
+        "action": "إكمال معالج الإعداد",
+        "details": "شركتي",
+        "time": "١٥‏/١٠‏/٢٠٢٦، ٤:٣١:٤٠ ص",
+        "timestamp": 1792027900817,
+        "user": "غير معروف"
+      },
+      {
+        "action": "إضافة فرع (المعالج)",
+        "details": "الفرع الرئيسي",
+        "time": "١٥‏/١٠‏/٢٠٢٦، ٤:٣١:٤٠ ص",
+        "timestamp": 1792027900816,
+        "user": "غير معروف"
       }
     ],
     "staff": [
@@ -154,6 +254,62 @@
         "code": "21",
         "branchId": "id_o6pn6xgel2qm",
         "jobTitle": "بائع"
+      }
+    ],
+    "users": [
+      {
+        "id": "u_sam",
+        "username": "sam",
+        "passwordHash": "w_680adeb360cfb15db21aa91b96914103d8ccfd464ab16b415f4fbc358eafcb39",
+        "fullName": "المدير العام",
+        "role": "admin",
+        "branchId": "",
+        "permissions": {
+          "enterDailySales": true,
+          "editTarget": true,
+          "manageBranches": true,
+          "manageStaff": true,
+          "exportReports": true,
+          "viewFinancialReports": true,
+          "editPastDays": true
+        },
+        "updatedAt": 1793050663059
+      },
+      {
+        "id": "id_v3vdx8w3lphi",
+        "username": "sama",
+        "passwordHash": "w_680adeb360cfb15db21aa91b96914103d8ccfd464ab16b415f4fbc358eafcb39",
+        "fullName": "عبدالله الموسى",
+        "role": "branch_manager",
+        "branchId": "id_sscauv7yl2qm",
+        "permissions": {
+          "enterDailySales": true,
+          "editTarget": false,
+          "manageBranches": false,
+          "manageStaff": true,
+          "exportReports": true,
+          "viewFinancialReports": true,
+          "editPastDays": false
+        },
+        "updatedAt": 1793050663059
+      },
+      {
+        "id": "u_samg",
+        "username": "samg",
+        "passwordHash": "w_680adeb360cfb15db21aa91b96914103d8ccfd464ab16b415f4fbc358eafcb39",
+        "fullName": "المشرف samg",
+        "role": "manager",
+        "branchId": "",
+        "permissions": {
+          "enterDailySales": true,
+          "editTarget": true,
+          "manageBranches": false,
+          "manageStaff": true,
+          "exportReports": true,
+          "viewFinancialReports": true,
+          "editPastDays": true
+        },
+        "updatedAt": 1793050663060
       }
     ],
     "daily": {
@@ -899,6 +1055,43 @@
         "invoices": 0,
         "pieces": 0,
         "isClosed": false
+      },
+      "2026-10-25|id_u4lw74lv50k4": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false
+      },
+      "2026-10-26|id_u4lw74lv50k4": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false,
+        "key": "2026-10-26|id_u4lw74lv50k4",
+        "date": "2026-10-26",
+        "branchId": "id_u4lw74lv50k4",
+        "mtdSales": 0,
+        "updatedAt": 1793048619718
+      },
+      "2026-10-27|id_u4lw74lv50k4": {
+        "baseTarget": 0,
+        "heroesTarget": 0,
+        "manualExtra": 0,
+        "staffData": {},
+        "invoices": 0,
+        "pieces": 0,
+        "isClosed": false,
+        "key": "2026-10-27|id_u4lw74lv50k4",
+        "date": "2026-10-27",
+        "branchId": "id_u4lw74lv50k4",
+        "mtdSales": 0,
+        "updatedAt": 1793130969267
       }
     },
     "monthlyTargets": {
@@ -921,82 +1114,8 @@
       "2026-10-15|id_i5qryr7ml2qm": true,
       "2026-10-15|id_fh0m6zf2l2qm": true,
       "2026-10-22|id_fh0m6zf2l2qm": true
-    },
-    "users": [
-      {
-        "id": "u_sam",
-        "username": "sam",
-        "passwordHash": "w_680adeb360cfb15db21aa91b96914103d8ccfd464ab16b415f4fbc358eafcb39",
-        "fullName": "المدير العام",
-        "role": "admin",
-        "branchId": "",
-        "permissions": {
-          "enterDailySales": true,
-          "editTarget": true,
-          "manageBranches": true,
-          "manageStaff": true,
-          "exportReports": true,
-          "viewFinancialReports": true,
-          "editPastDays": true
-        }
-      },
-      {
-        "id": "id_v3vdx8w3lphi",
-        "username": "sama",
-        "passwordHash": "w_680adeb360cfb15db21aa91b96914103d8ccfd464ab16b415f4fbc358eafcb39",
-        "fullName": "عبدالله الموسى",
-        "role": "branch_manager",
-        "branchId": "id_sscauv7yl2qm",
-        "permissions": {
-          "enterDailySales": true,
-          "editTarget": false,
-          "manageBranches": false,
-          "manageStaff": true,
-          "exportReports": true,
-          "viewFinancialReports": true,
-          "editPastDays": false
-        }
-      },
-      {
-        "id": "u_samg",
-        "username": "samg",
-        "passwordHash": "w_680adeb360cfb15db21aa91b96914103d8ccfd464ab16b415f4fbc358eafcb39",
-        "fullName": "المشرف samg",
-        "role": "manager",
-        "branchId": "",
-        "permissions": {
-          "enterDailySales": true,
-          "editTarget": true,
-          "manageBranches": false,
-          "manageStaff": true,
-          "exportReports": true,
-          "viewFinancialReports": true,
-          "editPastDays": true
-        }
-      }
-    ],
-    "branding": {
-      "companyName": "شركتي",
-      "companyDesc": "إدارة المبيعات",
-      "copyrightText": "© 2026 شركتي",
-      "logoDataURL": null,
-      "labels": {
-        "branch": "معرض",
-        "branchPlural": "معارض",
-        "staff": "بائع",
-        "staffPlural": "بائعين",
-        "sales": "مبيعات",
-        "invoice": "فاتورة",
-        "invoicePlural": "فواتير",
-        "piece": "قطعة",
-        "piecePlural": "قطع",
-        "target": "تارجت",
-        "manager": "مدير معرض"
-      },
-      "sectorTemplate": "retail"
-    },
-    "updated_at": 1792801016872
+    }
   },
-  "version": "23.45.0",
-  "updated_at": 1792801016879
+  "version": "25.2.0",
+  "updated_at": 1793131014620
 }

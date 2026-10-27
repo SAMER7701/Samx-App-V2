@@ -4,7 +4,7 @@
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '25.1.0';
+const APP_VERSION = '25.2.0';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -13,11 +13,11 @@ const DEV_WHATSAPP = '0533642710';
 const COPYRIGHT = '© 2026 SAMX - جميع الحقوق محفوظة';
 
 // ================================================================
-//  ⭐ v25.1.0: مركز المساعدة والدليل الحي القابل للتحديث المستمر
+//  ⭐ v25.2.0: مركز المساعدة والدليل الحي القابل للتحديث المستمر
 //  (In-App Interactive Living Documentation Schema)
 // ================================================================
 const SAMX_HELP_CENTER = Object.freeze({
-  version: '25.1.0',
+  version: '25.2.0',
   categories: [
     {
       id: 'routine',
@@ -305,9 +305,20 @@ const SAMX_HELP_CENTER = Object.freeze({
       desc: { ar: 'سجل التحديثات والإصدارات والميزات المضافة تباعاً في نظام SAMX', en: 'Release history, milestones, and new feature changelogs' },
       topics: [
         {
+          id: 'ver-25-2',
+          badge: 'v25.2.0',
+          badgeType: 'latest',
+          title: { ar: 'إصدار v25.2.0 — ترقية وتأمين الخادم السحابي والمزامنة', en: 'v25.2.0 — Server Security & Audit Sync' },
+          tags: ['25.2.0', 'أمان', 'خادم', 'سحابة', 'تدقيق', 'security', 'server', 'sync'],
+          content: {
+            ar: '• التحقق من الصلاحيات وحوكمة الأمان على مستوى الخادم (Server-Side RBAC Enforcement).\n• منع الحذف العرضي أو المسح الصفري (Zero-Size Wipe Protection) لقاعدة البيانات السحابية.\n• حماية بيانات الاعتماد وتشفير كلمات المرور ومنع تسريبها عبر ترويسات API.\n• دمج تراكمي آمن ومستمر لسجل العمليات والتدقيق (Cumulative Cloud Audit Trail Merge).\n• تطبيق ترويسات الأمان الصارمة وسياسات مشاركة الموارد (CORS & Security Headers).',
+            en: '• Server-Side RBAC Enforcement on Cloudflare Worker & Node server.\n• Zero-size wipe and accidental deletion protection on cloud state.\n• Credential sanitization & password hash protection on API payloads.\n• Cumulative cloud audit trail merge without truncation.\n• Strict CORS and enterprise security headers.'
+          }
+        },
+        {
           id: 'ver-25-1',
           badge: 'v25.1.0',
-          badgeType: 'latest',
+          badgeType: 'feature',
           title: { ar: 'إصدار v25.1.0 — مركز المساعدة والدليل الحي التفاعلي', en: 'v25.1.0 — In-App Living Help Center' },
           tags: ['25.1.0', 'دليل', 'مساعدة', 'طباعة', 'help', 'print'],
           content: {
@@ -5540,16 +5551,32 @@ this.settings = {
           monthlyTargets: this.monthlyTargets || {},
           monthlyHeroesTargets: this.monthlyHeroesTargets || {},
           attendance: this.attendance || {},
+          activityLog: this.activityLog || [],
           users: this.users || [],
           branding: this.branding || null,
           updated_at: Date.now(),
         };
 
+        const userHeaders = {
+          'Content-Type': 'application/json',
+          'X-SAMX-User-Id': (this.currentUser && this.currentUser.id) ? String(this.currentUser.id) : '',
+          'X-SAMX-User-Role': (this.currentUser && this.currentUser.role) ? String(this.currentUser.role) : '',
+          'X-SAMX-User-Name': (this.currentUser && (this.currentUser.username || this.currentUser.name)) ? encodeURIComponent(this.currentUser.username || this.currentUser.name) : '',
+        };
+
         const res = await fetch('/api/sync', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: userHeaders,
           body: JSON.stringify({ payload, version: APP_VERSION }),
         });
+
+        if (res.status === 403) {
+          const errData = await res.json().catch(() => ({}));
+          this.cloudSyncStatus = 'error';
+          this.cloudSyncError = errData.error || 'Forbidden: Admin role required';
+          this.showToast(this.currentLang === 'ar' ? '⚠️ غير مصرح: تتطلب هذه العملية صلاحيات المشرف العام' : '⚠️ Forbidden: Admin privileges required', 'error');
+          return;
+        }
 
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
@@ -5587,15 +5614,20 @@ this.settings = {
 
       try {
         this.cloudSyncStatus = 'syncing';
-        // ⭐ v23.28: منع الكاش نهائياً بإضافة معامل الوقت و Cache-Control no-store
+        // ⭐ v23.28 / v25.2.0: منع الكاش نهائياً وتمرير هوية المستخدم للتحقق من الصلاحيات
+        const userHeaders = {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'X-SAMX-User-Id': (this.currentUser && this.currentUser.id) ? String(this.currentUser.id) : '',
+          'X-SAMX-User-Role': (this.currentUser && this.currentUser.role) ? String(this.currentUser.role) : '',
+          'X-SAMX-User-Name': (this.currentUser && (this.currentUser.username || this.currentUser.name)) ? encodeURIComponent(this.currentUser.username || this.currentUser.name) : '',
+        };
+
         const res = await fetch(`/api/sync?t=${Date.now()}`, {
           method: 'GET',
           cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-          },
+          headers: userHeaders,
         });
 
         if (!res.ok) {
@@ -5788,6 +5820,22 @@ this.settings = {
         }
         if (cloud.branding && typeof cloud.branding === 'object') {
           this.branding = { ...this.branding, ...cloud.branding };
+        }
+
+        // 5.5 ⭐ v25.2.0: مزامنة ودمج سجل التدقيق السحابي التراكمي (Audit Trail Cumulative Merge)
+        if (Array.isArray(cloud.activityLog) && cloud.activityLog.length > 0) {
+          const logMap = new Map();
+          [...(this.activityLog || []), ...cloud.activityLog].forEach(entry => {
+            if (!entry) return;
+            const key = entry.id || `${entry.timestamp}_${entry.action}`;
+            if (!logMap.has(key)) logMap.set(key, entry);
+          });
+          this.activityLog = Array.from(logMap.values())
+            .sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0))
+            .slice(0, 500);
+          try {
+            localStorage.setItem('samx_activity_log', JSON.stringify(this.activityLog));
+          } catch (e) {}
         }
 
         // 6. ⭐ v23.28: حفظ فوري لكافة الجداول في localStorage بالهاتف
