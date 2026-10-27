@@ -4525,6 +4525,131 @@
       </div>
     </transition>
 
+    <!-- ============================================================
+         v23.50: نافذة اعتماد وإغلاق اليومية (Close Day Modal)
+         ============================================================ -->
+    <transition name="fade">
+      <div v-if="showCloseDayModal" class="bottom-sheet-overlay" style="z-index:10050;" @click.self="showCloseDayModal=false">
+        <div class="bottom-sheet" style="max-width:520px;">
+          <div class="bottom-sheet-handle"></div>
+
+          <!-- Header -->
+          <div class="modal-header-pro">
+            <h3 class="modal-title-pro" style="color:#fcd34d;">
+              <span>🔒</span>
+              <span>{{ currentLang === 'ar' ? 'اعتماد وإغلاق اليومية' : 'Close & Approve Daily Shift' }}</span>
+            </h3>
+            <button @click="showCloseDayModal=false" class="modal-close-btn" aria-label="Close">✕</button>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body-pro" style="padding:16px 20px;">
+            <div style="background:rgba(212,168,75,0.08);border:1px solid rgba(212,168,75,0.25);border-radius:12px;padding:14px;margin-bottom:16px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;">
+                <div>
+                  <span style="color:#94a3b8;display:block;margin-bottom:2px;">{{ currentLang === 'ar' ? 'الفرع:' : 'Branch:' }}</span>
+                  <strong style="color:#fff;font-size:13px;">{{ selectedBranch ? selectedBranch.name : '—' }}</strong>
+                </div>
+                <div>
+                  <span style="color:#94a3b8;display:block;margin-bottom:2px;">{{ currentLang === 'ar' ? 'التاريخ:' : 'Date:' }}</span>
+                  <strong style="color:#fff;font-size:13px;">{{ selectedDate }}</strong>
+                </div>
+                <div>
+                  <span style="color:#94a3b8;display:block;margin-bottom:2px;">{{ currentLang === 'ar' ? 'إجمالي المبيعات:' : 'Total Sales:' }}</span>
+                  <strong style="color:#34d399;font-size:15px;font-weight:900;">{{ formatSAR(branchSales) }}</strong>
+                </div>
+                <div>
+                  <span style="color:#94a3b8;display:block;margin-bottom:2px;">{{ currentLang === 'ar' ? 'عدد الفواتير:' : 'Invoices:' }}</span>
+                  <strong style="color:#60a5fa;font-size:15px;font-weight:900;">{{ branchInvoices }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:8px;">
+              <label style="display:block;font-size:12px;color:#cbd5e1;font-weight:600;margin-bottom:6px;">
+                {{ currentLang === 'ar' ? 'ملاحظة الإغلاق (اختياري):' : 'Closing Note (Optional):' }}
+              </label>
+              <input
+                v-model="closeDayNote"
+                type="text"
+                class="input"
+                style="width:100%;font-size:13px;"
+                :placeholder="currentLang === 'ar' ? 'اكتب أي ملاحظة تخص إغلاق اليومية...' : 'Any note about today shift...'"
+                @keyup.enter="confirmCloseDay"
+              >
+            </div>
+            <p style="font-size:11px;color:#94a3b8;margin:6px 0 0;line-height:1.5;">
+              ℹ️ {{ currentLang === 'ar' ? 'اعتماد اليومية يمنع تعديل مبيعات وحضور الموظفين لهذا اليوم إلا بطلب إعادة فتح رسمي من الإدارة.' : 'Closing seals sales and attendance records from further edits unless officially reopened.' }}
+            </p>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer-pro">
+            <button @click="showCloseDayModal=false" class="btn-ghost btn-md">
+              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+            </button>
+            <button @click="confirmCloseDay" class="btn-gold btn-md" style="font-weight:800;gap:6px;">
+              🔒 {{ currentLang === 'ar' ? 'تأكيد واعتماد الإغلاق' : 'Confirm & Close' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ============================================================
+         v23.50: نافذة إعادة فتح اليومية (Reopen Day Modal)
+         ============================================================ -->
+    <transition name="fade">
+      <div v-if="showReopenDayModal" class="bottom-sheet-overlay" style="z-index:10050;" @click.self="showReopenDayModal=false">
+        <div class="bottom-sheet" style="max-width:480px;">
+          <div class="bottom-sheet-handle"></div>
+
+          <!-- Header -->
+          <div class="modal-header-pro">
+            <h3 class="modal-title-pro" style="color:#fb7185;">
+              <span>🔓</span>
+              <span>{{ currentLang === 'ar' ? 'طلب إعادة فتح اليومية' : 'Reopen Day Shift' }}</span>
+            </h3>
+            <button @click="showReopenDayModal=false" class="modal-close-btn" aria-label="Close">✕</button>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body-pro" style="padding:16px 20px;">
+            <p style="font-size:12px;color:#cbd5e1;line-height:1.6;margin-bottom:14px;">
+              {{ currentLang === 'ar' ? 'إعادة فتح اليومية المعتمدة تتطلب صلاحية مدير عام وإدخال سبب صريح سيتم توثيقه في سجل النشاطات.' : 'Reopening an approved shift requires Admin privileges and a documented reason.' }}
+            </p>
+
+            <div style="margin-bottom:10px;">
+              <label style="display:block;font-size:12px;color:#94a3b8;font-weight:600;margin-bottom:6px;">
+                {{ currentLang === 'ar' ? 'سبب إعادة الفتح (مطلوب):' : 'Reopen Reason (Required):' }}
+              </label>
+              <input
+                v-model="reopenDayReason"
+                type="text"
+                class="input"
+                style="width:100%;font-size:13px;"
+                :placeholder="currentLang === 'ar' ? 'مثال: تعديل مبيعات فاتورة متأخرة...' : 'e.g., Adjusting delayed invoice sales...'"
+                @keyup.enter="confirmReopenDay"
+              >
+              <p v-if="reopenDayError" style="color:#fb7185;font-size:11px;margin:6px 0 0;font-weight:600;">
+                ⚠️ {{ reopenDayError }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer-pro">
+            <button @click="showReopenDayModal=false" class="btn-ghost btn-md">
+              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+            </button>
+            <button @click="confirmReopenDay" class="btn-danger-subtle btn-md" style="font-weight:800;gap:6px;">
+              🔓 {{ currentLang === 'ar' ? 'تأكيد إعادة الفتح' : 'Confirm Reopen' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
   </div>
 
   <!-- ============================================================
@@ -4717,113 +4842,6 @@
           </button>
         </div>
 
-      </div>
-    </div>
-  </transition>
-
-  <!-- ============================================================
-       v23.50: نافذة اعتماد وإغلاق اليومية (Close Day Modal)
-       ============================================================ -->
-  <transition name="fade">
-    <div v-if="showCloseDayModal" class="bottom-sheet-overlay" @click.self="showCloseDayModal=false">
-      <div class="bottom-sheet" style="max-width:500px;margin:auto;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <h3 style="margin:0;font-size:16px;font-weight:800;color:#fcd34d;display:flex;align-items:center;gap:8px;">
-            <span>🔒</span>
-            <span>{{ currentLang === 'ar' ? 'اعتماد وإغلاق اليومية' : 'Close & Approve Daily Shift' }}</span>
-          </h3>
-          <button @click="showCloseDayModal=false" class="modal-close-btn" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;" title="إغلاق">✕</button>
-        </div>
-
-        <div style="background:rgba(212,168,75,0.08);border:1px solid rgba(212,168,75,0.25);border-radius:12px;padding:14px;margin-bottom:16px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;">
-            <div>
-              <span style="color:#94a3b8;display:block;">{{ currentLang === 'ar' ? 'الفرع:' : 'Branch:' }}</span>
-              <strong style="color:#fff;">{{ selectedBranch?.name }}</strong>
-            </div>
-            <div>
-              <span style="color:#94a3b8;display:block;">{{ currentLang === 'ar' ? 'التاريخ:' : 'Date:' }}</span>
-              <strong style="color:#fff;">{{ selectedDate }}</strong>
-            </div>
-            <div>
-              <span style="color:#94a3b8;display:block;">{{ currentLang === 'ar' ? 'إجمالي المبيعات:' : 'Total Sales:' }}</span>
-              <strong style="color:#34d399;font-size:14px;">{{ formatSAR(branchSales) }}</strong>
-            </div>
-            <div>
-              <span style="color:#94a3b8;display:block;">{{ currentLang === 'ar' ? 'عدد الفواتير:' : 'Invoices:' }}</span>
-              <strong style="color:#60a5fa;font-size:14px;">{{ branchInvoices }}</strong>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-bottom:16px;">
-          <label style="display:block;font-size:12px;color:#94a3b8;margin-bottom:6px;">
-            {{ currentLang === 'ar' ? 'ملاحظة الإغلاق (اختياري):' : 'Closing Note (Optional):' }}
-          </label>
-          <input
-            v-model="closeDayNote"
-            type="text"
-            class="input"
-            style="width:100%;"
-            :placeholder="currentLang === 'ar' ? 'اكتب أي ملاحظة تخص إغلاق اليومية...' : 'Any note about today shift...'"
-          >
-        </div>
-
-        <div style="display:flex;gap:10px;justify-content:flex-end;">
-          <button @click="showCloseDayModal=false" class="btn-ghost" style="padding:8px 16px;border-radius:8px;">
-            {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
-          </button>
-          <button @click="confirmCloseDay" class="btn-gold" style="padding:8px 20px;border-radius:8px;font-weight:700;">
-            🔒 {{ currentLang === 'ar' ? 'تأكيد واعتماد الإغلاق' : 'Confirm & Close' }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </transition>
-
-  <!-- ============================================================
-       v23.50: نافذة إعادة فتح اليومية (Reopen Day Modal)
-       ============================================================ -->
-  <transition name="fade">
-    <div v-if="showReopenDayModal" class="bottom-sheet-overlay" @click.self="showReopenDayModal=false">
-      <div class="bottom-sheet" style="max-width:480px;margin:auto;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <h3 style="margin:0;font-size:16px;font-weight:800;color:#fb7185;display:flex;align-items:center;gap:8px;">
-            <span>🔓</span>
-            <span>{{ currentLang === 'ar' ? 'طلب إعادة فتح اليومية' : 'Reopen Day Shift' }}</span>
-          </h3>
-          <button @click="showReopenDayModal=false" class="modal-close-btn" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;" title="إغلاق">✕</button>
-        </div>
-
-        <p style="font-size:12px;color:#cbd5e1;line-height:1.6;margin-bottom:14px;">
-          {{ currentLang === 'ar' ? 'إعادة فتح اليومية المعتمدة تتطلب صلاحية مدير عام وإدخال سبب صريح سيتم توثيقه في سجل النشاطات.' : 'Reopening an approved shift requires Admin privileges and a documented reason.' }}
-        </p>
-
-        <div style="margin-bottom:14px;">
-          <label style="display:block;font-size:12px;color:#94a3b8;margin-bottom:6px;">
-            {{ currentLang === 'ar' ? 'سبب إعادة الفتح (مطلوب):' : 'Reopen Reason (Required):' }}
-          </label>
-          <input
-            v-model="reopenDayReason"
-            type="text"
-            class="input"
-            style="width:100%;"
-            :placeholder="currentLang === 'ar' ? 'مثال: تعديل مبيعات فاتورة متأخرة...' : 'e.g., Adjusting delayed invoice sales...'"
-            @keyup.enter="confirmReopenDay"
-          >
-          <p v-if="reopenDayError" style="color:#fb7185;font-size:11px;margin:6px 0 0;font-weight:600;">
-            ⚠️ {{ reopenDayError }}
-          </p>
-        </div>
-
-        <div style="display:flex;gap:10px;justify-content:flex-end;">
-          <button @click="showReopenDayModal=false" class="btn-ghost" style="padding:8px 16px;border-radius:8px;">
-            {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
-          </button>
-          <button @click="confirmReopenDay" class="btn-danger-subtle" style="padding:8px 20px;border-radius:8px;font-weight:700;">
-            🔓 {{ currentLang === 'ar' ? 'تأكيد إعادة الفتح' : 'Confirm Reopen' }}
-          </button>
-        </div>
       </div>
     </div>
   </transition>

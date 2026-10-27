@@ -47,7 +47,7 @@
     'app.loading': 'جارٍ التحميل...',
 
     // ─── Auth ───
-    'auth.login.title': '🔐 تسجيل الدخول',
+    'auth.login.title': 'تسجيل الدخول',
     'auth.username': 'اسم المستخدم',
     'auth.usernamePlaceholder': 'اسم المستخدم',
     'auth.password': 'كلمة المرور',

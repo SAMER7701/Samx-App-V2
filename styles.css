@@ -1153,7 +1153,7 @@ html.light .drawer { background: #ffffff; }
   background: rgba(4, 8, 16, 0.85);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  z-index: 1000;
+  z-index: 10050;
   display: flex;
   align-items: flex-end;
   justify-content: center;

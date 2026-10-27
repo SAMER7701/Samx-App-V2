@@ -47,7 +47,7 @@
     'app.loading': 'Loading...',
 
     // ─── Auth ───
-    'auth.login.title': '🔐 Login',
+    'auth.login.title': 'Login',
     'auth.username': 'Username',
     'auth.usernamePlaceholder': 'Username',
     'auth.password': 'Password',
