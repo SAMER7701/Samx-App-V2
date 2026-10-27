@@ -878,6 +878,8 @@ createApp({
       biometricsSupported: false,
       biometricBinding: null,
       isBiometricLoading: false,
+      showBiometricOverlay: false,
+      biometricStatusText: '',
 
       // ============ التنقل ============
       currentView: 'welcome',
@@ -9734,14 +9736,56 @@ this.settings = {
       );
     },
 
-    async loginWithBiometrics() {
-      if (!this.biometricBinding || !this.biometricBinding.credentialId) {
-        this.showToast(this.currentLang === 'ar' ? 'لا يوجد حساب مربوط بالبصمة على هذا الجهاز' : 'No biometric binding found', 'warning');
-        return;
+    openBiometricOverlay(autoTrigger = true) {
+      if (!this.biometricBinding || !this.biometricsSupported) return;
+      this.showBiometricOverlay = true;
+      this.biometricStatusText = this.currentLang === 'ar'
+        ? 'يرجى لمس حساس البصمة أو مطابقة الوجه للفتح الفوري...'
+        : 'Touch fingerprint sensor or verify face...';
+      if (autoTrigger) {
+        setTimeout(() => {
+          if (this.showBiometricOverlay && !this.currentUser) {
+            this.triggerBiometricAuth();
+          }
+        }, 150);
       }
+    },
+
+    dismissBiometricOverlay() {
+      this.showBiometricOverlay = false;
+      if (this._biometricAbortController) {
+        try {
+          this._biometricAbortController.abort();
+        } catch (e) {}
+        this._biometricAbortController = null;
+      }
+      this.loggingIn = false;
+      this.loginError = '';
+      this.$nextTick(() => {
+        const uInput = document.querySelector('input[autocomplete="username"]') || document.querySelector('input.input-with-icon');
+        if (uInput && typeof uInput.focus === 'function') {
+          uInput.focus();
+        }
+      });
+    },
+
+    async triggerBiometricAuth() {
+      if (!this.biometricBinding || !this.biometricBinding.credentialId) return;
+      if (this.loggingIn) return;
+
+      // Cleanly abort any prior pending authentication
+      if (this._biometricAbortController) {
+        try { this._biometricAbortController.abort(); } catch (e) {}
+      }
+      this._biometricAbortController = new AbortController();
+      const signal = this._biometricAbortController.signal;
 
       this.loggingIn = true;
       this.loginError = '';
+      this.biometricStatusText = this.currentLang === 'ar'
+        ? 'يرجى لمس حساس البصمة أو مطابقة الوجه للفتح الفوري...'
+        : 'Touch fingerprint sensor or verify face...';
+
       try {
         let rpId = window.location.hostname;
         if (!rpId || rpId === '127.0.0.1') rpId = 'localhost';
@@ -9759,7 +9803,7 @@ this.settings = {
           timeout: 60000,
         };
 
-        const assertion = await navigator.credentials.get({ publicKey });
+        const assertion = await navigator.credentials.get({ publicKey, signal });
         if (!assertion) {
           throw new Error('Biometric assertion cancelled or failed');
         }
@@ -9802,6 +9846,7 @@ this.settings = {
           }
         }).catch(() => {});
 
+        this.showBiometricOverlay = false;
         this.load();
         this.setDefaultSelections();
         this.currentView = 'welcome';
@@ -9816,15 +9861,26 @@ this.settings = {
           role: targetUser.role
         });
       } catch (err) {
-        console.warn('[Biometrics] Login error:', err);
+        if (err.name === 'AbortError') {
+          // User dismissed overlay or canceled — clean abort, no error toast
+          return;
+        }
+        console.warn('[Biometrics] Auth error:', err);
         if (err.name === 'NotAllowedError') {
-          this.loginError = this.currentLang === 'ar' ? 'تم إلغاء مسح البصمة. يمكنك إدخال كلمة المرور' : 'Biometric verification cancelled';
+          this.biometricStatusText = this.currentLang === 'ar'
+            ? 'تم إلغاء المسح. اضغط على الدائرة للمحاولة مجدداً أو اختر كلمة المرور.'
+            : 'Scan cancelled. Tap to retry or use password.';
         } else {
-          this.loginError = err.message || (this.currentLang === 'ar' ? 'فشل التحقق من البصمة' : 'Biometric verification failed');
+          this.biometricStatusText = err.message || (this.currentLang === 'ar' ? 'تعذر التحقق من البصمة' : 'Biometric verification failed');
         }
       } finally {
         this.loggingIn = false;
+        this._biometricAbortController = null;
       }
+    },
+
+    async loginWithBiometrics() {
+      this.openBiometricOverlay(true);
     },
 
     async unlockWithBiometrics() {
@@ -9884,8 +9940,13 @@ this.settings = {
       if (loading) loading.style.display = 'none';
 
       // ⭐ v25.3.0: فحص دعم البصمة وتحميل الربط المحلي للجهاز
-      this.checkBiometricsSupport();
-      this.loadBiometricBinding();
+      this.checkBiometricsSupport().then(supported => {
+        const binding = this.loadBiometricBinding();
+        if (supported && binding && !this.currentUser) {
+          // Open biometric prompt overlay smoothly when visiting login screen
+          this.openBiometricOverlay(true);
+        }
+      });
 
       // ⭐ v23.36: مراقبة حالة ملء الشاشة
       ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
