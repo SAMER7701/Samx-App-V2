@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const SERVER_VERSION = '25.2.0';
+const SERVER_VERSION = '25.3.0';
 
 // ================================================================
 //  CORS & Standard Security Headers

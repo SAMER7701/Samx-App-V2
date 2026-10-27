@@ -43,8 +43,8 @@
 <!-- ⭐ v23.13: خط رمز الريال السعودي مضمّن كـ base64 — يعمل بدون إنترنت وعلى كافة الهواتف (iOS / Android) -->
 <link rel="stylesheet" href="libs/saudi-riyal-font.css">
 
-<!-- ⭐ v25.2: أنماط التطبيق المحدثة -->
-<link href="styles.css?v=25.2.0" rel="stylesheet">
+<!-- ⭐ v25.3: أنماط التطبيق المحدثة -->
+<link href="styles.css?v=25.3.0" rel="stylesheet">
 <!-- Vue 3 -->
 <script src="libs/vue.global.prod.js"></script>
 <!-- Chart.js -->
@@ -182,8 +182,13 @@
           </div>
         </div>
         <p v-if="lockError" class="shake" style="color:#fda4af;font-size:12px;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:10px;padding:10px 14px;margin:0 0 14px;">⚠️ {{ lockError }}</p>
-        <button @click="unlockApp" class="btn-gold" style="width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;cursor:pointer;margin-bottom:10px;min-height:50px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(var(--theme-primary-rgb, 212,168,75), .3);">🔓 فتح التطبيق</button>
-        <button @click="doLogout" class="btn-ghost" style="width:100%;border-radius:12px;padding:12px;font-size:13px;cursor:pointer;min-height:44px;">تسجيل خروج</button>
+        <!-- ⭐ v25.3.0: زر فتح القفل السريع بالبصمة / الوجه -->
+        <button v-if="biometricBinding && biometricsSupported" type="button" @click="unlockWithBiometrics" class="btn-biometric-unlock" style="width:100%;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;min-height:50px;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <span style="font-size:20px;">👆</span>
+          <span>{{ currentLang === 'ar' ? 'فتح التطبيق بالبصمة / الوجه' : 'Unlock with Biometrics' }}</span>
+        </button>
+        <button @click="unlockApp" class="btn-gold" style="width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;cursor:pointer;margin-bottom:10px;min-height:50px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(var(--theme-primary-rgb, 212,168,75), .3);">🔓 {{ currentLang === 'ar' ? 'فتح بكلمة المرور' : 'Unlock with Password' }}</button>
+        <button @click="doLogout" class="btn-ghost" style="width:100%;border-radius:12px;padding:12px;font-size:13px;cursor:pointer;min-height:44px;">{{ currentLang === 'ar' ? 'تسجيل خروج' : 'Logout' }}</button>
       </div>
     </div>
   </transition>
@@ -205,6 +210,20 @@
           <span>🔐</span>
           <span>{{ t('auth.login.title') }}</span>
         </h2>
+
+        <!-- ⭐ v25.3.0: زر الدخول السريع بالبصمة / الوجه (Biometrics Passkey) -->
+        <div v-if="biometricBinding && biometricsSupported" style="margin-bottom:16px;">
+          <button type="button" @click="loginWithBiometrics" :disabled="loggingIn" class="btn-biometric-login" style="width:100%;border-radius:12px;padding:13px 16px;font-size:15px;font-weight:800;cursor:pointer;min-height:50px;display:flex;align-items:center;justify-content:center;gap:10px;">
+            <span style="font-size:20px;">👆</span>
+            <span>{{ currentLang === 'ar' ? `الدخول السريع بالبصمة / الوجه (${biometricBinding.userName || biometricBinding.username})` : `Biometric Sign-in (${biometricBinding.userName || biometricBinding.username})` }}</span>
+          </button>
+          <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 0 6px;">
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.12);"></div>
+            <span style="font-size:11px;color:#64748b;font-weight:600;">{{ currentLang === 'ar' ? 'أو الدخول بكلمة المرور' : 'or enter password' }}</span>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.12);"></div>
+          </div>
+        </div>
+
         <div class="form-group-pro">
           <label class="form-label-pro">
             <span>👤</span>
@@ -4329,6 +4348,63 @@
                 </div>
               </div>
 
+              <!-- ⭐ v25.3.0: بطاقة الدخول السريع بالبصمة / الوجه (Biometrics Passkey) -->
+              <div class="settings-card" style="background:linear-gradient(135deg, rgba(16,185,129,0.08), rgba(15,23,42,0.6));border-color:rgba(16,185,129,0.35);">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+                  <div>
+                    <h4 class="settings-label" style="margin:0 0 4px;display:flex;align-items:center;gap:8px;color:#34d399;">
+                      <span style="font-size:18px;">👆</span>
+                      <span>{{ currentLang === 'ar' ? 'الدخول السريع بالبصمة / الوجه (Biometrics)' : 'Biometrics Passkey Sign-in' }}</span>
+                    </h4>
+                    <p class="settings-subtext" style="margin:0;line-height:1.5;">
+                      {{ currentLang === 'ar' ? 'دعم تسجيل الدخول الفوري عبر FaceID / TouchID / بصمة أندرويد و Windows Hello بدون كلمة مرور.' : 'Instant FaceID / TouchID / Android biometrics authentication without passwords.' }}
+                    </p>
+                  </div>
+
+                  <!-- Status Badge -->
+                  <div>
+                    <span v-if="biometricBinding" class="badge" style="background:rgba(16,185,129,0.2);color:#34d399;border:1px solid rgba(16,185,129,0.4);padding:5px 12px;font-size:12px;font-weight:700;border-radius:20px;display:inline-flex;align-items:center;gap:6px;">
+                      <span>✅</span>
+                      <span>{{ currentLang === 'ar' ? `مفعلة لحساب: ${biometricBinding.userName || biometricBinding.username}` : `Active for: ${biometricBinding.userName || biometricBinding.username}` }}</span>
+                    </span>
+                    <span v-else-if="!biometricsSupported" class="badge" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);padding:5px 12px;font-size:12px;border-radius:20px;display:inline-flex;align-items:center;gap:6px;">
+                      <span>⚠️</span>
+                      <span>{{ currentLang === 'ar' ? 'البصمة غير مدعومة بهذا المتصفح/الجهاز' : 'Biometrics unsupported on this device' }}</span>
+                    </span>
+                    <span v-else class="badge" style="background:rgba(148,163,184,0.15);color:#94a3b8;border:1px solid rgba(148,163,184,0.3);padding:5px 12px;font-size:12px;border-radius:20px;display:inline-flex;align-items:center;gap:6px;">
+                      <span>⚪</span>
+                      <span>{{ currentLang === 'ar' ? 'غير مفعلة على هذا الجهاز' : 'Not active on this device' }}</span>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+                  <button v-if="!biometricBinding" @click="enableBiometricsOnDevice" :disabled="!biometricsSupported || isBiometricLoading" class="btn-success-subtle btn-sm" style="font-weight:700;display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-size:13px;cursor:pointer;">
+                    <span>👆</span>
+                    <span>{{ isBiometricLoading ? (currentLang === 'ar' ? 'جارٍ التحقق...' : 'Verifying...') : (currentLang === 'ar' ? 'تفعيل البصمة على هذا الجهاز' : 'Enable Biometrics on Device') }}</span>
+                  </button>
+                  <template v-else>
+                    <button @click="enableBiometricsOnDevice" :disabled="isBiometricLoading" class="btn-ghost btn-sm" style="font-size:12px;padding:8px 14px;border-radius:10px;cursor:pointer;">
+                      <span>🔄</span>
+                      <span>{{ currentLang === 'ar' ? 'إعادة ربط الحساب الحالي' : 'Re-link Current Account' }}</span>
+                    </button>
+                    <button @click="disableBiometricsOnDevice" class="btn-danger-subtle btn-sm" style="font-size:12px;padding:8px 14px;border-radius:10px;cursor:pointer;">
+                      <span>🗑️</span>
+                      <span>{{ currentLang === 'ar' ? 'إلغاء ربط البصمة من هذا الجهاز' : 'Unlink Biometrics' }}</span>
+                    </button>
+                  </template>
+                </div>
+
+                <!-- Security Note -->
+                <div style="background:rgba(212,168,75,0.08);border:1px dashed rgba(212,168,75,0.35);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:14px;">⚠️</span>
+                  <span style="font-size:11px;color:#fcd34d;line-height:1.4;">
+                    {{ currentLang === 'ar' ? 'ملاحظة: مخصص لجوالك الشخصي فقط — لا تفعله على أجهزة المعرض المشتركة لضمان حماية حسابك.' : 'Note: For personal devices only — do not enable on shared store devices.' }}
+                  </span>
+                </div>
+              </div>
+
               <!-- ⭐ v23.24: تثبيت التطبيق على الهاتف (PWA App Installation) -->
               <div class="settings-card">
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
@@ -4725,7 +4801,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=25.2.0"></script>
+<script src="app.js?v=25.3.0"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {
