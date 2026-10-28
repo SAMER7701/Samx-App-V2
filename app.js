@@ -4,7 +4,7 @@
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '25.3.1';
+const APP_VERSION = '25.3.2';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -6623,9 +6623,16 @@ this.settings = {
     // ================================================================
     //  ⭐ v23.21: حوكمة إغلاق وترحيل اليوميات (Daily Shift Closure)
     // ================================================================
-    //  ⭐ v25.3.1: الإغلاق المباشر والنهائي لليوميات (Direct Force Close Day)
+    //  ⭐ v25.3.2: الإغلاق المباشر والنهائي لليوميات (Direct Force Close Day)
     // ================================================================
-    forceCloseCurrentDay() {
+    forceCloseCurrentDay(event) {
+      if (event && typeof event.stopPropagation === 'function') {
+        event.stopPropagation();
+      }
+      if (this._isTogglingDayLock) return;
+      this._isTogglingDayLock = true;
+      setTimeout(() => { this._isTogglingDayLock = false; }, 800);
+
       try {
         const branchId = this.selectedBranchId || (this.allowedBranches && this.allowedBranches[0]?.id) || '';
         const date = this.selectedDate || this.todayStr || (new Date().toISOString().slice(0, 10));
@@ -6645,8 +6652,11 @@ this.settings = {
           `${branchId}|${normDate}`,
         ];
 
+        // قراءة حالة الإغلاق الحالية بدقة مرة واحدة فقط قبل أي قرار
+        const currentlyClosed = !!this.isDayClosed;
+
         // ─── الحالة 1: اليومية مغلقة حالياً — طلب إعادة الفتح ───
-        if (this.isDayClosed) {
+        if (currentlyClosed) {
           if (!this.currentUser || this.currentUser.role !== 'admin') {
             this.showToast(this.currentLang === 'ar' ? 'صلاحية إعادة فتح اليومية للمدير العام فقط ⛔' : 'Only Admin can reopen closed days ⛔', 'error');
             return;
@@ -6659,21 +6669,24 @@ this.settings = {
           );
           if (!confirmReopen) return;
 
-          if (!this.closedDays) this.closedDays = {};
+          const updatedClosedDays = Object.assign({}, this.closedDays || {});
           keys.forEach(k => {
-            delete this.closedDays[k];
+            delete updatedClosedDays[k];
           });
-          this.closedDays = { ...this.closedDays };
+          this.closedDays = updatedClosedDays;
 
           if (this.daily) {
+            const updatedDaily = Object.assign({}, this.daily);
             keys.forEach(k => {
-              if (this.daily[k]) {
-                this.daily[k].isClosed = false;
-                this.daily[k].reopenedAt = Date.now();
-                this.daily[k].reopenedBy = this.currentUser ? this.currentUser.fullName : 'المدير العام';
+              if (updatedDaily[k]) {
+                updatedDaily[k] = Object.assign({}, updatedDaily[k], {
+                  isClosed: false,
+                  reopenedAt: Date.now(),
+                  reopenedBy: this.currentUser ? this.currentUser.fullName : 'المدير العام'
+                });
               }
             });
-            this.daily = { ...this.daily };
+            this.daily = updatedDaily;
           }
 
           try {
@@ -6682,6 +6695,7 @@ this.settings = {
 
           this.logActivity('🔓 إعادة فتح يومية', `${branchName} (${date})`);
           this.persist();
+          if (typeof this.$forceUpdate === 'function') this.$forceUpdate();
           if (typeof this.triggerCloudSyncDebounced === 'function') this.triggerCloudSyncDebounced();
           if (typeof this.vibrate === 'function') this.vibrate(25);
           this.showCloseDayModal = false;
@@ -6708,11 +6722,11 @@ this.settings = {
           closeNote: (this.closeDayNote || this.closeDayNotes || 'اعتماد وإغلاق رسمي').trim(),
         };
 
-        if (!this.closedDays) this.closedDays = {};
+        const updatedClosedDays = Object.assign({}, this.closedDays || {});
         keys.forEach(k => {
-          this.closedDays[k] = { ...closedMeta };
+          updatedClosedDays[k] = Object.assign({}, closedMeta);
         });
-        this.closedDays = { ...this.closedDays };
+        this.closedDays = updatedClosedDays;
 
         if (!this.daily) this.daily = {};
         const primaryKey = `${normDate}|${branchId}`;
@@ -6725,10 +6739,11 @@ this.settings = {
         rec.closedInvoices = closedMeta.closedInvoices;
         rec.closeNote = closedMeta.closeNote;
 
+        const updatedDaily = Object.assign({}, this.daily);
         keys.forEach(k => {
-          this.daily[k] = { ...rec, isClosed: true };
+          updatedDaily[k] = Object.assign({}, rec, { isClosed: true });
         });
-        this.daily = { ...this.daily };
+        this.daily = updatedDaily;
 
         try {
           localStorage.setItem('samx_closed_days', JSON.stringify(this.closedDays));
@@ -6736,6 +6751,7 @@ this.settings = {
 
         this.logActivity('🔒 إغلاق يومية', `${branchName} - تاريخ: ${date} • المبيعات: ${currentSalesStr}`);
         this.persist();
+        if (typeof this.$forceUpdate === 'function') this.$forceUpdate();
         if (typeof this.triggerCloudSyncDebounced === 'function') this.triggerCloudSyncDebounced();
         if (typeof this.vibrate === 'function') this.vibrate([20, 50, 20]);
         this.showCloseDayModal = false;
@@ -6752,17 +6768,18 @@ this.settings = {
             });
           }
         }).catch(() => {});
+        return;
       } catch (err) {
         console.error('[forceCloseCurrentDay error]', err);
         this.showCloseDayModal = false;
         this.showToast(this.currentLang === 'ar' ? '✅ تم اعتماد وإغلاق اليومية بنجاح' : '✅ Day closed successfully', 'success');
       }
     },
-    handleCloseDayClick() {
-      this.forceCloseCurrentDay();
+    handleCloseDayClick(e) {
+      this.forceCloseCurrentDay(e);
     },
-    openCloseDayModal() {
-      this.forceCloseCurrentDay();
+    openCloseDayModal(e) {
+      this.forceCloseCurrentDay(e);
     },
     confirmCloseDay() {
       this.forceCloseCurrentDay();
@@ -10202,37 +10219,4 @@ const samxMountedApp = appInstance.mount('#app');
 window.__samx = samxMountedApp;
 window.samxApp = samxMountedApp;
 
-// ================================================================
-//  ⭐ v25.3.1: Global Document Click Listener لزر إغلاق اليومية المباشر
-// ================================================================
-(function initGlobalCloseDayClickListener() {
-  document.addEventListener('click', function(e) {
-    try {
-      const btn = e.target && e.target.closest ? e.target.closest('button, [role="button"], .btn-close-day-action, [data-action="close-day"]') : null;
-      if (!btn) return;
 
-      const action = btn.getAttribute('data-action');
-      const text = (btn.textContent || '').trim();
-      const hasCloseClass = btn.classList && btn.classList.contains('btn-close-day-action');
-
-      const isCloseDayBtn = action === 'close-day' ||
-        hasCloseClass ||
-        text.includes('اعتماد وإغلاق اليومية') ||
-        text.includes('إغلاق اليومية') ||
-        text.includes('اليومية مغلقة — إعادة فتح') ||
-        text.includes('مغلقة (إعادة فتح)') ||
-        text.includes('اليومية مغلقة') ||
-        (text.includes('Close Day') && !text.includes('Cancel'));
-
-      if (isCloseDayBtn) {
-        console.log('[SAMX Global Click Listener] Intercepted close day click:', text);
-        const app = window.__samx || window.samxApp;
-        if (app && typeof app.forceCloseCurrentDay === 'function') {
-          app.forceCloseCurrentDay();
-        }
-      }
-    } catch (err) {
-      console.warn('[Global Close Day Listener error]', err);
-    }
-  }, true);
-})();
