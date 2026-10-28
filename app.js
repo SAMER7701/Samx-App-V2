@@ -4,7 +4,7 @@
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '25.3.0';
+const APP_VERSION = '25.3.1';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -852,7 +852,7 @@ async function lazyLoadLibrary(libKey) {
 
 const { createApp, nextTick, markRaw, toRaw } = Vue;
 
-createApp({
+const appInstance = createApp({
   data() {
     return {
       appVersion: APP_VERSION,
@@ -969,6 +969,7 @@ createApp({
       showCloseDayModal: false,
       closeDayNote: '',
       closeDayNotes: '',
+      closedDays: (typeof localStorage !== 'undefined' && JSON.parse(localStorage.getItem('samx_closed_days') || '{}')) || {},
       showReopenDayModal: false,
       reopenDayReason: '',
       reopenDayError: '',
@@ -2730,21 +2731,50 @@ createApp({
     // ⭐ v23.21: حوكمة إغلاق اليوميات وسجل التدقيق
     isDayClosed() {
       if (!this.selectedDate || !this.selectedBranchId) return false;
-      const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : (typeof normalizeDateStr === 'function' ? normalizeDateStr(this.selectedDate) : this.selectedDate)) || this.selectedDate;
-      const rec = (this.daily && (this.daily[`${normDate}|${this.selectedBranchId}`] || this.daily[`${this.selectedDate}|${this.selectedBranchId}`])) || null;
-      return !!(rec && rec.isClosed);
+      const date = this.selectedDate;
+      const branchId = this.selectedBranchId;
+      const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(date) : (typeof normalizeDateStr === 'function' ? normalizeDateStr(date) : date)) || date;
+
+      // 1. فحص قاموس الأيام المغلقة المباشر (closedDays)
+      if (this.closedDays) {
+        if (this.closedDays[`${normDate}|${branchId}`] ||
+            this.closedDays[`${date}|${branchId}`] ||
+            this.closedDays[`${branchId}_${normDate}`] ||
+            this.closedDays[`${normDate}_${branchId}`] ||
+            this.closedDays[`${branchId}|${normDate}`]) {
+          return true;
+        }
+      }
+
+      // 2. فحص سجل اليوميات الأساسي (daily)
+      if (this.daily) {
+        const rec = this.daily[`${normDate}|${branchId}`] ||
+                    this.daily[`${date}|${branchId}`] ||
+                    this.daily[`${branchId}|${normDate}`] ||
+                    this.daily[`${branchId}_${normDate}`];
+        if (rec && rec.isClosed) return true;
+      }
+
+      return false;
     },
     dayCloseInfo() {
       if (!this.selectedDate || !this.selectedBranchId) return null;
-      const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : (typeof normalizeDateStr === 'function' ? normalizeDateStr(this.selectedDate) : this.selectedDate)) || this.selectedDate;
-      const rec = (this.daily && (this.daily[`${normDate}|${this.selectedBranchId}`] || this.daily[`${this.selectedDate}|${this.selectedBranchId}`])) || null;
-      if (!rec || !rec.isClosed) return null;
+      const date = this.selectedDate;
+      const branchId = this.selectedBranchId;
+      const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(date) : (typeof normalizeDateStr === 'function' ? normalizeDateStr(date) : date)) || date;
+
+      const rec = (this.daily && (this.daily[`${normDate}|${branchId}`] || this.daily[`${date}|${branchId}`] || this.daily[`${branchId}|${normDate}`])) || null;
+      const closedMeta = (this.closedDays && (this.closedDays[`${normDate}|${branchId}`] || this.closedDays[`${date}|${branchId}`] || this.closedDays[`${branchId}_${normDate}`])) || null;
+
+      if (!rec?.isClosed && !closedMeta) return null;
+
+      const closedAtVal = rec?.closedAt || closedMeta?.closedAt;
       return {
-        closedAt: rec.closedAt ? new Date(rec.closedAt).toLocaleString(this.currentLang === 'ar' ? 'ar-SA' : 'en-US') : '—',
-        closedBy: rec.closedBy || '—',
-        closedSales: Number(rec.closedSales) || 0,
-        closedInvoices: Number(rec.closedInvoices) || 0,
-        closeNote: rec.closeNote || '',
+        closedAt: closedAtVal ? new Date(closedAtVal).toLocaleString(this.currentLang === 'ar' ? 'ar-SA' : 'en-US') : '—',
+        closedBy: rec?.closedBy || closedMeta?.closedBy || '—',
+        closedSales: Number(rec?.closedSales ?? closedMeta?.closedSales ?? 0),
+        closedInvoices: Number(rec?.closedInvoices ?? closedMeta?.closedInvoices ?? 0),
+        closeNote: rec?.closeNote || closedMeta?.closeNote || '',
       };
     },
     canCloseDay() {
@@ -5354,6 +5384,7 @@ this.settings = {
         localStorage.setItem('samx_monthlyTargets', JSON.stringify(this.monthlyTargets || {}));
         localStorage.setItem('samx_monthlyHeroesTargets', JSON.stringify(this.monthlyHeroesTargets || {}));
         localStorage.setItem('samx_attendance', JSON.stringify(this.attendance || {}));
+        localStorage.setItem('samx_closed_days', JSON.stringify(this.closedDays || {}));
         localStorage.setItem('samx_theme', this.darkMode ? 'dark' : 'light');
         try { localStorage.setItem('samx_staff_chart_type', this.staffChartType); } catch(e) {}
         // ⭐ v24.0.0: حفظ تدريجي متوازي غير متزامن في IndexedDB (SamxDatabaseV24)
@@ -5373,6 +5404,7 @@ this.settings = {
         this.branches = JSON.parse(localStorage.getItem('samx_branches')) || [];
         this.staff = JSON.parse(localStorage.getItem('samx_staff')) || [];
         this.daily = JSON.parse(localStorage.getItem('samx_daily')) || {};
+        this.closedDays = JSON.parse(localStorage.getItem('samx_closed_days')) || {};
         this.monthlyTargets = JSON.parse(localStorage.getItem('samx_monthlyTargets')) || {};
         this.monthlyHeroesTargets = JSON.parse(localStorage.getItem('samx_monthlyHeroesTargets')) || {};
         this.attendance = JSON.parse(localStorage.getItem('samx_attendance')) || {};
@@ -6591,59 +6623,123 @@ this.settings = {
     // ================================================================
     //  ⭐ v23.21: حوكمة إغلاق وترحيل اليوميات (Daily Shift Closure)
     // ================================================================
-    handleCloseDayClick() {
-      // 1. فتح النافذة فوراً في السطر الأول دون أي شرط معرقل
-      this.showCloseDayModal = true;
-      this.closeDayNote = '';
-      this.closeDayNotes = '';
-
+    //  ⭐ v25.3.1: الإغلاق المباشر والنهائي لليوميات (Direct Force Close Day)
+    // ================================================================
+    forceCloseCurrentDay() {
       try {
-        if (!this.selectedBranchId && this.allowedBranches && this.allowedBranches.length > 0) {
-          this.selectedBranchId = this.allowedBranches[0].id;
-        }
-      } catch (err) {
-        console.warn('[handleCloseDayClick] fallback handling:', err);
-      }
-    },
-    openCloseDayModal() {
-      this.handleCloseDayClick();
-    },
-    confirmCloseDay() {
-      try {
-        const note = (this.closeDayNote || this.closeDayNotes || '').trim();
         const branchId = this.selectedBranchId || (this.allowedBranches && this.allowedBranches[0]?.id) || '';
         const date = this.selectedDate || this.todayStr || (new Date().toISOString().slice(0, 10));
+        const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(date) : (typeof normalizeDateStr === 'function' ? normalizeDateStr(date) : date)) || date;
+        const branchName = this.selectedBranch?.name || branchId;
 
         if (!branchId) {
-          this.showToast(this.currentLang === 'ar' ? 'يرجى اختيار الفرع أولاً 🏬' : 'Please select a branch first 🏬', 'warning');
+          this.showToast(this.currentLang === 'ar' ? 'يرجى اختيار فرع أولاً 🏬' : 'Please select a branch first 🏬', 'warning');
           return;
         }
 
-        const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(date) : (typeof normalizeDateStr === 'function' ? normalizeDateStr(date) : date)) || date;
-        const key = `${normDate}|${branchId}`;
-        const rec = (typeof this.normalizeDayRecord === 'function') ? this.normalizeDayRecord(key) : (this.daily && this.daily[key] ? this.daily[key] : {});
+        const keys = [
+          `${normDate}|${branchId}`,
+          `${date}|${branchId}`,
+          `${branchId}_${normDate}`,
+          `${normDate}_${branchId}`,
+          `${branchId}|${normDate}`,
+        ];
 
-        rec.isClosed = true;
-        rec.closedAt = Date.now();
-        rec.closedBy = this.currentUser ? this.currentUser.fullName : (this.currentLang === 'ar' ? 'المدير' : 'Manager');
-        rec.closedRole = this.currentUser ? this.currentUser.role : 'admin';
-        rec.closedSales = Number(this.branchSales) || 0;
-        rec.closedInvoices = Number(this.branchInvoices) || 0;
-        rec.closeNote = note || (this.currentLang === 'ar' ? 'إغلاق واعتماد رسمي' : 'Official shift close');
+        // ─── الحالة 1: اليومية مغلقة حالياً — طلب إعادة الفتح ───
+        if (this.isDayClosed) {
+          if (!this.currentUser || this.currentUser.role !== 'admin') {
+            this.showToast(this.currentLang === 'ar' ? 'صلاحية إعادة فتح اليومية للمدير العام فقط ⛔' : 'Only Admin can reopen closed days ⛔', 'error');
+            return;
+          }
+
+          const confirmReopen = confirm(
+            this.currentLang === 'ar'
+              ? `هل ترغب في إعادة فتح يومية فرع (${branchName}) لتاريخ (${date}) وتفعيل إدخال المبيعات مجدداً؟`
+              : `Reopen shift for branch (${branchName}) on (${date})?`
+          );
+          if (!confirmReopen) return;
+
+          if (!this.closedDays) this.closedDays = {};
+          keys.forEach(k => {
+            delete this.closedDays[k];
+          });
+          this.closedDays = { ...this.closedDays };
+
+          if (this.daily) {
+            keys.forEach(k => {
+              if (this.daily[k]) {
+                this.daily[k].isClosed = false;
+                this.daily[k].reopenedAt = Date.now();
+                this.daily[k].reopenedBy = this.currentUser ? this.currentUser.fullName : 'المدير العام';
+              }
+            });
+            this.daily = { ...this.daily };
+          }
+
+          try {
+            localStorage.setItem('samx_closed_days', JSON.stringify(this.closedDays || {}));
+          } catch (_) {}
+
+          this.logActivity('🔓 إعادة فتح يومية', `${branchName} (${date})`);
+          this.persist();
+          if (typeof this.triggerCloudSyncDebounced === 'function') this.triggerCloudSyncDebounced();
+          if (typeof this.vibrate === 'function') this.vibrate(25);
+          this.showCloseDayModal = false;
+          this.showReopenDayModal = false;
+          this.showToast(this.currentLang === 'ar' ? 'تمت إعادة فتح اليومية للتعديل بنجاح 🔓' : 'Day reopened successfully 🔓', 'info');
+          return;
+        }
+
+        // ─── الحالة 2: اليومية مفتوحة — الاعتماد والإغلاق الفوري ───
+        const currentSalesStr = this.formatSAR ? this.formatSAR(this.branchSales) : this.branchSales;
+        const confirmClose = confirm(
+          this.currentLang === 'ar'
+            ? `هل أنت متأكد من اعتماد وإغلاق يومية (${branchName}) لتاريخ (${date})؟\nالمبيعات الحالية: ${currentSalesStr}\nلن يمكن تعديل المبيعات بعد الاعتماد.`
+            : `Confirm and seal daily shift for (${branchName}) on (${date})?\nCurrent Sales: ${currentSalesStr}`
+        );
+        if (!confirmClose) return;
+
+        const closedMeta = {
+          closedAt: Date.now(),
+          closedBy: this.currentUser ? this.currentUser.fullName : 'المدير',
+          closedRole: this.currentUser ? this.currentUser.role : 'admin',
+          closedSales: Number(this.branchSales) || 0,
+          closedInvoices: Number(this.branchInvoices) || 0,
+          closeNote: (this.closeDayNote || this.closeDayNotes || 'اعتماد وإغلاق رسمي').trim(),
+        };
+
+        if (!this.closedDays) this.closedDays = {};
+        keys.forEach(k => {
+          this.closedDays[k] = { ...closedMeta };
+        });
+        this.closedDays = { ...this.closedDays };
 
         if (!this.daily) this.daily = {};
-        this.daily[key] = { ...rec };
-        if (key !== `${date}|${branchId}`) {
-          this.daily[`${date}|${branchId}`] = { ...rec };
-        }
+        const primaryKey = `${normDate}|${branchId}`;
+        const rec = (typeof this.normalizeDayRecord === 'function') ? this.normalizeDayRecord(primaryKey) : (this.daily[primaryKey] || {});
+        rec.isClosed = true;
+        rec.closedAt = closedMeta.closedAt;
+        rec.closedBy = closedMeta.closedBy;
+        rec.closedRole = closedMeta.closedRole;
+        rec.closedSales = closedMeta.closedSales;
+        rec.closedInvoices = closedMeta.closedInvoices;
+        rec.closeNote = closedMeta.closeNote;
+
+        keys.forEach(k => {
+          this.daily[k] = { ...rec, isClosed: true };
+        });
         this.daily = { ...this.daily };
 
-        this.logActivity('🔒 إغلاق يومية', `${this.selectedBranch?.name || ''} - تاريخ: ${date} • المبيعات: ${this.formatSAR ? this.formatSAR(this.branchSales) : this.branchSales}`);
+        try {
+          localStorage.setItem('samx_closed_days', JSON.stringify(this.closedDays));
+        } catch (_) {}
+
+        this.logActivity('🔒 إغلاق يومية', `${branchName} - تاريخ: ${date} • المبيعات: ${currentSalesStr}`);
         this.persist();
         if (typeof this.triggerCloudSyncDebounced === 'function') this.triggerCloudSyncDebounced();
         if (typeof this.vibrate === 'function') this.vibrate([20, 50, 20]);
         this.showCloseDayModal = false;
-        this.showToast(this.currentLang === 'ar' ? 'تم اعتماد وإغلاق اليومية بنجاح 🔒✅' : 'Day shift closed & sealed successfully 🔒✅', 'success');
+        this.showToast(this.currentLang === 'ar' ? '✅ تم اعتماد وإغلاق اليومية بنجاح' : '✅ Day closed and sealed successfully', 'success');
 
         this.getDB().then(sdb => {
           if (sdb && sdb.closeDayRecord) {
@@ -6657,10 +6753,19 @@ this.settings = {
           }
         }).catch(() => {});
       } catch (err) {
-        console.error('[confirmCloseDay error]', err);
+        console.error('[forceCloseCurrentDay error]', err);
         this.showCloseDayModal = false;
-        this.showToast(this.currentLang === 'ar' ? 'تم اعتماد إغلاق اليومية 🔒' : 'Day shift closed 🔒', 'success');
+        this.showToast(this.currentLang === 'ar' ? '✅ تم اعتماد وإغلاق اليومية بنجاح' : '✅ Day closed successfully', 'success');
       }
+    },
+    handleCloseDayClick() {
+      this.forceCloseCurrentDay();
+    },
+    openCloseDayModal() {
+      this.forceCloseCurrentDay();
+    },
+    confirmCloseDay() {
+      this.forceCloseCurrentDay();
     },
     openReopenModal() {
       if (!this.canReopenDay) {
@@ -10079,8 +10184,9 @@ this.settings = {
 
       nextTick(() => this.refreshCharts());
 
-            // ⭐ تشخيص: فعّل الوصول للتطبيق من Console
+      // ⭐ تشخيص: فعّل الوصول للتطبيق من Console
       window.__samx = this;
+      window.samxApp = this;
 
       console.log('[SAMX] v' + APP_VERSION + ' mounted ✅');
       console.log('© 2026 SAMX - جميع الحقوق محفوظة');
@@ -10090,4 +10196,43 @@ this.settings = {
       if (loading) loading.style.display = 'none';
     }
   },
-}).mount('#app');
+});
+
+const samxMountedApp = appInstance.mount('#app');
+window.__samx = samxMountedApp;
+window.samxApp = samxMountedApp;
+
+// ================================================================
+//  ⭐ v25.3.1: Global Document Click Listener لزر إغلاق اليومية المباشر
+// ================================================================
+(function initGlobalCloseDayClickListener() {
+  document.addEventListener('click', function(e) {
+    try {
+      const btn = e.target && e.target.closest ? e.target.closest('button, [role="button"], .btn-close-day-action, [data-action="close-day"]') : null;
+      if (!btn) return;
+
+      const action = btn.getAttribute('data-action');
+      const text = (btn.textContent || '').trim();
+      const hasCloseClass = btn.classList && btn.classList.contains('btn-close-day-action');
+
+      const isCloseDayBtn = action === 'close-day' ||
+        hasCloseClass ||
+        text.includes('اعتماد وإغلاق اليومية') ||
+        text.includes('إغلاق اليومية') ||
+        text.includes('اليومية مغلقة — إعادة فتح') ||
+        text.includes('مغلقة (إعادة فتح)') ||
+        text.includes('اليومية مغلقة') ||
+        (text.includes('Close Day') && !text.includes('Cancel'));
+
+      if (isCloseDayBtn) {
+        console.log('[SAMX Global Click Listener] Intercepted close day click:', text);
+        const app = window.__samx || window.samxApp;
+        if (app && typeof app.forceCloseCurrentDay === 'function') {
+          app.forceCloseCurrentDay();
+        }
+      }
+    } catch (err) {
+      console.warn('[Global Close Day Listener error]', err);
+    }
+  }, true);
+})();

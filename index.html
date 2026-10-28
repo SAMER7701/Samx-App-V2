@@ -1163,8 +1163,18 @@
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
               <h3 style="font-size:13px;font-weight:bold;color:#34d399;margin:0;">{{ t('dashboard.staff.title') }}</h3>
               <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-                <button v-if="!isDayClosed && canCloseDay" @click="handleCloseDayClick()" class="btn-warning-subtle btn-sm" style="font-weight:700;display:inline-flex;align-items:center;gap:4px;">
-                  🔒 {{ currentLang === 'ar' ? 'اعتماد وإغلاق اليومية' : 'Close Day' }}
+                <!-- ⭐ v25.3.1: زر اعتماد وإغلاق / إعادة فتح اليومية المباشر -->
+                <button
+                  type="button"
+                  data-action="close-day"
+                  @click.stop="forceCloseCurrentDay()"
+                  class="btn-close-day-action btn-sm"
+                  :class="isDayClosed ? 'btn-success-subtle' : 'btn-warning-subtle'"
+                  :style="isDayClosed ? 'font-weight:700;display:inline-flex;align-items:center;gap:5px;border:1.5px solid #10b981;color:#10b981;background:rgba(16,185,129,0.15);cursor:pointer;' : 'font-weight:700;display:inline-flex;align-items:center;gap:5px;border:1.5px solid rgba(212,168,75,0.7);color:#fcd34d;background:rgba(212,168,75,0.15);cursor:pointer;'"
+                  :title="isDayClosed ? (currentLang === 'ar' ? 'اليومية مغلقة — اضغط لإعادة الفتح (للمدير العام)' : 'Day Closed — Click to Reopen (Admin)') : (currentLang === 'ar' ? 'اضغط لاعتماد وإغلاق اليومية' : 'Click to close and seal day')"
+                >
+                  <span v-if="!isDayClosed">🔒 {{ currentLang === 'ar' ? 'اعتماد وإغلاق اليومية' : 'Close Day' }}</span>
+                  <span v-else>🔓 {{ currentLang === 'ar' ? 'اليومية مغلقة — إعادة فتح' : 'Day Closed — Reopen' }}</span>
                 </button>
                 <button @click="exportDailyExcel" :disabled="!selectedBranch || !canExport" class="btn-success-subtle btn-sm">{{ t('dashboard.staff.actions.excel') }}</button>
                 <button @click="showCompareModal=true" class="btn-ghost btn-sm">{{ t('dashboard.staff.actions.compare') }}</button>
@@ -1269,8 +1279,18 @@
                 <span class="label">{{ currentLang === 'ar' ? 'أبطال:' : 'Heroes:' }}</span>
                 <span class="val" :style="{color: heroesPct >= 100 ? '#34d399' : heroesPct >= 70 ? '#fbbf24' : '#fb7185'}">{{ heroesPct.toFixed(0) }}%</span>
               </div>
-              <button v-if="!isDayClosed && canCloseDay" @click="handleCloseDayClick()" class="btn-warning-subtle btn-sm" style="font-size:11px;padding:4px 8px;font-weight:700;white-space:nowrap;margin-inline-start:auto;">
-                🔒 {{ currentLang === 'ar' ? 'إغلاق' : 'Close' }}
+              <!-- ⭐ v25.3.1: زر إغلاق / إعادة فتح اليومية المباشر للجوال -->
+              <button
+                type="button"
+                data-action="close-day"
+                @click.stop="forceCloseCurrentDay()"
+                class="btn-close-day-action btn-sm"
+                :class="isDayClosed ? 'btn-success-subtle' : 'btn-warning-subtle'"
+                :style="isDayClosed ? 'font-size:11px;padding:4px 8px;font-weight:700;white-space:nowrap;margin-inline-start:auto;border:1.5px solid #10b981;color:#10b981;background:rgba(16,185,129,0.15);cursor:pointer;' : 'font-size:11px;padding:4px 8px;font-weight:700;white-space:nowrap;margin-inline-start:auto;border:1.5px solid rgba(212,168,75,0.7);color:#fcd34d;background:rgba(212,168,75,0.15);cursor:pointer;'"
+                :title="isDayClosed ? (currentLang === 'ar' ? 'اليومية مغلقة — اضغط لإعادة الفتح' : 'Day Closed — Reopen') : (currentLang === 'ar' ? 'اضغط لاعتماد وإغلاق اليومية' : 'Close Day')"
+              >
+                <span v-if="!isDayClosed">🔒 {{ currentLang === 'ar' ? 'إغلاق اليومية' : 'Close Day' }}</span>
+                <span v-else>🔓 {{ currentLang === 'ar' ? 'مغلقة (إعادة فتح)' : 'Closed (Reopen)' }}</span>
               </button>
             </div>
             <div v-if="branchStaff.length===0" class="card" style="border-radius:16px;padding:32px;text-align:center;color:#94a3b8;">{{ t('dashboard.staff.empty') }}</div>
@@ -4863,7 +4883,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=25.3.0"></script>
+<script src="app.js?v=25.3.1"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {
