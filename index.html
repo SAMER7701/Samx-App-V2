@@ -1521,7 +1521,7 @@
             </div>
             <div>
               <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600;">{{ t('kpi.filter.branch') }}</label>
-              <select v-model="selectedBranchId" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;">
+              <select v-model="selectedBranchId" @change="monthlyBranchId = selectedBranchId" class="input" style="width:100%;border-radius:8px;padding:10px;font-size:14px;">
                 <option value="">{{ t('kpi.filter.chooseBranch') }}</option>
                 <option v-for="b in allowedBranches" :key="b.id" :value="b.id">{{ b.name }} ({{ b.code }})</option>
               </select>
@@ -4883,7 +4883,7 @@
   </transition>
 </div>
 
-<script src="app.js?v=25.3.2"></script>
+<script src="app.js?v=25.3.3"></script>
 <script>
 // v19: تحديث شاشة التحميل بالهوية المخصصة
 (function() {

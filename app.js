@@ -4,7 +4,7 @@
 //  © 2026 SAMX - جميع الحقوق محفوظة
 // ================================================================
 
-const APP_VERSION = '25.3.2';
+const APP_VERSION = '25.3.3';
 const APP_NAME = 'SAMX';
 const OWNER_NAME = 'SAMX';
 const DEV_NAME = 'SAMX Team';
@@ -540,6 +540,48 @@ function normalizeDateStr(val) {
   }
 
   return null;
+}
+
+// ⭐ v25.3.3: استخراج الشهر القياسي (YYYY-MM) بدقة من أي صيغة تاريخ أو مفتاح
+function extractYearMonth(val) {
+  if (val === null || val === undefined || val === '') return '';
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    return `${val.getFullYear()}-${String(val.getMonth() + 1).padStart(2, '0')}`;
+  }
+  let str = String(val).replace(/[\u0660-\u0669]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).trim();
+  if (!str) return '';
+
+  // إذا كانت القيمة بالفعل YYYY-MM
+  if (/^\d{4}[\/\-\.]\d{1,2}$/.test(str)) {
+    const parts = str.split(/[\/\-\.]/);
+    return `${parts[0]}-${String(parseInt(parts[1], 10)).padStart(2, '0')}`;
+  }
+
+  // محاولة التطبيع القياسي كـ YYYY-MM-DD
+  const norm = normalizeDateStr(str);
+  if (norm && norm.length >= 7) {
+    return norm.slice(0, 7);
+  }
+
+  // YYYY-MM في بداية السلسلة
+  const ymMatch = str.match(/^(\d{4})[\/\-\.](\d{1,2})/);
+  if (ymMatch) {
+    const m = parseInt(ymMatch[2], 10);
+    if (m >= 1 && m <= 12) {
+      return `${ymMatch[1]}-${String(m).padStart(2, '0')}`;
+    }
+  }
+
+  // DD-MM-YYYY أو MM-YYYY
+  const myMatch = str.match(/(\d{1,2})[\/\-\.](\d{4})/);
+  if (myMatch) {
+    const m = parseInt(myMatch[1], 10);
+    if (m >= 1 && m <= 12) {
+      return `${myMatch[2]}-${String(m).padStart(2, '0')}`;
+    }
+  }
+
+  return '';
 }
 
 // ================================================================
@@ -1294,12 +1336,23 @@ const appInstance = createApp({
 
     // حساب التارجت الشهري الإجمالي للفرع
     branchMonthlyTargetTotal() {
-      if (!this.selectedBranchId) return 0;
-      const month = this.selectedDate ? this.selectedDate.slice(0, 7) : '';
-      const monthlyKey = `${month}|${this.selectedBranchId}`;
+      const bId = this.selectedBranchId || this.monthlyBranchId;
+      if (!bId) return 0;
+      const month = (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.selectedDate) : extractYearMonth(this.selectedDate)) ||
+                    (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.monthlyMonth) : extractYearMonth(this.monthlyMonth)) ||
+                    localMonthStr();
+      const monthlyKey = `${month}|${bId}`;
       // 1. التارجت الشهري المركزي للفرع
       if (this.monthlyTargets && Number(this.monthlyTargets[monthlyKey]) > 0) {
         return Math.round(Number(this.monthlyTargets[monthlyKey]));
+      }
+      if (this.monthlyTargets) {
+        for (const [k, v] of Object.entries(this.monthlyTargets)) {
+          const parts = k.split('|');
+          if (parts[0] === month && String(parts[1]).trim() === String(bId).trim() && Number(v) > 0) {
+            return Math.round(Number(v));
+          }
+        }
       }
       // 2. إذا أدخل المستخدم قيمة مخصصة في سجل اليوم
       if (this.dayData && Number(this.dayData.monthlyTarget) > 0) {
@@ -1309,7 +1362,16 @@ const appInstance = createApp({
       let sumDays = 0;
       if (this.daily) {
         for (const [k, d] of Object.entries(this.daily)) {
-          if (k.startsWith(month + '-') && k.endsWith('|' + this.selectedBranchId)) {
+          const parts = k.includes('|') ? k.split('|') : k.split('_');
+          let kDate = parts[0];
+          let kBId = parts[1];
+          if (/^\d{4}[\/\-\.]/.test(parts[1]) || /^\d{1,2}[\/\-\.]/.test(parts[1])) {
+            kDate = parts[1];
+            kBId = parts[0];
+          }
+          const normKDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(kDate) : normalizeDateStr(kDate)) || kDate;
+          const kMonth = typeof this.extractYearMonth === 'function' ? this.extractYearMonth(normKDate) : extractYearMonth(normKDate);
+          if (kMonth === month && String(kBId).trim() === String(bId).trim()) {
             sumDays += Number(d.baseTarget) || 0;
           }
         }
@@ -1320,25 +1382,41 @@ const appInstance = createApp({
 
     // حساب المبيعات التراكمية من بداية الشهر حتى اليوم المختار
     branchMtdSalesCalculated() {
-      if (!this.selectedBranchId || !this.selectedDate) return 0;
-      const month = this.selectedDate.slice(0, 7);
+      const bId = this.selectedBranchId || this.monthlyBranchId;
+      if (!bId || !this.selectedDate) return 0;
+      const month = (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.selectedDate) : extractYearMonth(this.selectedDate)) ||
+                    (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.monthlyMonth) : extractYearMonth(this.monthlyMonth)) ||
+                    localMonthStr();
+      const normSelectedDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : normalizeDateStr(this.selectedDate)) || this.selectedDate;
       let sum = 0;
       if (this.daily) {
         for (const [k, d] of Object.entries(this.daily)) {
-          if (k.startsWith(month + '-') && k.endsWith('|' + this.selectedBranchId)) {
-            const datePart = k.split('|')[0];
-            if (datePart <= this.selectedDate) {
+          const parts = k.includes('|') ? k.split('|') : k.split('_');
+          let kDate = parts[0];
+          let kBId = parts[1];
+          if (/^\d{4}[\/\-\.]/.test(parts[1]) || /^\d{1,2}[\/\-\.]/.test(parts[1])) {
+            kDate = parts[1];
+            kBId = parts[0];
+          }
+          const normKDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(kDate) : normalizeDateStr(kDate)) || kDate;
+          const kMonth = typeof this.extractYearMonth === 'function' ? this.extractYearMonth(normKDate) : extractYearMonth(normKDate);
+          if (kMonth === month && String(kBId).trim() === String(bId).trim()) {
+            if (normKDate <= normSelectedDate) {
               let daySales = 0;
-              if (d.staffData) {
+              if (d.staffData && typeof d.staffData === 'object') {
                 for (const s of Object.values(d.staffData)) {
-                  daySales += Number(s.sales) || 0;
+                  daySales += Number(s?.sales) || 0;
                 }
               }
               daySales += Number(d.manualExtra) || 0;
+              if (daySales === 0 && Number(d.sales) > 0) daySales = Number(d.sales);
               sum += daySales;
             }
           }
         }
+      }
+      if (sum === 0 && typeof this.branchSales === 'number' && this.branchSales > 0) {
+        sum = this.branchSales;
       }
       return Math.round(sum);
     },
@@ -1498,23 +1576,103 @@ const appInstance = createApp({
     },
 
     kpiMonthlySummary() {
-      if (!this.monthlyBranchId) return { upt: 0, atv: 0, invoices: 0, pieces: 0, sales: 0, daysCount: 0 };
-      const [y, m] = this.monthlyMonth.split('-').map(Number);
+      const targetBranchId = this.selectedBranchId || this.monthlyBranchId;
+      if (!targetBranchId) return { upt: 0, atv: 0, invoices: 0, pieces: 0, sales: 0, daysCount: 0 };
+      const targetMonth = (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.monthlyMonth) : extractYearMonth(this.monthlyMonth)) ||
+                          (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.selectedDate) : extractYearMonth(this.selectedDate)) ||
+                          localMonthStr();
+      const [y, m] = targetMonth.split('-').map(Number);
       const daysInMonth = new Date(y, m, 0).getDate();
-      const staffIds = this.staff.filter(s => s.branchId === this.monthlyBranchId).map(s => s.id);
+
       let totalSales = 0, totalInvoices = 0, totalPieces = 0, daysCount = 0;
+      const seenDays = new Set();
+      const normSelectedDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : normalizeDateStr(this.selectedDate)) || this.selectedDate;
+
+      // 1. فحص يوم بيوم عبر getDayRecord
       for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const d = this.daily[`${dateStr}|${this.monthlyBranchId}`];
-        if (!d) continue;
-        const daySales = staffIds.reduce((sum, id) => sum + (Number(d.staffData?.[id]?.sales) || 0), 0) + (Number(d.manualExtra) || 0);
-        const dayInv = Number(d.invoices) || 0;
-        const dayPcs = Number(d.pieces) || 0;
-        if (daySales > 0 || dayInv > 0 || dayPcs > 0) daysCount++;
-        totalSales += daySales; totalInvoices += dayInv; totalPieces += dayPcs;
+        const dayNum = String(day).padStart(2, '0');
+        const dateStr = `${y}-${String(m).padStart(2, '0')}-${dayNum}`;
+        let d = null;
+        if (typeof this.getDayRecord === 'function') {
+          d = this.getDayRecord(dateStr, targetBranchId, false);
+        } else if (this.daily) {
+          d = this.daily[`${dateStr}|${targetBranchId}`];
+        }
+
+        let dayStaffSales = 0;
+        let dayInv = 0;
+        let dayPcs = 0;
+
+        if (d) {
+          seenDays.add(dateStr);
+          if (d.staffData && typeof d.staffData === 'object') {
+            Object.values(d.staffData).forEach(item => {
+              dayStaffSales += (Number(item?.sales) || 0);
+            });
+          }
+          dayInv = Number(d.invoices) || 0;
+          dayPcs = Number(d.pieces) || 0;
+        }
+
+        let daySales = dayStaffSales + (Number(d?.manualExtra) || 0);
+        if (daySales === 0 && Number(d?.sales) > 0) daySales = Number(d.sales);
+
+        // ربط مباشر مع بيانات اليوم الحي إذا كان اليوم المختار ولم يسجل بعد في daily
+        if (dateStr === normSelectedDate && typeof this.branchSales === 'number' && this.branchSales > 0 && daySales === 0) {
+          daySales = Math.round(this.branchSales);
+          if (dayInv === 0 && this.branchInvoices > 0) dayInv = this.branchInvoices;
+          if (dayPcs === 0 && this.branchPieces > 0) dayPcs = this.branchPieces;
+          seenDays.add(dateStr);
+        }
+
+        if (daySales > 0 || dayInv > 0 || dayPcs > 0) {
+          seenDays.add(dateStr);
+          daysCount++;
+        }
+        totalSales += daySales;
+        totalInvoices += dayInv;
+        totalPieces += dayPcs;
       }
+
+      // 2. فحص شامل لكافة السجلات في this.daily التابعة لنفس الشهر والفرع
+      if (this.daily) {
+        for (const [k, d] of Object.entries(this.daily)) {
+          if (!d) continue;
+          const parts = k.includes('|') ? k.split('|') : k.split('_');
+          let kDate = parts[0];
+          let kBId = parts[1];
+          if (/^\d{4}[\/\-\.]/.test(parts[1]) || /^\d{1,2}[\/\-\.]/.test(parts[1])) {
+            kDate = parts[1];
+            kBId = parts[0];
+          }
+          const normKDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(kDate) : normalizeDateStr(kDate)) || kDate;
+          const kMonth = typeof this.extractYearMonth === 'function' ? this.extractYearMonth(normKDate) : extractYearMonth(normKDate);
+          if (String(kBId).trim() === String(targetBranchId).trim() && kMonth === targetMonth) {
+            if (!seenDays.has(normKDate)) {
+              seenDays.add(normKDate);
+              let dayStaffSales = 0;
+              if (d.staffData && typeof d.staffData === 'object') {
+                Object.values(d.staffData).forEach(item => {
+                  dayStaffSales += (Number(item?.sales) || 0);
+                });
+              }
+              let daySales = dayStaffSales + (Number(d.manualExtra) || 0);
+              if (daySales === 0 && Number(d.sales) > 0) daySales = Number(d.sales);
+              const dayInv = Number(d.invoices) || 0;
+              const dayPcs = Number(d.pieces) || 0;
+              if (daySales > 0 || dayInv > 0 || dayPcs > 0) daysCount++;
+              totalSales += daySales;
+              totalInvoices += dayInv;
+              totalPieces += dayPcs;
+            }
+          }
+        }
+      }
+
       return {
-        sales: totalSales, invoices: totalInvoices, pieces: totalPieces,
+        sales: Math.round(totalSales),
+        invoices: Math.round(totalInvoices),
+        pieces: Math.round(totalPieces),
         upt: totalInvoices > 0 ? totalPieces / totalInvoices : 0,
         atv: totalInvoices > 0 ? totalSales / totalInvoices : 0,
         daysCount,
@@ -1522,45 +1680,137 @@ const appInstance = createApp({
     },
 
     kpiMonthlyByStaff() {
-      if (!this.monthlyBranchId) return [];
-      const [y, m] = this.monthlyMonth.split('-').map(Number);
+      const targetBranchId = this.selectedBranchId || this.monthlyBranchId;
+      if (!targetBranchId) return [];
+      const targetMonth = (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.monthlyMonth) : extractYearMonth(this.monthlyMonth)) ||
+                          (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.selectedDate) : extractYearMonth(this.selectedDate)) ||
+                          localMonthStr();
+      const [y, m] = targetMonth.split('-').map(Number);
       const daysInMonth = new Date(y, m, 0).getDate();
-      const staffList = this.staff.filter(s => s.branchId === this.monthlyBranchId);
+      const staffList = this.staff.filter(s => String(s.branchId).trim() === String(targetBranchId).trim());
+      const normSelectedDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : normalizeDateStr(this.selectedDate)) || this.selectedDate;
+
       return staffList.map(s => {
         let sales = 0, target = 0, daysWorked = 0;
+        const seenDays = new Set();
+
         for (let day = 1; day <= daysInMonth; day++) {
           const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const d = this.daily[`${dateStr}|${this.monthlyBranchId}`];
-          if (!d) continue;
-          const sd = d.staffData?.[s.id];
-          if (!sd) continue;
-          sales += Number(sd.sales) || 0;
-          target += Number(sd.target) || 0;
-          if ((Number(sd.sales) || 0) > 0) daysWorked++;
+          let d = null;
+          if (typeof this.getDayRecord === 'function') {
+            d = this.getDayRecord(dateStr, targetBranchId, false);
+          } else if (this.daily) {
+            d = this.daily[`${dateStr}|${targetBranchId}`];
+          }
+
+          let sSales = 0;
+          let sTarget = 0;
+          if (d && d.staffData && d.staffData[s.id]) {
+            seenDays.add(dateStr);
+            sSales = Number(d.staffData[s.id].sales) || 0;
+            sTarget = Number(d.staffData[s.id].target) || 0;
+          }
+
+          // إذا كان اليوم هو اليوم المختار ومسجل في staffRowsComputed مباشرة
+          if (dateStr === normSelectedDate && sSales === 0) {
+            const activeRow = (this.staffRowsComputed || []).find(r => r.id === s.id);
+            if (activeRow && activeRow.sales > 0) {
+              sSales = activeRow.sales;
+              if (sTarget === 0) sTarget = activeRow.target;
+              seenDays.add(dateStr);
+            }
+          }
+
+          sales += sSales;
+          target += sTarget;
+          if (sSales > 0) daysWorked++;
         }
+
+        if (this.daily) {
+          for (const [k, d] of Object.entries(this.daily)) {
+            if (!d) continue;
+            const parts = k.includes('|') ? k.split('|') : k.split('_');
+            let kDate = parts[0];
+            let kBId = parts[1];
+            if (/^\d{4}[\/\-\.]/.test(parts[1]) || /^\d{1,2}[\/\-\.]/.test(parts[1])) {
+              kDate = parts[1];
+              kBId = parts[0];
+            }
+            const normKDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(kDate) : normalizeDateStr(kDate)) || kDate;
+            const kMonth = typeof this.extractYearMonth === 'function' ? this.extractYearMonth(normKDate) : extractYearMonth(normKDate);
+            if (String(kBId).trim() === String(targetBranchId).trim() && kMonth === targetMonth) {
+              if (!seenDays.has(normKDate)) {
+                seenDays.add(normKDate);
+                const sd = d.staffData?.[s.id];
+                if (sd) {
+                  const sSales = Number(sd.sales) || 0;
+                  sales += sSales;
+                  target += Number(sd.target) || 0;
+                  if (sSales > 0) daysWorked++;
+                }
+              }
+            }
+          }
+        }
+
         return {
           id: s.id, name: s.name, code: s.code, jobTitle: s.jobTitle,
-          sales, target, daysWorked,
+          sales: Math.round(sales),
+          target: Math.round(target),
+          daysWorked,
           pct: target > 0 ? (sales / target) * 100 : 0,
         };
       }).sort((a, b) => b.sales - a.sales);
     },
 
     kpiDailyTrend() {
-      if (!this.selectedBranchId) return [];
+      const targetBranchId = this.selectedBranchId || this.monthlyBranchId;
+      if (!targetBranchId) return [];
       const arr = [];
+      const baseDate = this.selectedDate ? new Date(this.selectedDate) : new Date();
+      const normSelectedDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : normalizeDateStr(this.selectedDate)) || this.selectedDate;
+
       for (let i = 6; i >= 0; i--) {
-        const d = new Date(this.selectedDate);
+        const d = new Date(baseDate);
         d.setDate(d.getDate() - i);
-       const dateStr = localDateStr(d);
-        const rec = this.daily[`${dateStr}|${this.selectedBranchId}`] || {};
-        const staffIds = this.staff.filter(s => s.branchId === this.selectedBranchId).map(s => s.id);
-        const sales = staffIds.reduce((sum, id) => sum + (Number(rec.staffData?.[id]?.sales) || 0), 0) + (Number(rec.manualExtra) || 0);
-        const inv = Number(rec.invoices) || 0;
-        const pcs = Number(rec.pieces) || 0;
+        const dateStr = localDateStr(d);
+        const normDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(dateStr) : normalizeDateStr(dateStr)) || dateStr;
+        let rec = null;
+        if (typeof this.getDayRecord === 'function') {
+          rec = this.getDayRecord(normDate, targetBranchId, false);
+        }
+        if (!rec && this.daily) {
+          rec = this.daily[`${normDate}|${targetBranchId}`] || this.daily[`${dateStr}|${targetBranchId}`] || {};
+        }
+        rec = rec || {};
+        let staffSales = 0;
+        if (rec.staffData && typeof rec.staffData === 'object') {
+          Object.values(rec.staffData).forEach(item => {
+            staffSales += (Number(item?.sales) || 0);
+          });
+        }
+        let sales = staffSales + (Number(rec.manualExtra) || 0);
+        if (sales === 0 && Number(rec.sales) > 0) sales = Number(rec.sales);
+
+        let inv = Number(rec.invoices) || 0;
+        let pcs = Number(rec.pieces) || 0;
+
+        // إذا كان هذا اليوم هو اليوم المختار واليوم الحالي وله مبيعات معروضة مباشرة
+        if (normDate === normSelectedDate || dateStr === this.selectedDate) {
+          if (typeof this.branchSales === 'number' && this.branchSales > 0 && sales === 0) {
+            sales = this.branchSales;
+          }
+          if (inv === 0 && this.branchInvoices > 0) inv = this.branchInvoices;
+          if (pcs === 0 && this.branchPieces > 0) pcs = this.branchPieces;
+        }
+
         const dayKeys = ['days.sun','days.mon','days.tue','days.wed','days.thu','days.fri','days.sat'];
         arr.push({
-          date: dateStr, dayName: this.t(dayKeys[d.getDay()]), sales, invoices: inv, pieces: pcs,
+          date: normDate,
+          dayName: this.t(dayKeys[d.getDay()]),
+          sales: Math.round(sales),
+          invoices: Math.round(inv),
+          pieces: Math.round(pcs),
           upt: inv > 0 ? pcs / inv : 0,
           atv: inv > 0 ? sales / inv : 0,
         });
@@ -2487,44 +2737,89 @@ const appInstance = createApp({
       return results;
     },
 
-    monthlyTargetKeyBase() { return this.monthlyBranchId ? `${this.monthlyMonth}|${this.monthlyBranchId}` : null; },
+    monthlyTargetKeyBase() {
+      const bId = this.selectedBranchId || this.monthlyBranchId;
+      const m = (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.monthlyMonth) : extractYearMonth(this.monthlyMonth)) ||
+                (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.selectedDate) : extractYearMonth(this.selectedDate)) ||
+                localMonthStr();
+      return bId && m ? `${m}|${bId}` : null;
+    },
     monthlyBaseTarget: {
       get() {
-        if (!this.monthlyTargetKeyBase) return 0;
-        return Math.round(Number(this.monthlyTargets[this.monthlyTargetKeyBase]) || 0);
+        const bId = this.selectedBranchId || this.monthlyBranchId;
+        const m = (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.monthlyMonth) : extractYearMonth(this.monthlyMonth)) ||
+                  (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.selectedDate) : extractYearMonth(this.selectedDate)) ||
+                  localMonthStr();
+        if (!bId || !m) return 0;
+        const key = `${m}|${bId}`;
+        if (this.monthlyTargets && Number(this.monthlyTargets[key]) > 0) {
+          return Math.round(Number(this.monthlyTargets[key]));
+        }
+        if (this.monthlyTargets) {
+          for (const [k, v] of Object.entries(this.monthlyTargets)) {
+            const parts = k.split('|');
+            if (parts[0] === m && String(parts[1]).trim() === String(bId).trim() && Number(v) > 0) {
+              return Math.round(Number(v));
+            }
+          }
+        }
+        return Math.round(Number(this.branchMonthlyTargetTotal) || 0);
       },
       set(val) {
         if (!this.monthlyTargetKeyBase) return;
+        if (!this.monthlyTargets) this.monthlyTargets = {};
         this.monthlyTargets[this.monthlyTargetKeyBase] = Math.round(Number(val) || 0);
       },
     },
     monthlyHeroesTarget: {
       get() {
-        if (!this.monthlyTargetKeyBase) return 0;
-        return Math.round(Number(this.monthlyHeroesTargets[this.monthlyTargetKeyBase]) || 0);
+        const bId = this.selectedBranchId || this.monthlyBranchId;
+        const m = (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.monthlyMonth) : extractYearMonth(this.monthlyMonth)) ||
+                  (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.selectedDate) : extractYearMonth(this.selectedDate)) ||
+                  localMonthStr();
+        if (!bId || !m) return 0;
+        const key = `${m}|${bId}`;
+        if (this.monthlyHeroesTargets && Number(this.monthlyHeroesTargets[key]) > 0) {
+          return Math.round(Number(this.monthlyHeroesTargets[key]));
+        }
+        if (this.monthlyHeroesTargets) {
+          for (const [k, v] of Object.entries(this.monthlyHeroesTargets)) {
+            const parts = k.split('|');
+            if (parts[0] === m && String(parts[1]).trim() === String(bId).trim() && Number(v) > 0) {
+              return Math.round(Number(v));
+            }
+          }
+        }
+        return 0;
       },
       set(val) {
         if (!this.monthlyTargetKeyBase) return;
+        if (!this.monthlyHeroesTargets) this.monthlyHeroesTargets = {};
         this.monthlyHeroesTargets[this.monthlyTargetKeyBase] = Math.round(Number(val) || 0);
       },
     },
     monthlyDays() {
-      if (!this.monthlyBranchId) return [];
-      const [y, m] = this.monthlyMonth.split('-').map(Number);
+      const targetBranchId = this.selectedBranchId || this.monthlyBranchId;
+      if (!targetBranchId) return [];
+      const targetMonth = (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.monthlyMonth) : extractYearMonth(this.monthlyMonth)) ||
+                          (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.selectedDate) : extractYearMonth(this.selectedDate)) ||
+                          localMonthStr();
+      const [y, m] = targetMonth.split('-').map(Number);
       const daysInMonth = new Date(y, m, 0).getDate();
-      const staffIds = this.staff.filter(s => s.branchId === this.monthlyBranchId).map(s => s.id);
       const dayKeys = ['days.sun','days.mon','days.tue','days.wed','days.thu','days.fri','days.sat'];
       const todayKey = this.todayStr;
       const arr = [];
       let cumulative = 0;
+      const normSelectedDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(this.selectedDate) : normalizeDateStr(this.selectedDate)) || this.selectedDate;
+
       for (let day = 1; day <= daysInMonth; day++) {
         const dayNum = String(day).padStart(2, '0');
         const dateStr = `${y}-${String(m).padStart(2, '0')}-${dayNum}`;
         let d = null;
         if (typeof this.getDayRecord === 'function') {
-          d = this.getDayRecord(dateStr, this.monthlyBranchId, false);
+          d = this.getDayRecord(dateStr, targetBranchId, false);
         } else if (this.daily) {
-          d = this.daily[`${dateStr}|${this.monthlyBranchId}`];
+          d = this.daily[`${dateStr}|${targetBranchId}`];
         }
         if (!d) d = { baseTarget: 0, heroesTarget: 0, staffData: {}, manualExtra: 0, invoices: 0, pieces: 0 };
 
@@ -2534,11 +2829,24 @@ const appInstance = createApp({
             staffSales += (Number(item?.sales) || 0);
           });
         }
-        const sales = Math.round(staffSales + (Number(d.manualExtra) || 0));
+        let sales = Math.round(staffSales + (Number(d.manualExtra) || 0));
+        if (sales === 0 && Number(d.sales) > 0) sales = Math.round(Number(d.sales));
+
+        // إذا كان هذا اليوم هو اليوم المختار واليوم الحالي وله مبيعات معروضة مباشرة
+        if (dateStr === normSelectedDate && typeof this.branchSales === 'number' && this.branchSales > 0 && sales === 0) {
+          sales = Math.round(this.branchSales);
+        }
+
         const baseT = Math.round(Number(d.baseTarget) || 0);
         const heroesT = Math.round(Number(d.heroesTarget) || 0);
-        const invoices = Math.round(Number(d.invoices) || 0);
-        const pieces = Math.round(Number(d.pieces) || 0);
+        let invoices = Math.round(Number(d.invoices) || 0);
+        let pieces = Math.round(Number(d.pieces) || 0);
+
+        if (dateStr === normSelectedDate) {
+          if (invoices === 0 && this.branchInvoices > 0) invoices = this.branchInvoices;
+          if (pieces === 0 && this.branchPieces > 0) pieces = this.branchPieces;
+        }
+
         const atv = invoices > 0 ? Math.round(sales / invoices) : 0;
         const upt = invoices > 0 ? Number((pieces / invoices).toFixed(2)) : 0;
 
@@ -2568,7 +2876,13 @@ const appInstance = createApp({
     monthlyDaysWithSales() { return this.monthlyDays.filter(d => d.sales > 0).length; },
     monthlySummary() {
       const days = this.monthlyDays;
-      const totalSales = Math.round(days.reduce((s, d) => s + d.sales, 0));
+      let totalSales = Math.round(days.reduce((s, d) => s + (Number(d.sales) || 0), 0));
+      if (totalSales === 0 && this.kpiMonthlySummary && this.kpiMonthlySummary.sales > 0) {
+        totalSales = this.kpiMonthlySummary.sales;
+      }
+      if (totalSales === 0 && this.branchMtdSalesTotal > 0) {
+        totalSales = this.branchMtdSalesTotal;
+      }
       const baseT = Math.round(this.monthlyBaseTarget);
       const heroesT = Math.round(this.monthlyHeroesTarget);
       return {
@@ -2578,7 +2892,8 @@ const appInstance = createApp({
       };
     },
     monthlyForecast() {
-      if (!this.monthlyBranchId) {
+      const targetBranchId = this.selectedBranchId || this.monthlyBranchId;
+      if (!targetBranchId) {
         return {
           available: false, totalSales: 0, daysPassed: 0, daysRemaining: 0,
           avgDaily: 0, forecastSales: 0, target: 0, forecastPct: 0,
@@ -2591,10 +2906,13 @@ const appInstance = createApp({
       const days = this.monthlyDays;
       if (!days.length) return { available: false };
 
-      const [y, m] = this.monthlyMonth.split('-').map(Number);
+      const targetMonth = (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.monthlyMonth) : extractYearMonth(this.monthlyMonth)) ||
+                          (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(this.selectedDate) : extractYearMonth(this.selectedDate)) ||
+                          localMonthStr();
+      const [y, m] = targetMonth.split('-').map(Number);
       const daysInMonth = new Date(y, m, 0).getDate();
       const todayStr = this.todayStr;
-      const isCurrentMonth = todayStr.slice(0, 7) === this.monthlyMonth;
+      const isCurrentMonth = todayStr.slice(0, 7) === targetMonth;
       const totalSales = days.reduce((s, d) => s + d.sales, 0);
       const activeDays = days.filter(d => d.sales > 0).length;
       let daysPassed;
@@ -3053,11 +3371,18 @@ const appInstance = createApp({
         this.selectedDate = norm;
         return;
       }
+      const ym = (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(val) : extractYearMonth(val));
+      if (ym && this.monthlyMonth !== ym) {
+        this.monthlyMonth = ym;
+      }
       this.refreshCharts();
       this.staffPage = 1;
       nextTick(() => this.autoDistributeCurrentDay());
     },
-    selectedBranchId() {
+    selectedBranchId(val) {
+      if (val && String(this.monthlyBranchId).trim() !== String(val).trim()) {
+        this.monthlyBranchId = val;
+      }
       this.refreshCharts();
       this.staffPage = 1;
       nextTick(() => this.autoDistributeCurrentDay());
@@ -3078,7 +3403,12 @@ const appInstance = createApp({
     },       
     analyticsBranchId() { nextTick(() => this.renderTrendChart()); },
     analyticsRange() { nextTick(() => this.renderTrendChart()); },
-    monthlyBranchId() { nextTick(() => this.renderMonthlyChart()); },
+    monthlyBranchId(val) {
+      if (val && String(this.selectedBranchId).trim() !== String(val).trim()) {
+        this.selectedBranchId = val;
+      }
+      nextTick(() => this.renderMonthlyChart());
+    },
     monthlyMonth() { nextTick(() => this.renderMonthlyChart()); },
     monthlyDays: { handler() { nextTick(() => this.renderMonthlyChart()); }, deep: true },
     staffRowsComputed: { handler() { nextTick(() => this.renderStaffChart()); }, deep: true },
@@ -6845,20 +7175,24 @@ this.settings = {
     normalizeDateStr(val) {
       return normalizeDateStr(val);
     },
+    extractYearMonth(val) {
+      return extractYearMonth(val);
+    },
 
     getDayRecord(date, branchId, autoCreate = false) {
       if (!date || !branchId) return null;
       const normDate = normalizeDateStr(date) || String(date).trim();
-      const primaryKey = `${normDate}|${branchId}`;
+      const bId = String(branchId).trim();
+      const primaryKey = `${normDate}|${bId}`;
 
       // 1. فحص السجل المباشر بالمفتاح القياسي المُوحّد
       if (this.daily && this.daily[primaryKey]) {
         return this.daily[primaryKey];
       }
 
-      // 2. فحص السجلات القديمة أو بصيغ تاريخ غير موحدة
+      // 2. فحص السجلات القديمة أو بصيغ تاريخ غير موحدة أو بترتيب معكوس
       if (this.daily) {
-        const rawKey = `${date}|${branchId}`;
+        const rawKey = `${date}|${bId}`;
         if (this.daily[rawKey]) {
           if (rawKey !== primaryKey) {
             this.daily[primaryKey] = this.daily[rawKey];
@@ -6866,9 +7200,16 @@ this.settings = {
           return this.daily[primaryKey];
         }
         for (const k of Object.keys(this.daily)) {
-          if (k.endsWith(`|${branchId}`)) {
-            const kDate = k.split('|')[0];
-            if (normalizeDateStr(kDate) === normDate) {
+          const parts = k.includes('|') ? k.split('|') : k.split('_');
+          let kDate = parts[0];
+          let kBId = parts[1];
+          if (/^\d{4}[\/\-\.]/.test(parts[1]) || /^\d{1,2}[\/\-\.]/.test(parts[1])) {
+            kDate = parts[1];
+            kBId = parts[0];
+          }
+          if (String(kBId).trim() === bId) {
+            const normKDate = normalizeDateStr(kDate) || kDate;
+            if (normKDate === normDate) {
               if (k !== primaryKey) {
                 this.daily[primaryKey] = this.daily[k];
               }
@@ -6879,7 +7220,7 @@ this.settings = {
       }
 
       // 3. فحص التارجت الشهري إذا كان موجوداً
-      const monthlyRec = this.ensureDailyRecordFromMonthly(normDate, branchId);
+      const monthlyRec = this.ensureDailyRecordFromMonthly(normDate, bId);
       if (monthlyRec && (Number(monthlyRec.baseTarget) > 0 || Number(monthlyRec.heroesTarget) > 0)) {
         return monthlyRec;
       }
@@ -7407,16 +7748,29 @@ this.settings = {
     },
     branchHasMonthlyData(branchId, month) {
       if (!branchId || !month) return false;
-      const prefix = `${month}-`;
-      for (const key of Object.keys(this.daily)) {
-        if (key.startsWith(prefix) && key.endsWith(`|${branchId}`)) {
-          const rec = this.daily[key];
+      const normMonth = (typeof this.extractYearMonth === 'function' ? this.extractYearMonth(month) : extractYearMonth(month)) || month;
+      for (const [key, rec] of Object.entries(this.daily || {})) {
+        if (!rec) continue;
+        const parts = key.includes('|') ? key.split('|') : key.split('_');
+        let kDate = parts[0];
+        let kBId = parts[1];
+        if (/^\d{4}[\/\-\.]/.test(parts[1]) || /^\d{1,2}[\/\-\.]/.test(parts[1])) {
+          kDate = parts[1];
+          kBId = parts[0];
+        }
+        const normKDate = (typeof this.normalizeDateStr === 'function' ? this.normalizeDateStr(kDate) : normalizeDateStr(kDate)) || kDate;
+        const kMonth = typeof this.extractYearMonth === 'function' ? this.extractYearMonth(normKDate) : extractYearMonth(normKDate);
+        if (kMonth === normMonth && String(kBId).trim() === String(branchId).trim()) {
           if (Number(rec.baseTarget) > 0 || Number(rec.heroesTarget) > 0) return true;
         }
       }
-      const monthlyKey = `${month}|${branchId}`;
+      const monthlyKey = `${normMonth}|${branchId}`;
       if (Number(this.monthlyTargets[monthlyKey]) > 0) return true;
       if (Number(this.monthlyHeroesTargets[monthlyKey]) > 0) return true;
+      for (const [k, v] of Object.entries(this.monthlyTargets || {})) {
+        const parts = k.split('|');
+        if (parts[0] === normMonth && String(parts[1]).trim() === String(branchId).trim() && Number(v) > 0) return true;
+      }
       return false;
     },
     confirmImport() {

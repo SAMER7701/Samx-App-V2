@@ -5,7 +5,7 @@
 //  يعمل: Network-First للتنقل مع Fallback للكاش، Offline-First للأصول
 // ================================================================
 
-const CACHE_VERSION = 'samx-v25.3.2';
+const CACHE_VERSION = 'samx-v25.3.3';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
